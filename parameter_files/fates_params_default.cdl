@@ -928,7 +928,7 @@ data:
  fates_allom_sai_scaler = 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
     0.1, 0.1 ;
 
- fates_allom_smode = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ;
+ fates_allom_smode = 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2 ;
 
  fates_allom_stmode = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ;
 
