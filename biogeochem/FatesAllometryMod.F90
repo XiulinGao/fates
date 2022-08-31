@@ -919,7 +919,7 @@ contains
 
        bsap = bagw
 
-       if(present(dbsapdd) .and. present(dbagwdd))then
+       if(present(dbsapdd))then
           dbsapdd = dbagwdd
        end if
 
