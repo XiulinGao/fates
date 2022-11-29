@@ -300,6 +300,8 @@ module FatesHistoryInterfaceMod
   integer :: ih_biomass_si_agepft
   integer :: ih_npp_si_agepft
   integer :: ih_scorch_height_si_agepft
+  integer :: ih_canopycrownarea_si_agepft
+  integer :: ih_crownarea_si_agepft
 
   ! Indices to (site) variables
   integer :: ih_tveg24_si
@@ -1982,6 +1984,8 @@ end subroutine flush_hvars
                hio_nplant_si_scagpft                => this%hvars(ih_nplant_si_scagpft)%r82d, &
                hio_npp_si_agepft                    => this%hvars(ih_npp_si_agepft)%r82d, &
                hio_biomass_si_agepft                => this%hvars(ih_biomass_si_agepft)%r82d, &
+               hio_canopycrownarea_si_agepft        => this%hvars(ih_canopycrownarea_si_agepft)%r82d, &
+               hio_crownarea_si_agepft              => this%hvars(ih_crownarea_si_agepft)%r82d, &
                hio_scorch_height_si_agepft          => this%hvars(ih_scorch_height_si_agepft)%r82d, &
                hio_yesterdaycanopylevel_canopy_si_scls     => this%hvars(ih_yesterdaycanopylevel_canopy_si_scls)%r82d, &
                hio_yesterdaycanopylevel_understory_si_scls => this%hvars(ih_yesterdaycanopylevel_understory_si_scls)%r82d, &
@@ -2645,6 +2649,14 @@ end subroutine flush_hvars
 
                hio_biomass_si_agepft(io_si,iagepft) = hio_biomass_si_agepft(io_si,iagepft) + &
                   total_m * ccohort%n * AREA_INV
+              
+               hio_crownarea_si_agepft(io_si,iagepft) = hio_crownarea_si_agepft(io_si,iagepft) + &
+                  ccohort%c_area * AREA_INV
+               
+               if (ccohort%canopy_layer .eq. 1) then
+                   hio_canopycrownarea_si_agepft(io_si,iagepft) = hio_canopycrownarea_si_agepft(io_si,iagepft) + &
+                      ccohort%c_area * AREA_INV
+               end if
 
                ! update SCPF/SCLS- and canopy/subcanopy- partitioned quantities
                canlayer: if (ccohort%canopy_layer .eq. 1) then
@@ -5583,6 +5595,18 @@ end subroutine update_history_hifrq
           use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
           initialize=initialize_variables, index = ih_biomass_si_agepft)
+    
+    call this%set_history_var(vname='FATES_CANOPYCROWNAREA_APPF',units = 'kg m-2',        &
+          long='total PFT-level canopy-layer crown area per m2 land X age bin',          &
+          use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
+          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
+          initialize=initialize_variables, index = ih_canopycrownarea_si_agepft)
+
+    call this%set_history_var(vname='FATES_CROWNAREA_APPF',units = 'kg m-2',        &
+          long='total PFT-level canopy-layer crown area per m2 land X age bin',          &
+          use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
+          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
+          initialize=initialize_variables, index = ih_crownarea_si_agepft)
 
     call this%set_history_var(vname='FATES_SCORCH_HEIGHT_APPF',units = 'm',    &
           long='SPITFIRE flame Scorch Height (calculated per PFT in each patch age bin)', &
