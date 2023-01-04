@@ -817,7 +817,10 @@ contains
 
              ! Assume no damage to begin with - since we assume no damage
              ! we do not need to initialise branch frac just yet. 
-             temp_cohort%crowndamage = 1
+             temp_cohort%crowndamage = 1 
+
+             ! Cohorts initialized on bare ground are not resprouts
+             temp_cohort%resprout = 0
 
              !  h,dbh,leafc,n from SP values or from small initial size.
              if(hlm_use_sp.eq.itrue)then

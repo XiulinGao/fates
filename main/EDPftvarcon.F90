@@ -48,8 +48,10 @@ module EDPftvarcon
      real(r8), allocatable :: z0mr(:)                ! ratio of roughness length of vegetation to height (-)
      real(r8), allocatable :: displar(:)             ! ratio of displacement height to canopy top height
      real(r8), allocatable :: bark_scaler(:)         ! scaler from dbh to bark thickness. For fire model.
-     real(r8), allocatable :: crown_kill(:)          ! scaler on fire death. For fire model.
+     real(r8), allocatable :: frac_resprout(:)       ! fraction of cohort that resprouts rather than dies.
+     real(r8), allocatable :: resprouter(:)          ! Can the pft resprout after fire? For fire model.
      real(r8), allocatable :: initd(:)               ! initial seedling density
+     real(r8), allocatable :: crown_kill(:)          ! scaler on fire death. For fire model.
 
      real(r8), allocatable :: seed_suppl(:)          ! seeds that come from outside the gridbox.
      real(r8), allocatable :: bb_slope(:)            ! ball berry slope parameter
@@ -347,6 +349,14 @@ contains
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
     name = 'fates_fire_bark_scaler'
+    call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
+         dimension_names=dim_names, lower_bounds=dim_lower_bound)
+
+    name = 'fates_fire_frac_resprout'
+    call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
+         dimension_names=dim_names, lower_bounds=dim_lower_bound)
+
+    name = 'fates_fire_resprouter'
     call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
@@ -697,7 +707,15 @@ contains
     name = 'fates_fire_bark_scaler'
     call fates_params%RetrieveParameterAllocate(name=name, &
          data=this%bark_scaler)
+    
+    name = 'fates_fire_frac_resprout'
+    call fates_params%RetrieveParameterAllocate(name=name, &
+         data=this%frac_resprout)
 
+    name = 'fates_fire_resprouter'
+    call fates_params%RetrieveParameterAllocate(name=name, &
+         data=this%resprouter)
+    
     name = 'fates_fire_crown_kill'
     call fates_params%RetrieveParameterAllocate(name=name, &
          data=this%crown_kill)
@@ -1429,6 +1447,8 @@ contains
         write(fates_log(),fmt0) 'dleaf = ',EDPftvarcon_inst%dleaf
         write(fates_log(),fmt0) 'z0mr = ',EDPftvarcon_inst%z0mr
         write(fates_log(),fmt0) 'displar = ',EDPftvarcon_inst%displar
+        write(fates_log(),fmt0) 'frac_resprout = ',EDPftvarcon_inst%frac_resprout
+        write(fates_log(),fmt0) 'resprouter = ',EDPftvarcon_inst%resprouter
         write(fates_log(),fmt0) 'bark_scaler = ',EDPftvarcon_inst%bark_scaler
         write(fates_log(),fmt0) 'crown_kill = ',EDPftvarcon_inst%crown_kill
         write(fates_log(),fmt0) 'initd = ',EDPftvarcon_inst%initd

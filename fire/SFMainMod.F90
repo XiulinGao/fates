@@ -1029,6 +1029,10 @@ contains
     type(ed_patch_type),  pointer :: currentPatch
     type(ed_cohort_type), pointer :: currentCohort
 
+    !Local variables
+    real(r8) :: fire_mort
+
+
     currentPatch => currentSite%oldest_patch
 
     do while(associated(currentPatch)) 
@@ -1042,8 +1046,15 @@ contains
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
                 ! Equation 18 in Thonicke et al. 2010. 
-                currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
-                     (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.   
+                fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
+                     (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.
+                 
+                ! If the pft is eligible to resprout a fraction of the cohort will resprout rather than die.
+                if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
+                   currentCohort%frac_resprout = fire_mort * EDPftvarcon_inst%frac_resprout(currentCohort%pft) 
+                   currentCohort%fire_mort = fire_mort - currentCohort%frac_resprout
+                endif !resprouting
+                  
              else
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees

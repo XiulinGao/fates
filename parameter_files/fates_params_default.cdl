@@ -254,7 +254,13 @@ variables:
 	double fates_fire_bark_scaler(fates_pft) ;
 		fates_fire_bark_scaler:units = "fraction" ;
 		fates_fire_bark_scaler:long_name = "the thickness of a cohorts bark as a fraction of its dbh" ;
-	double fates_fire_crown_kill(fates_pft) ;
+	double fates_fire_frac_resprout(fates_pft) ;
+		fates_fire_frac_resprout:units = "fraction" ;
+		fates_fire_frac_resprout:long_name = "the fraction of a cohort that resprouts instead of dying in fire" ;
+	double fates_fire_resprouter(fates_pft) ;
+		fates_fire_resprouter:units = "NA" ;
+		fates_fire_resprouter:long_name = "can the pft resprout after fire? (1 = yes, 0 = no)" ;
+        double fates_fire_crown_kill(fates_pft) ;
 		fates_fire_crown_kill:units = "NA" ;
 		fates_fire_crown_kill:long_name = "fire parameter, see equation 22 in Thonicke et al 2010" ;
 	double fates_frag_fnrt_fcel(fates_pft) ;
@@ -1030,6 +1036,11 @@ data:
 
  fates_fire_bark_scaler = 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 
     0.07, 0.07, 0.07, 0.07 ;
+
+ fates_fire_frac_resprout = 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+    0.5, 0.5 ;
+
+ fates_fire_resprouter = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ;
 
  fates_fire_crown_kill = 0.775, 0.775, 0.775, 0.775, 0.775, 0.775, 0.775, 
     0.775, 0.775, 0.775, 0.775, 0.775 ;

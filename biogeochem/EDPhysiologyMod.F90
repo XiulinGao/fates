@@ -2044,7 +2044,8 @@ contains
           stem_drop_fraction      = EDPftvarcon_inst%phen_stem_drop_fraction(ft)
           temp_cohort%l2fr        = currentSite%rec_l2fr(ft,currentPatch%NCL_p)
           temp_cohort%crowndamage = 1       ! new recruits are undamaged
-          
+          temp_cohort%resprout    = 0       ! new recruits are not resprouts
+ 
           call h2d_allom(temp_cohort%hite,ft,temp_cohort%dbh)
 
        
