@@ -1053,6 +1053,14 @@ contains
                 if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
                    currentCohort%frac_resprout = fire_mort * EDPftvarcon_inst%frac_resprout(currentCohort%pft) 
                    currentCohort%fire_mort = fire_mort - currentCohort%frac_resprout
+                   
+                   !The cambial and crown fire mortality terms are retroactively reduced to account for the fraction
+                   !of the cohort that didn't actually die via these pathways (they resprouted instead)
+                   !CAUTION: This needs to be checked because fire mort is calculated with a joint probability of these terms
+                   ! rather than being additive.
+                   currentCohort%crownfire_mort = currentCohort%crownfire_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))
+                   currentCohort%cambial_mort = currentCohort%cambial_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))  
+                   
                 endif !resprouting
                   
              else

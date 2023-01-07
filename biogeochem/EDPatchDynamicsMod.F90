@@ -60,6 +60,12 @@ module EDPatchDynamicsMod
   use EDParamsMod          , only : fates_mortality_disturbance_fraction
   use FatesAllometryMod    , only : carea_allom
   use FatesAllometryMod    , only : set_root_fraction
+  use FatesAllometryMod    , only : h2d_allom
+  use FatesAllometryMod    , only : blmax_allom
+  use FatesAllometryMod    , only : bsap_allom
+  use FatesAllometryMod    , only : bagw_allom
+  use FatesAllometryMod    , only : bbgw_allom
+  use FatesAllometryMod    , only : bdead_allom
   use FatesConstantsMod    , only : g_per_kg
   use FatesConstantsMod    , only : ha_per_m2
   use FatesConstantsMod    , only : days_per_sec
@@ -384,8 +390,6 @@ contains
     type (ed_patch_type) , pointer :: currentPatch
     type (ed_cohort_type), pointer :: currentCohort
     type (ed_cohort_type), pointer :: nc
-    type (ed_cohort_type), pointer :: storesmallcohort
-    type (ed_cohort_type), pointer :: storebigcohort
     real(r8) :: site_areadis_primary         ! total area disturbed (to primary forest) in m2 per site per day
     real(r8) :: site_areadis_secondary       ! total area disturbed (to secondary forest) in m2 per site per day    
     real(r8) :: patch_site_areadis           ! total area disturbed in m2 per patch per day
@@ -408,6 +412,26 @@ contains
     integer  :: i_disturbance_type, i_dist2  ! iterators for looping over disturbance types
     real(r8) :: disturbance_rate             ! rate of disturbance being resolved [fraction of patch area / day]
     real(r8) :: oldarea                      ! old patch area prior to disturbance
+
+    !Resprouting variables
+
+    type (ed_cohort_type), pointer :: nrc    ! The new resprouting cohort
+    real(r8) :: nrc_leaf_c                   ! Target leaf carbon pool of nrc [kg]     
+    real(r8) :: nrc_sapw_c_bg                ! Target below ground sapw carbon pool of nrc [kg]
+    real(r8) :: nrc_sapw_c_ag                ! Target above ground sapw carbon pool of nrc [kg]
+    real(r8) :: nrc_struct_c_bg              ! Target below ground struct carbon pool of nrc [kg]
+    real(r8) :: nrc_struct_c_ag              ! Target above ground struct carbon pool of nrc [kg]
+    real(r8) :: a_sapw_nr                    ! Sapwood area of new recruit (dummy)
+    real(r8) :: sapw_c_nr                    ! Sapwood carbon of new recruit (intermediary var) [kg]
+    real(r8) :: agw_c_nr                     ! Above ground woody carbon of new recruit (intermediary var) [kg]
+    real(r8) :: bgw_c_nr                     ! Below ground woody carbon of new recruit (intermediary var) [kg]
+    real(r8) :: struct_c_nr                  ! Structural carbon of new recruit (intermediary var) [kg]
+    real(r8) :: nrc_store_c                  ! Target storage carbon pool of nrc [kg]
+    real(r8) :: f_leaf                       ! nrc target leaf carbon pool as fraction of donor co (leaf_c)
+    real(r8) :: f_store                      ! nrc target stor carbon pool as fraction of donor cohort (leaf_c)
+    real(r8) :: f_struct                     ! nrc target struc carbon pool as fraction of donor cohort (leaf_c)
+    real(r8) :: f_sapw                       ! nrc target leaf carbon pool as fraction of donor cohort (leaf_c) 
+
     !---------------------------------------------------------------------
 
     storesmallcohort => null() ! storage of the smallest cohort for insertion routine
@@ -631,15 +655,20 @@ contains
                       ! area modified number density into the new-patch, and apply survivorship.
                       ! -------------------------------------------------------------------------
 
-                      currentCohort => currentPatch%shortest
+                      currentCohort => currentPatch%shortest 
+                      !Do not change this order without changing code below that adds new resprouting
+                      !cohorts into the linked list.
+                      
                       do while(associated(currentCohort))
 
                          allocate(nc)
+
                          if(hlm_use_planthydro.eq.itrue) call InitHydrCohort(CurrentSite,nc)
 
                          ! Initialize the PARTEH object and point to the
                          ! correct boundary condition fields
                          nc%prt => null()
+                         
                          call InitPRTObject(nc%prt)
                          call InitPRTBoundaryConditions(nc)
 
@@ -659,6 +688,9 @@ contains
                          nc%canopy_layer = 1
                          nc%canopy_layer_yesterday = 1._r8
 
+
+                        
+ 
                          sapw_c   = currentCohort%prt%GetState(sapw_organ, carbon12_element)
                          struct_c = currentCohort%prt%GetState(struct_organ, carbon12_element)
                          leaf_c   = currentCohort%prt%GetState(leaf_organ, carbon12_element)
@@ -783,6 +815,47 @@ contains
                             ! Fire is the current disturbance
                          elseif (i_disturbance_type .eq. dtype_ifire ) then
 
+                            !If the cohort is capable of resprouting we will create a 
+                            !resprouting cohort (nrc). This is tracked separately from the new 
+                            !non-resprouting cohort (nc).
+                            if(EDPftvarcon_inst%resprout(currentCohort%pft) == 1) then
+                            
+                               allocate(nrc)
+                               if(hlm_use_planthydro.eq.itrue) call InitHydrCohort(CurrentSite,nrc)
+                            
+                               ! Initialize the PARTEH object and point to the
+                               ! correct boundary condition fields
+
+                               nrc%prt => null()
+                            
+                               call InitPRTObject(nrc%prt)
+                               call InitPRTBoundaryConditions(nrc)
+                               call zero_cohort(nrc)
+                               call copy_cohort(currentCohort, nrc)
+                               nrc%canopy_layer = 1
+                               nrc%canopy_layer_yesterday = 1._r8
+                              
+                               ! Reduce number of resprouters in the new patch due to new patch area
+                               ! and fraction of cohort resprouting
+                               nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area &
+                                       * currentCohrt%frac_resprout
+                               
+                               nrc%cmort            = currentCohort%cmort
+                               nrc%hmort            = currentCohort%hmort
+                               nrc%bmort            = currentCohort%bmort
+                               nrc%frmort           = currentCohort%frmort
+                               nrc%smort            = currentCohort%smort
+                               nrc%asmort           = currentCohort%asmort
+                               nrc%dgmort           = currentCohort%dgmort
+                               nrc%dmort            = currentCohort%dmort
+                               nrc%lmort_direct     = currentCohort%lmort_direct
+                               nrc%lmort_collateral = currentCohort%lmort_collateral
+                               nrc%lmort_infra      = currentCohort%lmort_infa
+
+     
+                            endif !create resprouting cohort
+
+
                             ! Number of members in the new patch, before we impose fire survivorship
                             nc%n = currentCohort%n * patch_site_areadis/currentPatch%area
 
@@ -822,7 +895,7 @@ contains
                                  currentSite%fmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
                                  nc%n * currentCohort%crownfire_mort / hlm_freq_day
 
-                            ! loss of individual from fire in new patch.
+                            ! loss of individuals from fire in new patch.
                             nc%n = nc%n * (1.0_r8 - currentCohort%fire_mort)
 
                             nc%cmort            = currentCohort%cmort
@@ -838,7 +911,7 @@ contains
                             nc%lmort_infra      = currentCohort%lmort_infra
 
 
-                            ! Some of of the leaf mass from living plants has been
+                            ! Some of the leaf mass from living plants has been
                             ! burned off.  Here, we remove that mass, and
                             ! tally it in the flux we sent to the atmosphere
 
@@ -898,11 +971,115 @@ contains
 
                             currentCohort%fraction_crown_burned = 0.0_r8
                             nc%fraction_crown_burned            = 0.0_r8
+                            
+                            !If the cohort is capable of post-fire resprouting we will create a 
+                            !resprouting cohort (nrc) and reduce above-ground biomass pools. 
+			    !This is tracked separately from the new non-resprouting cohort (nc).
+			    !Note: This routine only handles basal resprouting (not aerial / epicormic)
+                            if(EDPftvarcon_inst%resprout(currentCohort%pft) == 1) then
+                               
+			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			       !Step 1 of 4. Create resprout cohort, reduce height and number density!!!
+			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                               
+			       allocate(nrc)
+                               if(hlm_use_planthydro.eq.itrue) call InitHydrCohort(CurrentSite,nrc)
+                            
+                               ! Initialize the PARTEH object and point to the
+                               ! correct boundary condition fields
 
+                               nrc%prt => null()
+                            
+                               call InitPRTObject(nrc%prt)
+                               call InitPRTBoundaryConditions(nrc)
+                               call zero_cohort(nrc)
+                               call copy_cohort(currentCohort, nrc)
+                               nrc%canopy_layer = 1
+                               nrc%canopy_layer_yesterday = 1._r8
+                              
+                               ! Reduce number of resprouters in the new patch due to new patch area
+                               ! and fraction of cohort resprouting
+                               nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area &
+                                       * currentCohrt%frac_resprout
+                               
+                               nrc%cmort            = currentCohort%cmort
+                               nrc%hmort            = currentCohort%hmort
+                               nrc%bmort            = currentCohort%bmort
+                               nrc%frmort           = currentCohort%frmort
+                               nrc%smort            = currentCohort%smort
+                               nrc%asmort           = currentCohort%asmort
+                               nrc%dgmort           = currentCohort%dgmort
+                               nrc%dmort            = currentCohort%dmort
+                               nrc%lmort_direct     = currentCohort%lmort_direct
+                               nrc%lmort_collateral = currentCohort%lmort_collateral
+                               nrc%lmort_infra      = currentCohort%lmort_infa
 
+			       !Reduce height of resprout to new recruit
+                               nrc%hite = EDPftvarcon_inst%hgt_min(currentCohort%pft)
 
-                            ! Logging is the current disturbance
-                         elseif (i_disturbance_type .eq. dtype_ilog ) then
+                               !Get dbh of resprout
+			       h2d_allom(nrc%hite,currentCohort%pft,nrc%dbh)
+
+                               temp_cohort%crowndamage = 1 !Resprouts start undamaged. Needed for
+			                                   !bleaf_allom subroutine below.
+                               
+
+			       !Next we reduce above-ground biomass pools of resprouts down to the
+                               !size of a new recruit. Mass fluxes associated
+                               !with this reduction were already sent to 
+                               !litter/atm in the fire_litter_fluxes subroutine.
+ 
+                               !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			       !Step 2. Calculate target carbon pools for the resprouts!
+			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			       
+			       !Leaf carbon pool is based on dbh of resprout.
+			       blmax_allom(nrc%dbh,currentCohort%pft,nrc_leaf_c)
+			       
+			       !Below-ground sapw and struct is the same as the doner cohort.
+			       !Assumption: all below ground biomass is retained during the fire.
+                               nrc_sapw_c_bg = currentCohort%prt%GetState(sapw_organ,carbon12_element) * &
+				               (1.0_r8 - prt_params%allom_agb_frac(currentCohort%pft))
+
+                               nrc_struct_c_bg = currentCohort%prt%GetState(struct_organ,carbon12_element) * &
+			                         (1.0_r8 - prt_params%allom_agb_frac(currentCohort%pft))
+			       
+			       !Above-ground sapw and struct is based on dbh of the resprout.
+			       call bsap_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage, &
+			                      nrc%canopy_trim,a_sapw_nr,sapw_c_nr)
+                               call bagw_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage,agw_c_nr)
+			       call bbgw_allom(nrc%dbh,currentCohort%pft,bgw_c_nr)
+		               call bdead_allom(agw_c_nr,bgw_c_nr,sapw_c_nr,currentCohort%pft,struct_c_nr)
+
+                               !Get just the above ground fraction of new recruit struct_c and sapw_c
+			       nrc_sapw_c_ag = sapw_c_nr * prt_params%allom_agb_frac(currentCohort%pft)
+                               nrc_struct_c_ag = struct_c_nr * prt_params%allom_agb_frac(currentCohort%pft)
+
+                               !The target storage pool size is the amount in the doner cohort minus
+			       !the amount needed for the above-ground components of the resprout.
+			       !Assumption: storage is used to construct the above-ground 
+			       !tissues of the resprout
+                               nrc_store_c = store_c - (nrc_sapw_c_ag + nrc_struct_c_ag + nrc_leaf_c)
+                               
+			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                               !Step 3. Reduce storage and above-ground biomass pools of the resprouts!!
+			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+			       !Calculate the fraction to reduce the doner cohort biomass pools by so that
+			       !we can use the PRTBurnLosses subroutine.
+			       f_leaf = nrc_leaf_c / leaf_c
+			       f_store = nrc_store_c / store_c
+			       f_struct = (nrc_struct_c_bg + nrc_struct_c_ag) / struct_c
+			       f_sapw = (nrc_sapw_c_bg + nrc_sapw_c_ag) / sapw_c
+
+                               !Reduce the biomass pools
+			       call PRTBurnLosses(nrc%prt, leaf_organ, f_leaf)
+			       call PRTBurnLosses(nrc%prt, struct_organ, f_struct)
+			       call PRTBurnLosses(nrc%prt, sapw_organ, f_sapw)
+			       call PRTBurnLosses(nrc%prt, store_organ, f_store)
+                            endif !resprouting
+
+			 elseif (i_disturbance_type .eq. dtype_ilog ) then
 
                             ! If this cohort is in the upper canopy. It generated
                             if(currentCohort%canopy_layer == 1)then
@@ -1027,38 +1204,15 @@ contains
                             write(fates_log(),*) 'i_disturbance_type: ',i_disturbance_type
                             call endrun(msg=errMsg(sourcefile, __LINE__))
                          end if   ! Select disturbance mode
+                         
+			 !Add the new cohort into the linked list
+                         call cohort_to_linked_list(new_patch,nc)
 
-                         if (nc%n > 0.0_r8) then
-                            storebigcohort   =>  new_patch%tallest
-                            storesmallcohort =>  new_patch%shortest
-                            if(associated(new_patch%tallest))then
-                               tnull = 0
-                            else
-                               tnull = 1
-                               new_patch%tallest => nc
-                               nc%taller => null()
-                            endif
+			 !If current cohort is a resprouter add the new resprouting cohort
+			 if(EDPftvarcon_inst%resprout(currentCohort%pft) == 1) then
+                            call cohort_to_linked_list(new_patch,nrc)
+			 endif
 
-                            if(associated(new_patch%shortest))then
-                               snull = 0
-                            else
-                               snull = 1
-                               new_patch%shortest => nc
-                               nc%shorter => null()
-                            endif
-                            nc%patchptr => new_patch
-                            call insert_cohort(nc, new_patch%tallest, new_patch%shortest, &
-                                 tnull, snull, storebigcohort, storesmallcohort)
-
-                            new_patch%tallest  => storebigcohort
-                            new_patch%shortest => storesmallcohort
-                         else
-
-                            ! Get rid of the new temporary cohort
-                            call DeallocateCohort(nc)
-                            deallocate(nc)
-
-                         endif
 
                          currentCohort => currentCohort%taller
                       enddo ! currentCohort
@@ -1593,6 +1747,7 @@ contains
     real(r8) :: struct_m             ! structure mass [kg]
     real(r8) :: repro_m              ! Reproductive mass (seeds/flowers) [kg]
     real(r8) :: num_dead_trees       ! total number of dead trees passed in with the burn area
+    real(r8) :: num_resprouts        ! total number of resprouting trees passed in with the burn area
     real(r8) :: num_live_trees       ! total number of live trees passed in with the burn area
     real(r8) :: donate_m2            ! area normalization for litter mass destined to new patch [m-2]
     real(r8) :: retain_m2            ! area normalization for litter mass staying in donor patch [m-2]
@@ -1691,12 +1846,16 @@ contains
              num_dead_trees = (currentCohort%fire_mort*currentCohort%n * &
                                patch_site_areadis/currentPatch%area)
 
+             ! Absolute number of resprouting trees being transfered in with the donated area
+             num_resprouts = (currentCohort%frac_resprout*currentCohort%n * &
+                               patch_site_areadis/currentPatch%area)
+
              ! Contribution of dead trees to leaf litter
-             donatable_mass = num_dead_trees * (leaf_m+repro_m) * &
+             donatable_mass = (num_dead_trees + num_resprouts) * (leaf_m+repro_m) * &
                               (1.0_r8-currentCohort%fraction_crown_burned)
 
-             ! Contribution of dead trees to leaf burn-flux
-             burned_mass  = num_dead_trees * (leaf_m+repro_m) * currentCohort%fraction_crown_burned
+             ! Contribution of dead and resprouting trees to leaf burn-flux
+             burned_mass  = (num_dead_trees + num_resprouts) * (leaf_m+repro_m) * currentCohort%fraction_crown_burned
 
              do dcmpy=1,ndcmpy
                  dcmpy_frac = GetDecompyFrac(pft,leaf_organ,dcmpy)
@@ -1712,10 +1871,12 @@ contains
                   bc_in%max_rooting_depth_index_col)
 
              ! Contribution of dead trees to root litter (no root burn flux to atm)
+             ! No resprouts to root litter
              do dcmpy=1,ndcmpy
                  dcmpy_frac = GetDecompyFrac(pft,fnrt_organ,dcmpy)
                  do sl = 1,currentSite%nlevsoil
                      donatable_mass = num_dead_trees * (fnrt_m+store_m) * currentSite%rootfrac_scr(sl)
+
                      new_litt%root_fines(dcmpy,sl) = new_litt%root_fines(dcmpy,sl) + &
                                                      donatable_mass*donate_m2*dcmpy_frac
                      curr_litt%root_fines(dcmpy,sl) = curr_litt%root_fines(dcmpy,sl) + &
@@ -1726,7 +1887,7 @@ contains
              ! Track as diagnostic fluxes
              flux_diags%leaf_litter_input(pft) = &
                   flux_diags%leaf_litter_input(pft) + &
-                  num_dead_trees * (leaf_m+repro_m) * (1.0_r8-currentCohort%fraction_crown_burned)
+                  (num_dead_trees + num_resprouts)  * (leaf_m+repro_m) * (1.0_r8-currentCohort%fraction_crown_burned)
 
              flux_diags%root_litter_input(pft) = &
                   flux_diags%root_litter_input(pft) + &
@@ -1759,10 +1920,10 @@ contains
              ! Above ground coarse woody debris from twigs and small branches
              ! a portion of this pool may burn
              do c = 1,ncwd
-                 donatable_mass = num_dead_trees * SF_val_CWD_frac(c) * bstem
+                 donatable_mass = (num_dead_trees + num_resprouts) * SF_val_CWD_frac(c) * bstem
                  if (c == 1 .or. c == 2) then
                       donatable_mass = donatable_mass * (1.0_r8-currentCohort%fraction_crown_burned)
-                      burned_mass = num_dead_trees * SF_val_CWD_frac(c) * bstem * &
+                      burned_mass = (num_dead_trees + num_resprouts) * SF_val_CWD_frac(c) * bstem * &
                       currentCohort%fraction_crown_burned
                       site_mass%burn_flux_to_atm = site_mass%burn_flux_to_atm + burned_mass
                 endif
@@ -3089,7 +3250,6 @@ contains
 
  subroutine get_frac_site_primary(site_in, frac_site_primary)
 
-    !
     ! !DESCRIPTION:
     !  Calculate how much of a site is primary land
     !
@@ -3113,5 +3273,59 @@ contains
    end do
 
  end subroutine get_frac_site_primary
+
+ subroutine cohort_to_linked_list(new_patch,nc)
+
+    ! !DESCRIPTION:
+    ! Insert a new cohort into the linked list on a patch
+        
+    ! !USES:
+    !use EDTypesMod , only : ed_site
+    
+    ! !ARGUMENTS:
+    type(ed_cohort_type) , intent(in), target      :: nc !The new cohort
+                                                         !to be inserted
+    type(ed_patch_type) , intent(inout), target     :: new_patch 
+    
+    ! !LOCAL VARIABLES:
+    type (ed_cohort_type), pointer :: storesmallcohort
+    type (ed_cohort_type), pointer :: storebigcohort
+    integer :: tnull
+    integer :: snull
+    !------------------------------------------------------------------
+    if (nc%n > 0.0_r8) then
+       
+       storebigcohort   =>  new_patch%tallest
+       storesmallcohort =>  new_patch%shortest
+       
+       if(associated(new_patch%tallest))then
+          tnull = 0
+       else
+	  tnull = 1
+          new_patch%tallest => nc
+          nc%taller => null()
+       endif
+
+       if(associated(new_patch%shortest))then
+	  snull = 0
+       else
+          snull = 1
+          new_patch%shortest => nc
+          nc%shorter => null()
+      endif
+      nc%patchptr => new_patch
+      call insert_cohort(nc, new_patch%tallest, new_patch%shortest, &
+           tnull, snull, storebigcohort, storesmallcohort)
+
+      new_patch%tallest  => storebigcohort
+      new_patch%shortest => storesmallcohort
+    else
+
+       ! Get rid of the new temporary cohort
+       call DeallocateCohort(nc)
+       deallocate(nc)
+
+    endif
+ end subroutine cohort_to_linked_list
 
  end module EDPatchDynamicsMod

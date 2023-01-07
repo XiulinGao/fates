@@ -1210,7 +1210,6 @@ contains
                              ! check cohorts have the same resprout status before fusing
                              if (currentCohort%resprout == nextc%resprout) then
 
-
                              ! check cohorts in same c. layer. before fusing
 
                              if (currentCohort%canopy_layer == nextc%canopy_layer) then
@@ -2430,5 +2429,36 @@ contains
     return
   end subroutine DamageRecovery
   
+  subroutine RefreshResproutFlag(currentCohort)
+
+     !DESCRIPTION
+     !Check if the resprout should no longer be considered a resprout
+     !based on how close its fine root carbon pool is to target
+
+     !ARGUMENTS
+     type(ed_cohort_type), intent(inout) :: currentCohort
+
+     !USES
+     use FatesAllometryMod, only : bfineroot 
+
+     !LOCAL VARIABLES
+     real(r8) :: target_fnrt_c !target fine root carbon pool [kg]
+     real(r8) :: fnrt_c !actual fine root carbon pool [kg]
+
+
+     call bfineroot(currentCohort%dbh,currentCohort%pft,&
+          currentCohort%canopy_trim,currentCohort%l2fr,target_fnrt_c)
+
+     fnrt_c = currentCohort%prt%GetState(fnrt_organ,carbon12_element)
+     
+     !If actual fine root carbon is within 3% of target then the cohort
+     !loses its resprout flag is in considered to be witin the range of
+     !non-resprouting allometry.
+
+     if ((fnrt_c - target_fnrt_c) / fnrt_c < 0.03_r8) then
+        currentCohort%resprout = 0
+     endif
+
+  end subroutine RefreshResproutFlag
 
 end module EDCohortDynamicsMod

@@ -768,7 +768,7 @@ contains
 
     patch_in%tallest  => null()
     patch_in%shortest => null()
-
+    
     ! Manage interactions of fixed biogeog (site level filter) and
     ! nocomp (patch level filter)
     ! Need to cover all potential biogeog x nocomp combinations
@@ -886,7 +886,7 @@ contains
              end if ! SP mode
 
              if ( debug ) write(fates_log(),*) 'EDInitMod.F90 call create_cohort '
-
+             
              temp_cohort%coage = 0.0_r8
 
 
