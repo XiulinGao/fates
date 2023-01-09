@@ -132,6 +132,7 @@ Module EDCohortDynamicsMod
   public :: DeallocateCohort
   public :: EvaluateAndCorrectDBH
   public :: DamageRecovery
+  public :: RefreshResproutFlag
   
   logical, parameter :: debug  = .false. ! local debug flag
 
@@ -2435,11 +2436,12 @@ contains
      !Check if the resprout should no longer be considered a resprout
      !based on how close its fine root carbon pool is to target
 
+     !USES
+     use FatesAllometryMod, only : bfineroot 
+     
      !ARGUMENTS
      type(ed_cohort_type), intent(inout) :: currentCohort
 
-     !USES
-     use FatesAllometryMod, only : bfineroot 
 
      !LOCAL VARIABLES
      real(r8) :: target_fnrt_c !target fine root carbon pool [kg]

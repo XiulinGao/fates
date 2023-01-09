@@ -431,11 +431,8 @@ contains
     real(r8) :: f_store                      ! nrc target stor carbon pool as fraction of donor cohort (leaf_c)
     real(r8) :: f_struct                     ! nrc target struc carbon pool as fraction of donor cohort (leaf_c)
     real(r8) :: f_sapw                       ! nrc target leaf carbon pool as fraction of donor cohort (leaf_c) 
-
     !---------------------------------------------------------------------
 
-    storesmallcohort => null() ! storage of the smallest cohort for insertion routine
-    storebigcohort   => null() ! storage of the largest cohort for insertion routine 
 
     if (hlm_use_nocomp .eq. itrue) then
        min_nocomp_pft = 0
@@ -818,7 +815,7 @@ contains
                             !If the cohort is capable of resprouting we will create a 
                             !resprouting cohort (nrc). This is tracked separately from the new 
                             !non-resprouting cohort (nc).
-                            if(EDPftvarcon_inst%resprout(currentCohort%pft) == 1) then
+                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
                             
                                allocate(nrc)
                                if(hlm_use_planthydro.eq.itrue) call InitHydrCohort(CurrentSite,nrc)
@@ -838,7 +835,7 @@ contains
                                ! Reduce number of resprouters in the new patch due to new patch area
                                ! and fraction of cohort resprouting
                                nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area &
-                                       * currentCohrt%frac_resprout
+                                       * currentCohort%frac_resprout
                                
                                nrc%cmort            = currentCohort%cmort
                                nrc%hmort            = currentCohort%hmort
@@ -850,7 +847,7 @@ contains
                                nrc%dmort            = currentCohort%dmort
                                nrc%lmort_direct     = currentCohort%lmort_direct
                                nrc%lmort_collateral = currentCohort%lmort_collateral
-                               nrc%lmort_infra      = currentCohort%lmort_infa
+                               nrc%lmort_infra      = currentCohort%lmort_infra
 
      
                             endif !create resprouting cohort
@@ -976,7 +973,7 @@ contains
                             !resprouting cohort (nrc) and reduce above-ground biomass pools. 
 			    !This is tracked separately from the new non-resprouting cohort (nc).
 			    !Note: This routine only handles basal resprouting (not aerial / epicormic)
-                            if(EDPftvarcon_inst%resprout(currentCohort%pft) == 1) then
+                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
                                
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			       !Step 1 of 4. Create resprout cohort, reduce height and number density!!!
@@ -999,8 +996,8 @@ contains
                               
                                ! Reduce number of resprouters in the new patch due to new patch area
                                ! and fraction of cohort resprouting
-                               nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area &
-                                       * currentCohrt%frac_resprout
+                               nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area * &
+                                       currentCohort%frac_resprout
                                
                                nrc%cmort            = currentCohort%cmort
                                nrc%hmort            = currentCohort%hmort
@@ -1012,15 +1009,15 @@ contains
                                nrc%dmort            = currentCohort%dmort
                                nrc%lmort_direct     = currentCohort%lmort_direct
                                nrc%lmort_collateral = currentCohort%lmort_collateral
-                               nrc%lmort_infra      = currentCohort%lmort_infa
+                               nrc%lmort_infra      = currentCohort%lmort_infra
 
 			       !Reduce height of resprout to new recruit
                                nrc%hite = EDPftvarcon_inst%hgt_min(currentCohort%pft)
 
                                !Get dbh of resprout
-			       h2d_allom(nrc%hite,currentCohort%pft,nrc%dbh)
+			       call h2d_allom(nrc%hite,currentCohort%pft,nrc%dbh)
 
-                               temp_cohort%crowndamage = 1 !Resprouts start undamaged. Needed for
+                               nrc%crowndamage = 1 !Resprouts start undamaged. Needed for
 			                                   !bleaf_allom subroutine below.
                                
 
@@ -1034,7 +1031,7 @@ contains
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			       
 			       !Leaf carbon pool is based on dbh of resprout.
-			       blmax_allom(nrc%dbh,currentCohort%pft,nrc_leaf_c)
+			       call blmax_allom(nrc%dbh,currentCohort%pft,nrc_leaf_c)
 			       
 			       !Below-ground sapw and struct is the same as the doner cohort.
 			       !Assumption: all below ground biomass is retained during the fire.
@@ -1206,11 +1203,22 @@ contains
                          end if   ! Select disturbance mode
                          
 			 !Add the new cohort into the linked list
-                         call cohort_to_linked_list(new_patch,nc)
+                         
+			 if (nc%n > 0.0_r8) then
+			    call cohort_to_linked_list(new_patch,nc)
+                         else
+                            call DeallocateCohort(nc)
+			    deallocate(nc)
+			 endif
 
 			 !If current cohort is a resprouter add the new resprouting cohort
-			 if(EDPftvarcon_inst%resprout(currentCohort%pft) == 1) then
-                            call cohort_to_linked_list(new_patch,nrc)
+			 if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
+			    if (nc%n > 0.0_r8) then
+                               call cohort_to_linked_list(new_patch,nrc)
+			    else
+			       call DeallocateCohort(nrc)
+			       deallocate(nrc)
+			    endif
 			 endif
 
 
@@ -3283,7 +3291,7 @@ contains
     !use EDTypesMod , only : ed_site
     
     ! !ARGUMENTS:
-    type(ed_cohort_type) , intent(in), target      :: nc !The new cohort
+    type(ed_cohort_type) , intent(inout), target      :: nc !The new cohort
                                                          !to be inserted
     type(ed_patch_type) , intent(inout), target     :: new_patch 
     
@@ -3293,7 +3301,6 @@ contains
     integer :: tnull
     integer :: snull
     !------------------------------------------------------------------
-    if (nc%n > 0.0_r8) then
        
        storebigcohort   =>  new_patch%tallest
        storesmallcohort =>  new_patch%shortest
@@ -3312,20 +3319,14 @@ contains
           snull = 1
           new_patch%shortest => nc
           nc%shorter => null()
-      endif
-      nc%patchptr => new_patch
-      call insert_cohort(nc, new_patch%tallest, new_patch%shortest, &
+       endif
+       nc%patchptr => new_patch
+       call insert_cohort(nc, new_patch%tallest, new_patch%shortest, &
            tnull, snull, storebigcohort, storesmallcohort)
 
-      new_patch%tallest  => storebigcohort
-      new_patch%shortest => storesmallcohort
-    else
+       new_patch%tallest  => storebigcohort
+       new_patch%shortest => storesmallcohort
 
-       ! Get rid of the new temporary cohort
-       call DeallocateCohort(nc)
-       deallocate(nc)
-
-    endif
  end subroutine cohort_to_linked_list
 
  end module EDPatchDynamicsMod

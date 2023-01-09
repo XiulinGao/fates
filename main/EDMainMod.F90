@@ -541,7 +541,7 @@ contains
 	  ! as a resprout (for cohort fusion purposes). Resprout status is based on ratio 
 	  ! of actual fine root to target fine root ratio.
 
-	  if (currentCohort%resprout == 1)
+	  if (currentCohort%resprout == 1) then
 	     call RefreshResproutFlag(currentCohort)
           endif
 
