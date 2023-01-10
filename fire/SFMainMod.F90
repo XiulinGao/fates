@@ -30,11 +30,11 @@
   use EDTypesMod            , only : TW_SF
   use EDtypesMod            , only : LB_SF
   use EDtypesMod            , only : LG_SF
+  use EDTypesMod            , only : init_recruit_trim
   use FatesLitterMod        , only : ncwd
   use EDtypesMod            , only : NFSC
   use EDtypesMod            , only : TR_SF
   use FatesLitterMod        , only : litter_type
-
   use PRTGenericMod,          only : leaf_organ
   use PRTGenericMod,          only : carbon12_element
   use PRTGenericMod,          only : leaf_organ
@@ -44,8 +44,14 @@
   use PRTGenericMod,          only : repro_organ
   use PRTGenericMod,          only : struct_organ
   use PRTGenericMod,          only : SetState
-  use FatesInterfaceTypesMod     , only : numpft
+  use FatesInterfaceTypesMod, only : numpft
   use FatesAllometryMod,      only : CrownDepth
+  use FatesAllometryMod    , only : h2d_allom
+  use FatesAllometryMod    , only : blmax_allom
+  use FatesAllometryMod    , only : bsap_allom
+  use FatesAllometryMod    , only : bagw_allom
+  use FatesAllometryMod    , only : bbgw_allom
+  use FatesAllometryMod    , only : bdead_allom
 
   implicit none
   private
@@ -1025,13 +1031,24 @@ contains
     !  currentCohort%fire_mort  post-fire mortality from cambial and crown damage assuming two are independent.
 
     type(ed_site_type), intent(in), target :: currentSite
-
     type(ed_patch_type),  pointer :: currentPatch
     type(ed_cohort_type), pointer :: currentCohort
 
     !Local variables
     real(r8) :: fire_mort
-
+    
+    !Local variables for resprouting         ! "nrc" = new resprouting cohort
+    real(r8) :: nrc_leaf_c                   ! Target leaf carbon pool of nrc [kg]     
+    real(r8) :: nrc_sapw_c                   ! Target sapw carbon pool of nrc [kg]
+    real(r8) :: nrc_struct_c                 ! Target struct carbon pool of nrc [kg]
+    real(r8) :: nrc_store_c                  ! Target storage carbon pool of nrc [kg]
+    real(r8) :: a_sapw_nr                    ! Sapwood area of nrc (dummy)
+    real(r8) :: agw_c_nr                     ! AGW carbon of nrc (intermediary var) [kg]
+    real(r8) :: bgw_c_nr                     ! BGW carbon of nrc (intermediary var) [kg]
+    real(r8) :: store_c                      ! Storage carbon of current cohort
+    real(r8) :: resprout_dbh                 ! dbh of the resprout
+    integer :: resprout_crowndamage          ! Crown damage level of resprout
+    
 
     currentPatch => currentSite%oldest_patch
 
@@ -1051,15 +1068,56 @@ contains
                  
                 ! If the pft is eligible to resprout a fraction of the cohort will resprout rather than die.
                 if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
-                   currentCohort%frac_resprout = fire_mort * EDPftvarcon_inst%frac_resprout(currentCohort%pft) 
-                   currentCohort%fire_mort = fire_mort - currentCohort%frac_resprout
+		   
+                   !First check if the cohort has sufficient storage carbon to resprout
+		   !Assumption: storage carbon is used to construct the resprout.
+		   
+		   !Calculate storage carbon of current cohort
+                   store_c  = currentCohort%prt%GetState(store_organ, carbon12_element)
                    
-                   !The cambial and crown fire mortality terms are retroactively reduced to account for the fraction
-                   !of the cohort that didn't actually die via these pathways (they resprouted instead)
-                   !CAUTION: This needs to be checked because fire mort is calculated with a joint probability of these terms
-                   ! rather than being additive.
-                   currentCohort%crownfire_mort = currentCohort%crownfire_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))
-                   currentCohort%cambial_mort = currentCohort%cambial_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))  
+                   resprout_crowndamage = 1 !Resprouts start undamaged. Needed to calculate construction
+		                            !costs for a resprout.
+
+                   !Calculate construction costs of a resprout. 
+                   call h2d_allom(EDPftvarcon_inst%hgt_min(currentCohort%pft), currentCohort%pft,resprout_dbh)
+                   
+		   call bsap_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage, &
+		                                                   init_recruit_trim,a_sapw_nr,nrc_sapw_c)                    
+		   
+		   call bagw_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage,agw_c_nr)
+		   
+		   call bbgw_allom(resprout_dbh,currentCohort%pft,bgw_c_nr)
+
+		   call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
+
+
+		   !Calculate remaining storage amount after constructing resprout.
+		   !Note: This is just a check to see if any resprouting should occur. The main resprouting
+		   !routine occurs later when "spawn_patches" is called.
+		   nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
+		   
+		   !Post-fire basal resprouting should only occur if there is sufficient storage carbon to
+		   !construct a resprout
+                   if (nrc_store_c > 0.0_r8) then
+
+                      currentCohort%frac_resprout = fire_mort * EDPftvarcon_inst%frac_resprout(currentCohort%pft) 
+                      currentCohort%fire_mort = fire_mort - currentCohort%frac_resprout
+
+                      !The cambial and crown fire mortality terms are retroactively reduced to account for the fraction
+                      !of the cohort that didn't actually die via these pathways (they resprouted instead)
+                      !CAUTION: This needs to be checked because fire mort is calculated with a joint probability of these terms
+                      ! rather than being additive.
+                      currentCohort%crownfire_mort = currentCohort%crownfire_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))
+                      currentCohort%cambial_mort = currentCohort%cambial_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft)) 
+
+                   else
+		      
+		      write(fates_log(),*) 'not enough carbon to make new recruit'
+		      currentCohort%frac_resprout = 0.0_r8
+                      
+		   endif !check if there is sufficient storage carbon to resprout
+
+                   
                    
                 endif !resprouting
                   

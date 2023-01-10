@@ -30,6 +30,7 @@ module EDPatchDynamicsMod
   use EDTypesMod           , only : dtype_ilog
   use EDTypesMod           , only : dtype_ifire
   use EDTypesMod           , only : ican_upper
+  use EDTypesMod           , only : init_recruit_trim
   use PRTGenericMod        , only : num_elements
   use PRTGenericMod        , only : element_list
   use EDTypesMod           , only : lg_sf
@@ -925,7 +926,11 @@ contains
                             !resprouting cohort (nrc) and reduce above-ground biomass pools. 
 			    !This is tracked separately from the new non-resprouting cohort (nc).
 			    !Note: This routine only handles basal resprouting (not aerial / epicormic)
-                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
+
+                            !First we check if there is a enough storage carbon to resprout
+
+                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. &
+			     currentCohort%frac_resprout > 0.0_r8) then
                                
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			       !Step 1 of 4. Create resprout cohort, reduce height and number density!!!
@@ -1001,7 +1006,6 @@ contains
 			       
                                nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
                                
-			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                                !Step 3. Reduce storage and above-ground biomass pools of the resprouts!!
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -1156,7 +1160,7 @@ contains
 
 			 !If current cohort is a resprouter add the new resprouting cohort
 			 if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
-			    if (nc%n > 0.0_r8) then
+			    if (nrc%n > 0.0_r8) then
                                call cohort_to_linked_list(new_patch,nrc)
 			    else
 			       call DeallocateCohort(nrc)
