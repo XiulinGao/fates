@@ -417,20 +417,16 @@ contains
 
     type (ed_cohort_type), pointer :: nrc    ! The new resprouting cohort
     real(r8) :: nrc_leaf_c                   ! Target leaf carbon pool of nrc [kg]     
-    real(r8) :: nrc_sapw_c_bg                ! Target below ground sapw carbon pool of nrc [kg]
-    real(r8) :: nrc_sapw_c_ag                ! Target above ground sapw carbon pool of nrc [kg]
-    real(r8) :: nrc_struct_c_bg              ! Target below ground struct carbon pool of nrc [kg]
-    real(r8) :: nrc_struct_c_ag              ! Target above ground struct carbon pool of nrc [kg]
-    real(r8) :: a_sapw_nr                    ! Sapwood area of new recruit (dummy)
-    real(r8) :: sapw_c_nr                    ! Sapwood carbon of new recruit (intermediary var) [kg]
-    real(r8) :: agw_c_nr                     ! Above ground woody carbon of new recruit (intermediary var) [kg]
-    real(r8) :: bgw_c_nr                     ! Below ground woody carbon of new recruit (intermediary var) [kg]
-    real(r8) :: struct_c_nr                  ! Structural carbon of new recruit (intermediary var) [kg]
+    real(r8) :: nrc_sapw_c                   ! Target sapw carbon pool of nrc [kg]
+    real(r8) :: nrc_struct_c                 ! Target struct carbon pool of nrc [kg]
     real(r8) :: nrc_store_c                  ! Target storage carbon pool of nrc [kg]
-    real(r8) :: f_leaf                       ! nrc target leaf carbon pool as fraction of donor co (leaf_c)
-    real(r8) :: f_store                      ! nrc target stor carbon pool as fraction of donor cohort (leaf_c)
-    real(r8) :: f_struct                     ! nrc target struc carbon pool as fraction of donor cohort (leaf_c)
-    real(r8) :: f_sapw                       ! nrc target leaf carbon pool as fraction of donor cohort (leaf_c) 
+    real(r8) :: a_sapw_nr                    ! Sapwood area of new recruit (dummy)
+    real(r8) :: agw_c_nr                     ! agw carbon of new recruit (intermediary var) [kg]
+    real(r8) :: bgw_c_nr                     ! bgw carbon of new recruit (intermediary var) [kg]
+    real(r8) :: f_leaf                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: f_store                      ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: f_struct                     ! carbon pool mass reduction for resprout [fraction] 
+    real(r8) :: f_sapw                       ! carbon pool mass reduction for resprout [fraction] 
     !---------------------------------------------------------------------
 
 
@@ -685,8 +681,6 @@ contains
                          nc%canopy_layer = 1
                          nc%canopy_layer_yesterday = 1._r8
 
-
-                        
  
                          sapw_c   = currentCohort%prt%GetState(sapw_organ, carbon12_element)
                          struct_c = currentCohort%prt%GetState(struct_organ, carbon12_element)
@@ -812,48 +806,6 @@ contains
                             ! Fire is the current disturbance
                          elseif (i_disturbance_type .eq. dtype_ifire ) then
 
-                            !If the cohort is capable of resprouting we will create a 
-                            !resprouting cohort (nrc). This is tracked separately from the new 
-                            !non-resprouting cohort (nc).
-                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
-                            
-                               allocate(nrc)
-                               if(hlm_use_planthydro.eq.itrue) call InitHydrCohort(CurrentSite,nrc)
-                            
-                               ! Initialize the PARTEH object and point to the
-                               ! correct boundary condition fields
-
-                               nrc%prt => null()
-                            
-                               call InitPRTObject(nrc%prt)
-                               call InitPRTBoundaryConditions(nrc)
-                               call zero_cohort(nrc)
-                               call copy_cohort(currentCohort, nrc)
-                               nrc%canopy_layer = 1
-                               nrc%canopy_layer_yesterday = 1._r8
-                              
-                               ! Reduce number of resprouters in the new patch due to new patch area
-                               ! and fraction of cohort resprouting
-                               nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area &
-                                       * currentCohort%frac_resprout
-                               
-                               nrc%cmort            = currentCohort%cmort
-                               nrc%hmort            = currentCohort%hmort
-                               nrc%bmort            = currentCohort%bmort
-                               nrc%frmort           = currentCohort%frmort
-                               nrc%smort            = currentCohort%smort
-                               nrc%asmort           = currentCohort%asmort
-                               nrc%dgmort           = currentCohort%dgmort
-                               nrc%dmort            = currentCohort%dmort
-                               nrc%lmort_direct     = currentCohort%lmort_direct
-                               nrc%lmort_collateral = currentCohort%lmort_collateral
-                               nrc%lmort_infra      = currentCohort%lmort_infra
-
-     
-                            endif !create resprouting cohort
-
-
-                            ! Number of members in the new patch, before we impose fire survivorship
                             nc%n = currentCohort%n * patch_site_areadis/currentPatch%area
 
                             ! loss of individuals from source patch due to area shrinking
@@ -1033,30 +985,21 @@ contains
 			       !Leaf carbon pool is based on dbh of resprout.
 			       call blmax_allom(nrc%dbh,currentCohort%pft,nrc_leaf_c)
 			       
-			       !Below-ground sapw and struct is the same as the doner cohort.
-			       !Assumption: all below ground biomass is retained during the fire.
-                               nrc_sapw_c_bg = currentCohort%prt%GetState(sapw_organ,carbon12_element) * &
-				               (1.0_r8 - prt_params%allom_agb_frac(currentCohort%pft))
-
-                               nrc_struct_c_bg = currentCohort%prt%GetState(struct_organ,carbon12_element) * &
-			                         (1.0_r8 - prt_params%allom_agb_frac(currentCohort%pft))
-			       
-			       !Above-ground sapw and struct is based on dbh of the resprout.
+			       !Sapw and struct is based on the dbh of the resprout.
+			       !Assumption: all prior sapw and struct was lost during the fire.
 			       call bsap_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage, &
-			                      nrc%canopy_trim,a_sapw_nr,sapw_c_nr)
+			                      nrc%canopy_trim,a_sapw_nr,nrc_sapw_c)
                                call bagw_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage,agw_c_nr)
 			       call bbgw_allom(nrc%dbh,currentCohort%pft,bgw_c_nr)
-		               call bdead_allom(agw_c_nr,bgw_c_nr,sapw_c_nr,currentCohort%pft,struct_c_nr)
-
-                               !Get just the above ground fraction of new recruit struct_c and sapw_c
-			       nrc_sapw_c_ag = sapw_c_nr * prt_params%allom_agb_frac(currentCohort%pft)
-                               nrc_struct_c_ag = struct_c_nr * prt_params%allom_agb_frac(currentCohort%pft)
+		               call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
 
                                !The target storage pool size is the amount in the doner cohort minus
-			       !the amount needed for the above-ground components of the resprout.
-			       !Assumption: storage is used to construct the above-ground 
-			       !tissues of the resprout
-                               nrc_store_c = store_c - (nrc_sapw_c_ag + nrc_struct_c_ag + nrc_leaf_c)
+			       !the amount needed to make the leaf, struct, and sapw components of the
+			       !resprout.
+			       !Assumptions: storage is used to construct the tissues of the resprout,
+			       !fine root carbon stays the same as before the fire.
+			       
+                               nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
                                
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                                !Step 3. Reduce storage and above-ground biomass pools of the resprouts!!
@@ -1064,10 +1007,10 @@ contains
 
 			       !Calculate the fraction to reduce the doner cohort biomass pools by so that
 			       !we can use the PRTBurnLosses subroutine.
-			       f_leaf = nrc_leaf_c / leaf_c
-			       f_store = nrc_store_c / store_c
-			       f_struct = (nrc_struct_c_bg + nrc_struct_c_ag) / struct_c
-			       f_sapw = (nrc_sapw_c_bg + nrc_sapw_c_ag) / sapw_c
+			       f_leaf = 1.0_r8 - nrc_leaf_c / leaf_c
+			       f_store = 1.0_r8 - nrc_store_c / store_c
+			       f_struct = 1.0_r8 - nrc_struct_c / struct_c
+			       f_sapw = 1.0_r8 - nrc_sapw_c / sapw_c
 
                                !Reduce the biomass pools
 			       call PRTBurnLosses(nrc%prt, leaf_organ, f_leaf)
@@ -1907,7 +1850,7 @@ contains
              ! below ground coarse woody debris from burned trees
              do c = 1,ncwd
                 do sl = 1,currentSite%nlevsoil
-                   donatable_mass =  num_dead_trees * SF_val_CWD_frac(c) * &
+                   donatable_mass =  (num_dead_trees + num_resprouts) * SF_val_CWD_frac(c) * &
                          bcroot * currentSite%rootfrac_scr(sl)
 
                    new_litt%bg_cwd(c,sl) = new_litt%bg_cwd(c,sl) + &
