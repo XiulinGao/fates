@@ -47,6 +47,7 @@
   use FatesInterfaceTypesMod, only : numpft
   use FatesAllometryMod,      only : CrownDepth
   use FatesAllometryMod    , only : h2d_allom
+  use FatesAllometryMod    , only : bleaf
   use FatesAllometryMod    , only : blmax_allom
   use FatesAllometryMod    , only : bsap_allom
   use FatesAllometryMod    , only : bagw_allom
@@ -1059,6 +1060,7 @@ contains
           do while(associated(currentCohort))  
              currentCohort%fire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
+	     currentCohort%frac_resprout = 0.0_r8
              if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
@@ -1067,7 +1069,7 @@ contains
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.
                  
                 ! If the pft is eligible to resprout a fraction of the cohort will resprout rather than die.
-                if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
+                if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. fire_mort > 0.0_r8) then
 		   
                    !First check if the cohort has sufficient storage carbon to resprout
 		   !Assumption: storage carbon is used to construct the resprout.
@@ -1080,14 +1082,11 @@ contains
 
                    !Calculate construction costs of a resprout. 
                    call h2d_allom(EDPftvarcon_inst%hgt_min(currentCohort%pft), currentCohort%pft,resprout_dbh)
-                   
+		   call bleaf(resprout_dbh,currentCohort%pft,resprout_crowndamage,init_recruit_trim, nrc_leaf_c)
 		   call bsap_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage, &
 		                                                   init_recruit_trim,a_sapw_nr,nrc_sapw_c)                    
-		   
 		   call bagw_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage,agw_c_nr)
-		   
 		   call bbgw_allom(resprout_dbh,currentCohort%pft,bgw_c_nr)
-
 		   call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
 
 
@@ -1109,21 +1108,33 @@ contains
                       ! rather than being additive.
                       currentCohort%crownfire_mort = currentCohort%crownfire_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))
                       currentCohort%cambial_mort = currentCohort%cambial_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft)) 
+                      !ahb test
+		      if (currentCohort%frac_resprout > 0.0_r8) then
+		         write(fates_log(),*) 'resprout frac:', currentCohort%frac_resprout
+		      endif
 
                    else
-		      
-		      write(fates_log(),*) 'not enough carbon to make new recruit'
+		      !ahb test
+		      write(fates_log(),*) 'not enough carbon to make resprout'
 		      currentCohort%frac_resprout = 0.0_r8
+		      currentCohort%fire_mort = fire_mort
                       
 		   endif !check if there is sufficient storage carbon to resprout
 
-                   
+                else !check if pft is capable of repsrouting
+
+		   currentCohort%frac_resprout = 0.0_r8
                    
                 endif !resprouting
                   
              else
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees
+
+             !ahb test
+	     write(fates_log(),*) 'fire mort:', currentCohort%fire_mort
+	     write(fates_log(),*) 'fire resprout frac:', currentCohort%frac_resprout
+							               
 
              currentCohort => currentCohort%shorter
 

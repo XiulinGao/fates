@@ -67,6 +67,7 @@ module EDPatchDynamicsMod
   use FatesAllometryMod    , only : bagw_allom
   use FatesAllometryMod    , only : bbgw_allom
   use FatesAllometryMod    , only : bdead_allom
+  use FatesAllometryMod    , only : bleaf
   use FatesConstantsMod    , only : g_per_kg
   use FatesConstantsMod    , only : ha_per_m2
   use FatesConstantsMod    , only : days_per_sec
@@ -927,10 +928,7 @@ contains
 			    !This is tracked separately from the new non-resprouting cohort (nc).
 			    !Note: This routine only handles basal resprouting (not aerial / epicormic)
 
-                            !First we check if there is a enough storage carbon to resprout
-
-                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. &
-			     currentCohort%frac_resprout > 0.0_r8) then
+                            if(currentCohort%frac_resprout > 0.0_r8) then
                                
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			       !Step 1 of 4. Create resprout cohort, reduce height and number density!!!
@@ -976,7 +974,6 @@ contains
 
                                nrc%crowndamage = 1 !Resprouts start undamaged. Needed for
 			                                   !bleaf_allom subroutine below.
-                               
 
 			       !Next we reduce above-ground biomass pools of resprouts down to the
                                !size of a new recruit. Mass fluxes associated
@@ -988,8 +985,8 @@ contains
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			       
 			       !Leaf carbon pool is based on dbh of resprout.
-			       call blmax_allom(nrc%dbh,currentCohort%pft,nrc_leaf_c)
-			       
+			       call bleaf(nrc%dbh,currentCohort%pft,nrc%crowndamage,init_recruit_trim,nrc_leaf_c)
+
 			       !Sapw and struct is based on the dbh of the resprout.
 			       !Assumption: all prior sapw and struct was lost during the fire.
 			       call bsap_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage, &
@@ -1021,6 +1018,17 @@ contains
 			       call PRTBurnLosses(nrc%prt, struct_organ, f_struct)
 			       call PRTBurnLosses(nrc%prt, sapw_organ, f_sapw)
 			       call PRTBurnLosses(nrc%prt, store_organ, f_store)
+			       call PRTBurnLosses(nrc%prt, repro_organ, 1.0_r8) !why is this not sent to lit/atm for nc?
+
+
+                               !Add the new resprouting cohort into the linked list
+			       if (nrc%n > 0.0_r8) then
+			          call cohort_to_linked_list(new_patch,nrc)
+			       else
+			          call DeallocateCohort(nrc)
+			          deallocate(nrc)
+			       endif
+
                             endif !resprouting
 
 			 elseif (i_disturbance_type .eq. dtype_ilog ) then
@@ -1150,22 +1158,11 @@ contains
                          end if   ! Select disturbance mode
                          
 			 !Add the new cohort into the linked list
-                         
 			 if (nc%n > 0.0_r8) then
 			    call cohort_to_linked_list(new_patch,nc)
                          else
                             call DeallocateCohort(nc)
 			    deallocate(nc)
-			 endif
-
-			 !If current cohort is a resprouter add the new resprouting cohort
-			 if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1) then
-			    if (nrc%n > 0.0_r8) then
-                               call cohort_to_linked_list(new_patch,nrc)
-			    else
-			       call DeallocateCohort(nrc)
-			       deallocate(nrc)
-			    endif
 			 endif
 
 
@@ -1800,12 +1797,17 @@ contains
              ! Absolute number of dead trees being transfered in with the donated area
              num_dead_trees = (currentCohort%fire_mort*currentCohort%n * &
                                patch_site_areadis/currentPatch%area)
+             !ahb test 
+	     write(fates_log(),*) 'num dead trees', num_dead_trees
 
              ! Absolute number of resprouting trees being transfered in with the donated area
              num_resprouts = (currentCohort%frac_resprout*currentCohort%n * &
                                patch_site_areadis/currentPatch%area)
 
-             ! Contribution of dead trees to leaf litter
+             !ahb test
+	     write(fates_log(),*) 'num resprouts', num_resprouts
+
+             ! Contribution of dead and resprouting trees to leaf litter
              donatable_mass = (num_dead_trees + num_resprouts) * (leaf_m+repro_m) * &
                               (1.0_r8-currentCohort%fraction_crown_burned)
 
