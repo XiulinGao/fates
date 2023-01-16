@@ -120,23 +120,36 @@ contains
 
           if (currentCohort%n /= currentCohort%n) then
 	     write(fates_log(),*) "n is issue"
-	  else if currentCohort%prt%GetState(struct_organ,element_id) /= & 
-	  currentCohort%prt%GetState(struct_organ,element_id) then
+	  endif
+
+	  if ( currentCohort%prt%GetState(struct_organ,element_id) /= & 
+	  currentCohort%prt%GetState(struct_organ,element_id))  then
 	     write(fates_log(),*) "struct is issue"
-          else if currentCohort%prt%GetState(sapw_organ,element_id) /= & 
-	  currentCohort%prt%GetState(sapw_organ,element_id) then
+	  endif
+
+          if ( currentCohort%prt%GetState(sapw_organ,element_id) /= & 
+	  currentCohort%prt%GetState(sapw_organ,element_id))  then
 	     write(fates_log(),*) "sapw is issue"
-          else if currentCohort%prt%GetState(leaf_organ,element_id) /= &
-	  currentCohort%prt%GetState(leaf_organ,element_id) then
+          endif
+	     
+          if ( currentCohort%prt%GetState(leaf_organ,element_id) /= &
+	  currentCohort%prt%GetState(leaf_organ,element_id) ) then
 	     write(fates_log(),*) "leaf is issue"
-          else if currentCohort%prt%GetState(fnrt_organ,element_id) /= &
-	  currentCohort%prt%GetState(fnrt_organ,element_id) then
+	     write(fates_log(),*) "pft:", currentCohort%pft
+	  endif
+
+          if ( currentCohort%prt%GetState(fnrt_organ,element_id) /= &
+	  currentCohort%prt%GetState(fnrt_organ,element_id) ) then
 	     write(fates_log(),*) "fnrt is issue"
-          else if currentCohort%prt%GetState(store_organ,element_id) /= &
-	  currentCohort%prt%GetState(store_organ,element_id) then
+          endif
+
+	  if ( currentCohort%prt%GetState(store_organ,element_id) /= &
+	  currentCohort%prt%GetState(store_organ,element_id) ) then
 	     write(fates_log(),*) "store is issue"
-          else if currentCohort%prt%GetState(repro_organ,element_id) /= &
-	  currentCohort%prt%GetState(repro_organ,element_id) then
+          endif
+
+	  if ( currentCohort%prt%GetState(repro_organ,element_id) /= &
+	  currentCohort%prt%GetState(repro_organ,element_id) ) then
 	     write(fates_log(),*) "repro is issue"
           end if
 

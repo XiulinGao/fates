@@ -6,6 +6,7 @@ module EDPatchDynamicsMod
   use FatesGlobals         , only : fates_log
   use FatesGlobals         , only : FatesWarn,N2S,A2S
   use FatesInterfaceTypesMod    , only : hlm_freq_day
+  use FatesInterfaceTypesMod    , only : nleafage
   use EDPftvarcon          , only : EDPftvarcon_inst
   use EDPftvarcon          , only : GetDecompyFrac
   use PRTParametersMod      , only : prt_params
@@ -33,6 +34,8 @@ module EDPatchDynamicsMod
   use EDTypesMod           , only : init_recruit_trim
   use PRTGenericMod        , only : num_elements
   use PRTGenericMod        , only : element_list
+  use PRTGenericMod        , only : StorageNutrientTarget
+  use PRTGenericMod        , only : SetState
   use EDTypesMod           , only : lg_sf
   use EDTypesMod           , only : dl_sf
   use EDTypesMod           , only : dump_patch
@@ -81,6 +84,8 @@ module EDPatchDynamicsMod
   use EDCohortDynamicsMod  , only : InitPRTBoundaryConditions
   use ChecksBalancesMod,      only : SiteMassStock
   use PRTGenericMod,          only : carbon12_element
+  use PRTGenericMod,          only : nitrogen_element
+  use PRTGenericMod,          only : phosphorus_element
   use PRTGenericMod,          only : leaf_organ
   use PRTGenericMod,          only : fnrt_organ
   use PRTGenericMod,          only : sapw_organ
@@ -428,7 +433,14 @@ contains
     real(r8) :: f_leaf                       ! carbon pool mass reduction for resprout [fraction]
     real(r8) :: f_store                      ! carbon pool mass reduction for resprout [fraction]
     real(r8) :: f_struct                     ! carbon pool mass reduction for resprout [fraction] 
-    real(r8) :: f_sapw                       ! carbon pool mass reduction for resprout [fraction] 
+    real(r8) :: m_struct                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_leaf                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_sapw                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_store                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_repro                       ! carbon pool mass reduction for resprout [fraction]
+    integer :: iage                           ! age loop counter for leaf age bins
+    integer  :: element_id                    ! parteh compatible global element index
+
     !---------------------------------------------------------------------
 
 
@@ -1003,23 +1015,96 @@ contains
 			       
                                nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
                                
-                               !Step 3. Reduce storage and above-ground biomass pools of the resprouts!!
-			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-			       !Calculate the fraction to reduce the doner cohort biomass pools by so that
+                               if (nrc_leaf_c /= nrc_leaf_c) then
+                                  write(fates_log(),*) "nrc_leaf is na"
+                                  write(fates_log(),*) "dbh", nrc%dbh
+			       endif
+
+			       if (leaf_c /= leaf_c) then
+			          write(fates_log(),*) "leaf c is na"
+			       endif
+
+                               !Step 3. Set storage and above-ground biomass pools of the resprouts!!
+			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                               do el = 1,num_elements
+
+  		                   element_id = element_list(el)
+
+				   ! If this is carbon12, then the initialization is straight forward
+				   ! otherwise, we use stoichiometric ratios
+				   select case(element_id)
+				   case(carbon12_element)
+
+				      m_struct = nrc_struct_c
+				      m_leaf   = nrc_leaf_c
+				      m_sapw   = nrc_sapw_c
+				      m_repro  = 0._r8
+                              
+			           case(nitrogen_element)
+		                     
+				     m_struct = nrc_struct_c*prt_params%nitr_stoich_p1(currentCohort%pft,&
+				     prt_params%organ_param_id(struct_organ))
+				     m_leaf   = nrc_leaf_c*prt_params%nitr_stoich_p1(currentCohort%pft,&
+				     prt_params%organ_param_id(leaf_organ))
+				     m_sapw   = nrc_sapw_c*prt_params%nitr_stoich_p1(currentCohort%pft,&
+				     prt_params%organ_param_id(sapw_organ))
+				     m_repro  = 0._r8
+
+			           case(phosphorus_element)
+				     
+				     m_struct = nrc_struct_c*prt_params%phos_stoich_p1(currentCohort%pft,&
+				     prt_params%organ_param_id(struct_organ))
+				     m_leaf   = nrc_leaf_c*prt_params%phos_stoich_p1(currentCohort%pft,&
+				     prt_params%organ_param_id(leaf_organ))
+				     m_sapw   = nrc_sapw_c*prt_params%phos_stoich_p1(currentCohort%pft,&
+				     prt_params%organ_param_id(sapw_organ))
+				     m_repro  = 0._r8
+                             	   
+				   end select
+
+
+                                   select case(hlm_parteh_mode)
+				   case (prt_carbon_allom_hyp,prt_cnp_flex_allom_hyp )
+                                   
+				      ! Put all of the leaf mass into the first bin
+				      call SetState(nrc%prt,leaf_organ, element_id,m_leaf,1)
+				      do iage = 2,nleafage
+				         call SetState(nrc%prt,leaf_organ, element_id,0._r8,iage)
+				      end do
+
+				      call SetState(nrc%prt,sapw_organ, element_id, m_sapw)
+				      call SetState(nrc%prt,struct_organ, element_id, m_struct)
+				      call SetState(nrc%prt,repro_organ, element_id, m_repro)
+
+		                    case default
+				      write(fates_log(),*) 'Unspecified PARTEH module during create_cohort'
+				      call endrun(msg=errMsg(sourcefile, __LINE__))
+			           end select
+			       end do !element loop																																			      
+			       !Calculate the fraction to reduce the doner storage pool by so that
 			       !we can use the PRTBurnLosses subroutine.
-			       f_leaf = 1.0_r8 - nrc_leaf_c / leaf_c
+			       
 			       f_store = 1.0_r8 - nrc_store_c / store_c
-			       f_struct = 1.0_r8 - nrc_struct_c / struct_c
-			       f_sapw = 1.0_r8 - nrc_sapw_c / sapw_c
+			       !f_struct = 1.0_r8 - nrc_struct_c / struct_c
+			       !f_sapw = 1.0_r8 - nrc_sapw_c / sapw_c
+                               
+                               if (nrc_store_c > store_c) then
+                                  write(fates_log(),*) "nrc_store_c > store_c; store_c:", store_c
+                               end if
+
 
                                !Reduce the biomass pools
-			       call PRTBurnLosses(nrc%prt, leaf_organ, f_leaf)
-			       call PRTBurnLosses(nrc%prt, struct_organ, f_struct)
-			       call PRTBurnLosses(nrc%prt, sapw_organ, f_sapw)
+			       !call PRTBurnLosses(nrc%prt, leaf_organ, f_leaf)
+			       !call PRTBurnLosses(nrc%prt, struct_organ, f_struct)
+			       !call PRTBurnLosses(nrc%prt, sapw_organ, f_sapw)
 			       call PRTBurnLosses(nrc%prt, store_organ, f_store)
-			       call PRTBurnLosses(nrc%prt, repro_organ, 1.0_r8) !why is this not sent to lit/atm for nc?
+			       !call PRTBurnLosses(nrc%prt, repro_organ, 1.0_r8) !why is this not sent to lit/atm for nc?
 
+                               !write(fates_log(),*) "pre routine nrc leaf:",nrc_leaf_c
+                               !nrc_leaf_c = nrc%prt%GetState(leaf_organ, element_list(carbon12_element))                               
+			       !write(fates_log(),*) "post routine nrc leaf:",nrc_leaf_c 
 
                                !Add the new resprouting cohort into the linked list
 			       if (nrc%n > 0.0_r8) then
@@ -1029,7 +1114,7 @@ contains
 			          deallocate(nrc)
 			       endif
 
-                            endif !resprouting
+                            endif !end resprouting
 
 			 elseif (i_disturbance_type .eq. dtype_ilog ) then
 
