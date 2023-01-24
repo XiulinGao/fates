@@ -118,6 +118,7 @@ contains
                 currentCohort%prt%GetState(repro_organ,element_id) ) &
                 * currentCohort%n
 
+
           if (currentCohort%n /= currentCohort%n) then
 	     write(fates_log(),*) "n is issue"
 	  endif

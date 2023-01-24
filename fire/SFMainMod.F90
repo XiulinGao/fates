@@ -1095,7 +1095,7 @@ contains
 		   !routine occurs later when "spawn_patches" is called.
 		   nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
 		   
-		   !Post-fire basal resprouting should only occur if there is sufficient storage carbon to
+		   !Resprouting should only occur if there is sufficient storage carbon to
 		   !construct a resprout
                    if (nrc_store_c > 0.0_r8) then
 
@@ -1108,10 +1108,11 @@ contains
                       ! rather than being additive.
                       currentCohort%crownfire_mort = currentCohort%crownfire_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))
                       currentCohort%cambial_mort = currentCohort%cambial_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft)) 
+
                       !ahb test
-		      if (currentCohort%frac_resprout > 0.0_r8) then
+		         
 		         write(fates_log(),*) 'resprout frac:', currentCohort%frac_resprout
-		      endif
+		         write(fates_log(),*) 'nrc_store_c:', nrc_store_c
 
                    else
 		      !ahb test
@@ -1124,6 +1125,7 @@ contains
                 else !check if pft is capable of repsrouting
 
 		   currentCohort%frac_resprout = 0.0_r8
+		   currentCohort%fire_mort = fire_mort
                    
                 endif !resprouting
                   
@@ -1131,10 +1133,6 @@ contains
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees
 
-             !ahb test
-	     write(fates_log(),*) 'fire mort:', currentCohort%fire_mort
-	     write(fates_log(),*) 'fire resprout frac:', currentCohort%frac_resprout
-							               
 
              currentCohort => currentCohort%shorter
 

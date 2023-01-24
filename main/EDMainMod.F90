@@ -913,6 +913,8 @@ contains
        else
           error_frac      = 0.0_r8
        end if
+          
+	  write(fates_log(),*), "error fraction:", error_frac
 
        if ( error_frac > 10e-6_r8 .or. (error /= error) ) then
           write(fates_log(),*) 'mass balance error detected'

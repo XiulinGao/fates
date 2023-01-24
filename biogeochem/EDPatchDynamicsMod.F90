@@ -859,7 +859,7 @@ contains
                                  nc%n * currentCohort%crownfire_mort / hlm_freq_day
 
                             ! loss of individuals from fire in new patch.
-                            nc%n = nc%n * (1.0_r8 - currentCohort%fire_mort)
+                            nc%n = nc%n * (1.0_r8 - (currentCohort%fire_mort + currentCohort%frac_resprout))
 
                             nc%cmort            = currentCohort%cmort
                             nc%hmort            = currentCohort%hmort
@@ -940,7 +940,8 @@ contains
 			    !This is tracked separately from the new non-resprouting cohort (nc).
 			    !Note: This routine only handles basal resprouting (not aerial / epicormic)
 
-                            if(currentCohort%frac_resprout > 0.0_r8) then
+                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. &
+			    currentCohort%frac_resprout > 0.0_r8) then
                                
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			       !Step 1 of 4. Create resprout cohort, reduce height and number density!!!
@@ -1002,7 +1003,7 @@ contains
 			       !Sapw and struct is based on the dbh of the resprout.
 			       !Assumption: all prior sapw and struct was lost during the fire.
 			       call bsap_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage, &
-			                      nrc%canopy_trim,a_sapw_nr,nrc_sapw_c)
+			                      init_recruit_trim,a_sapw_nr,nrc_sapw_c)
                                call bagw_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage,agw_c_nr)
 			       call bbgw_allom(nrc%dbh,currentCohort%pft,bgw_c_nr)
 		               call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
@@ -1015,6 +1016,14 @@ contains
 			       
                                nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
                                
+
+                               write(fates_log(),*) "nrc_store_c", nrc_store_c
+                               write(fates_log(),*) "store_c", store_c
+                               write(fates_log(),*) "nrc_leaf_c", nrc_leaf_c
+                               write(fates_log(),*) "nrc_sapw_c", nrc_sapw_c
+                               write(fates_log(),*) "nrc_struct_c", nrc_struct_c
+                                  
+
 
                                if (nrc_leaf_c /= nrc_leaf_c) then
                                   write(fates_log(),*) "nrc_leaf is na"
@@ -1077,6 +1086,7 @@ contains
 				      call SetState(nrc%prt,sapw_organ, element_id, m_sapw)
 				      call SetState(nrc%prt,struct_organ, element_id, m_struct)
 				      call SetState(nrc%prt,repro_organ, element_id, m_repro)
+				      !call SetState(nrc%prt,store_organ, element_id, nrc_store_c)
 
 		                    case default
 				      write(fates_log(),*) 'Unspecified PARTEH module during create_cohort'
@@ -1882,15 +1892,11 @@ contains
              ! Absolute number of dead trees being transfered in with the donated area
              num_dead_trees = (currentCohort%fire_mort*currentCohort%n * &
                                patch_site_areadis/currentPatch%area)
-             !ahb test 
-	     write(fates_log(),*) 'num dead trees', num_dead_trees
 
              ! Absolute number of resprouting trees being transfered in with the donated area
              num_resprouts = (currentCohort%frac_resprout*currentCohort%n * &
                                patch_site_areadis/currentPatch%area)
 
-             !ahb test
-	     write(fates_log(),*) 'num resprouts', num_resprouts
 
              ! Contribution of dead and resprouting trees to leaf litter
              donatable_mass = (num_dead_trees + num_resprouts) * (leaf_m+repro_m) * &
