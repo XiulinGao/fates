@@ -46,6 +46,7 @@
   use PRTGenericMod,          only : SetState
   use FatesInterfaceTypesMod, only : numpft
   use FatesAllometryMod,      only : CrownDepth
+  use FatesAllometryMod,      only : target_resprout_carbon_pools
   use FatesAllometryMod    , only : h2d_allom
   use FatesAllometryMod    , only : bleaf
   use FatesAllometryMod    , only : blmax_allom
@@ -1043,25 +1044,25 @@ contains
     real(r8) :: nrc_sapw_c                   ! Target sapw carbon pool of nrc [kg]
     real(r8) :: nrc_struct_c                 ! Target struct carbon pool of nrc [kg]
     real(r8) :: nrc_store_c                  ! Target storage carbon pool of nrc [kg]
-    real(r8) :: a_sapw_nr                    ! Sapwood area of nrc (dummy)
-    real(r8) :: agw_c_nr                     ! AGW carbon of nrc (intermediary var) [kg]
-    real(r8) :: bgw_c_nr                     ! BGW carbon of nrc (intermediary var) [kg]
+    !real(r8) :: a_sapw_nr                    ! Sapwood area of nrc (dummy)
+    !real(r8) :: agw_c_nr                     ! AGW carbon of nrc (intermediary var) [kg]
+    !real(r8) :: bgw_c_nr                     ! BGW carbon of nrc (intermediary var) [kg]
     real(r8) :: store_c                      ! Storage carbon of current cohort
-    real(r8) :: resprout_dbh                 ! dbh of the resprout
-    integer :: resprout_crowndamage          ! Crown damage level of resprout
+    !real(r8) :: resprout_dbh                 ! dbh of the resprout
+    !integer :: resprout_crowndamage          ! Crown damage level of resprout
     
 
     currentPatch => currentSite%oldest_patch
 
     do while(associated(currentPatch)) 
 
-       if (currentPatch%fire == 1) then 
+       if_fire: if (currentPatch%fire == 1) then 
           currentCohort => currentPatch%tallest
           do while(associated(currentCohort))  
              currentCohort%fire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
 	     currentCohort%frac_resprout = 0.0_r8
-             if ( prt_params%woody(currentCohort%pft) == itrue) then
+             if_woody: if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
                 ! Equation 18 in Thonicke et al. 2010. 
@@ -1069,75 +1070,71 @@ contains
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.
                  
                 ! If the pft is eligible to resprout a fraction of the cohort will resprout rather than die.
-                if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. fire_mort > 0.0_r8) then
+                if_resprouter: if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. fire_mort > 0.0_r8) then
 		   
-                   !First check if the cohort has sufficient storage carbon to resprout
+                   !First check if the cohort has sufficient storage carbon to resprout.
 		   !Assumption: storage carbon is used to construct the resprout.
 		   
-		   !Calculate storage carbon of current cohort
+		   !Calculate storage carbon of current cohort.
                    store_c  = currentCohort%prt%GetState(store_organ, carbon12_element)
-                   
-                   resprout_crowndamage = 1 !Resprouts start undamaged. Needed to calculate construction
+                  
+                   !Calculate target carbon pools of the resprout and check that there is sufficient
+		   !storage to make the resprout.
+
+                   call target_resprout_carbon_pools(EDPftvarcon_inst%hgt_min(currentCohort%pft),currentCohort%pft,&
+		   store_c,nrc_leaf_c,nrc_sapw_c,nrc_struct_c,nrc_store_c)
+
+
+                   !resprout_crowndamage = 1 !Resprouts start undamaged. Needed to calculate construction
 		                            !costs for a resprout.
 
-                   !Calculate construction costs of a resprout. 
-                   call h2d_allom(EDPftvarcon_inst%hgt_min(currentCohort%pft), currentCohort%pft,resprout_dbh)
-		   call bleaf(resprout_dbh,currentCohort%pft,resprout_crowndamage,init_recruit_trim, nrc_leaf_c)
-		   call bsap_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage, &
-		                                                   init_recruit_trim,a_sapw_nr,nrc_sapw_c)                    
-		   call bagw_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage,agw_c_nr)
-		   call bbgw_allom(resprout_dbh,currentCohort%pft,bgw_c_nr)
-		   call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
+                   !call h2d_allom(EDPftvarcon_inst%hgt_min(currentCohort%pft), currentCohort%pft,resprout_dbh)
+		   !call bleaf(resprout_dbh,currentCohort%pft,resprout_crowndamage,init_recruit_trim, nrc_leaf_c)
+		   !call bsap_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage, &
+		    !                                               init_recruit_trim,a_sapw_nr,nrc_sapw_c)                    
+		   !call bagw_allom(resprout_dbh,currentCohort%pft,resprout_crowndamage,agw_c_nr)
+		   !call bbgw_allom(resprout_dbh,currentCohort%pft,bgw_c_nr)
+		   !call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
 
 
 		   !Calculate remaining storage amount after constructing resprout.
 		   !Note: This is just a check to see if any resprouting should occur. The main resprouting
 		   !routine occurs later when "spawn_patches" is called.
-		   nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
+		   !nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
 		   
 		   !Resprouting should only occur if there is sufficient storage carbon to
 		   !construct a resprout
-                   if (nrc_store_c > 0.0_r8) then
+                   if_sufficient_storage: if (nrc_store_c > 0.0_r8) then
 
                       currentCohort%frac_resprout = fire_mort * EDPftvarcon_inst%frac_resprout(currentCohort%pft) 
                       currentCohort%fire_mort = fire_mort - currentCohort%frac_resprout
 
-                      !The cambial and crown fire mortality terms are retroactively reduced to account for the fraction
-                      !of the cohort that didn't actually die via these pathways (they resprouted instead)
-                      !CAUTION: This needs to be checked because fire mort is calculated with a joint probability of these terms
-                      ! rather than being additive.
-                      currentCohort%crownfire_mort = currentCohort%crownfire_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft))
-                      currentCohort%cambial_mort = currentCohort%cambial_mort * (1.0_r8 - EDPftvarcon_inst%frac_resprout(currentCohort%pft)) 
+                      !The cambial and crown fire mortality terms might need to be retroactively reduced to account for the fraction
+                      !of the cohort that didn't actually die via these pathways (they resprouted instead)?
 
-                      !ahb test
-		         
-		         write(fates_log(),*) 'resprout frac:', currentCohort%frac_resprout
-		         write(fates_log(),*) 'nrc_store_c:', nrc_store_c
-
-                   else
-		      !ahb test
-		      write(fates_log(),*) 'not enough carbon to make resprout'
+                   else !If there is not sufficient storage then no resprouting occurs
+		      
 		      currentCohort%frac_resprout = 0.0_r8
 		      currentCohort%fire_mort = fire_mort
                       
-		   endif !check if there is sufficient storage carbon to resprout
+		   endif if_sufficient_storage
 
-                else !check if pft is capable of repsrouting
+                else !If the pft is not a resprouter then no resprouting occurs
 
 		   currentCohort%frac_resprout = 0.0_r8
 		   currentCohort%fire_mort = fire_mort
                    
-                endif !resprouting
+                endif if_resprouter !resprouting
                   
              else
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
-             endif !trees
+             endif if_woody !trees
 
 
              currentCohort => currentCohort%shorter
 
           enddo !end cohort loop
-       endif !fire?
+       endif if_fire
 
        currentPatch => currentPatch%younger
 

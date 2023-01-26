@@ -98,11 +98,14 @@ module FatesAllometryMod
   use FatesGlobals     , only : FatesWarn,N2S,A2S,I2S
   use EDTypesMod       , only : nlevleaf, dinc_vai
   use EDTypesMod       , only : nclmax
+  use EDTypesMod       , only : init_recruit_trim
   use DamageMainMod    , only : GetCrownReduction
 
   implicit none
 
   private
+  public :: target_resprout_carbon_pools     ! Calculate target carbon pools
+                                             ! of a resprout
   public :: h2d_allom     ! Generic height to diameter wrapper
   public :: h_allom       ! Generic diameter to height wrapper
   public :: bagw_allom    ! Generic AGWB (above grnd. woody bio) wrapper
@@ -2573,6 +2576,42 @@ subroutine ForceDBH( ipft, crowndamage, canopy_trim, d, h, bdead, bl )
     return
   end subroutine cspline
   
+ ! ==================================================================================
 
+  subroutine target_resprout_carbon_pools(hgt,pft,store_c,nrc_leaf_c,nrc_sapw_c,nrc_struct_c,nrc_store_c)
+
+  ! ==================================================================================
+  ! DESCRIPTION
+  ! This subroutine calculates the target above ground carbon stocks for a new resprout.
+  
+  ! ARGUMENTS
+    real(r8), intent(in)  :: hgt                          ! Height of the resprout (hgt_min) [m]
+    integer, intent(in)  :: pft                           ! Pft of the resprout
+    real(r8), intent(in)  :: store_c                      ! Storage pool of the pre-fire resprout [kg C]
+    real(r8), intent(out) :: nrc_leaf_c                   ! Target leaf carbon pool of the new resprouting 
+                                                          ! cohort (nrc) [kg]     
+    real(r8), intent(out) :: nrc_sapw_c                   ! Target sapw carbon pool of nrc [kg]
+    real(r8), intent(out) :: nrc_struct_c                 ! Target struct carbon pool of nrc [kg]
+    real(r8), intent(out) :: nrc_store_c                  ! Target storage carbon pool of nrc (post-fire) [kg]
+
+  ! LOCAL ARGUMENTS
+    real(r8) :: resprout_dbh                              ! dbh of the resprout [cm]
+    integer,parameter :: resprout_crowndamage = 1         ! Crown damage level of resprout (no damage)
+    real(r8) :: a_sapw_nr                                 ! Sapwood area of nrc (dummy)
+    real(r8) :: agw_c_nr                                  ! AGW carbon of nrc (intermediary var) [kg]
+    real(r8) :: bgw_c_nr                                  ! BGW carbon of nrc (intermediary var) [kg]
+
+
+    call h2d_allom(hgt,pft,resprout_dbh)
+    call bleaf(resprout_dbh,pft,resprout_crowndamage,init_recruit_trim, nrc_leaf_c)
+    call bsap_allom(resprout_dbh,pft,resprout_crowndamage, &
+                                                                   init_recruit_trim,a_sapw_nr,nrc_sapw_c)
+    call bagw_allom(resprout_dbh,pft,resprout_crowndamage,agw_c_nr)
+    call bbgw_allom(resprout_dbh,pft,bgw_c_nr)
+    call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,pft,nrc_struct_c)
+
+    nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
+
+  end subroutine target_resprout_carbon_pools
 
 end module FatesAllometryMod

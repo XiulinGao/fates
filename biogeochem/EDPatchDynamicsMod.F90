@@ -63,6 +63,7 @@ module EDPatchDynamicsMod
   use EDLoggingMortalityMod, only : get_harvest_rate_area
   use EDParamsMod          , only : fates_mortality_disturbance_fraction
   use FatesAllometryMod    , only : carea_allom
+  use FatesAllometryMod    , only : target_resprout_carbon_pools
   use FatesAllometryMod    , only : set_root_fraction
   use FatesAllometryMod    , only : h2d_allom
   use FatesAllometryMod    , only : blmax_allom
@@ -427,12 +428,12 @@ contains
     real(r8) :: nrc_sapw_c                   ! Target sapw carbon pool of nrc [kg]
     real(r8) :: nrc_struct_c                 ! Target struct carbon pool of nrc [kg]
     real(r8) :: nrc_store_c                  ! Target storage carbon pool of nrc [kg]
-    real(r8) :: a_sapw_nr                    ! Sapwood area of new recruit (dummy)
-    real(r8) :: agw_c_nr                     ! agw carbon of new recruit (intermediary var) [kg]
-    real(r8) :: bgw_c_nr                     ! bgw carbon of new recruit (intermediary var) [kg]
-    real(r8) :: f_leaf                       ! carbon pool mass reduction for resprout [fraction]
+    !real(r8) :: a_sapw_nr                    ! Sapwood area of new recruit (dummy)
+    !real(r8) :: agw_c_nr                     ! agw carbon of new recruit (intermediary var) [kg]
+    !real(r8) :: bgw_c_nr                     ! bgw carbon of new recruit (intermediary var) [kg]
+    !real(r8) :: f_leaf                       ! carbon pool mass reduction for resprout [fraction]
     real(r8) :: f_store                      ! carbon pool mass reduction for resprout [fraction]
-    real(r8) :: f_struct                     ! carbon pool mass reduction for resprout [fraction] 
+    !real(r8) :: f_struct                     ! carbon pool mass reduction for resprout [fraction] 
     real(r8) :: m_struct                       ! carbon pool mass reduction for resprout [fraction]
     real(r8) :: m_leaf                       ! carbon pool mass reduction for resprout [fraction]
     real(r8) :: m_sapw                       ! carbon pool mass reduction for resprout [fraction]
@@ -822,9 +823,7 @@ contains
 
                             nc%n = currentCohort%n * patch_site_areadis/currentPatch%area
 
-                            ! loss of individuals from source patch due to area shrinking
-                            currentCohort%n = currentCohort%n * (1._r8 - patch_site_areadis/currentPatch%area)
-
+                           
                             levcan = currentCohort%canopy_layer
 
                             if(levcan==ican_upper) then
@@ -935,24 +934,22 @@ contains
                             currentCohort%fraction_crown_burned = 0.0_r8
                             nc%fraction_crown_burned            = 0.0_r8
                             
-                            !If the cohort is capable of post-fire resprouting we will create a 
-                            !resprouting cohort (nrc) and reduce above-ground biomass pools. 
-			    !This is tracked separately from the new non-resprouting cohort (nc).
-			    !Note: This routine only handles basal resprouting (not aerial / epicormic)
+                            ! If the cohort is capable of post-fire resprouting we will create a 
+                            ! resprouting cohort (nrc) and reduce above-ground biomass pools. 
+			    ! This is tracked separately from the new non-resprouting cohort (nc).
+			    ! Note: This routine only handles basal resprouting (not aerial / epicormic)
 
-                            if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. &
+                            if_resprouter: if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. &
 			    currentCohort%frac_resprout > 0.0_r8) then
                                
-			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			       !Step 1 of 4. Create resprout cohort, reduce height and number density!!!
-			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                               
+			       ! Step 1 of 2. Create the new resprouting cohort (nrc)
+			       ! This is copied in to the new patch from the doner cohort in the same way
+			       ! as the new non-resprouting cohort (nc) above.
 			       allocate(nrc)
                                if(hlm_use_planthydro.eq.itrue) call InitHydrCohort(CurrentSite,nrc)
                             
                                ! Initialize the PARTEH object and point to the
                                ! correct boundary condition fields
-
                                nrc%prt => null()
                             
                                call InitPRTObject(nrc%prt)
@@ -963,10 +960,14 @@ contains
                                nrc%canopy_layer_yesterday = 1._r8
                               
                                ! Reduce number of resprouters in the new patch due to new patch area
-                               ! and fraction of cohort resprouting
+                               ! and fraction of cohort resprouting. Note: the doner cohort number 
+			       ! density is reduced after the resprouting routine.
                                nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area * &
                                        currentCohort%frac_resprout
                                
+			       ! Transfer over the mortality rates for diagnostics
+                               ! Caution: absolute mortality numbers will change when cohort number
+			       ! densities change
                                nrc%cmort            = currentCohort%cmort
                                nrc%hmort            = currentCohort%hmort
                                nrc%bmort            = currentCohort%bmort
@@ -979,34 +980,38 @@ contains
                                nrc%lmort_collateral = currentCohort%lmort_collateral
                                nrc%lmort_infra      = currentCohort%lmort_infra
 
+			      
+                               !Step 2 of 2. Set biomass pool sizes of the new resprouting cohort (nrc) 
+                               
 			       !Reduce height of resprout to new recruit
                                nrc%hite = EDPftvarcon_inst%hgt_min(currentCohort%pft)
-
-                               !Get dbh of resprout
+ 
+			       !Set dbh of resprout
 			       call h2d_allom(nrc%hite,currentCohort%pft,nrc%dbh)
 
-                               nrc%crowndamage = 1 !Resprouts start undamaged. Needed for
-			                                   !bleaf_allom subroutine below.
+                               !Calcuate target above ground carbon pool sizes for nrc. 
+                               !Carbon pools for leaf, struct, and sapw are based on the size of a new recruit.
+			       !Carbon pools for fnrt and storage are preserved from the doner cohort.
 
-			       !Next we reduce above-ground biomass pools of resprouts down to the
-                               !size of a new recruit. Mass fluxes associated
-                               !with this reduction were already sent to 
+                               call target_resprout_carbon_pools(nrc%hite,nrc%pft,store_c,nrc_leaf_c,&
+			       nrc_sapw_c,nrc_struct_c,nrc_store_c)
+
+			       !Set the biomass pool sizes for nrc. Mass fluxes associated
+                               !with the reduction in above-ground biomass pools were already sent to 
                                !litter/atm in the fire_litter_fluxes subroutine.
- 
-                               !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			       !Step 2. Calculate target carbon pools for the resprouts!
-			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			       
+                               
+			       !DELETE
+			       !========================================================================
 			       !Leaf carbon pool is based on dbh of resprout.
-			       call bleaf(nrc%dbh,currentCohort%pft,nrc%crowndamage,init_recruit_trim,nrc_leaf_c)
+			       !call bleaf(nrc%dbh,currentCohort%pft,nrc%crowndamage,init_recruit_trim,nrc_leaf_c)
 
 			       !Sapw and struct is based on the dbh of the resprout.
 			       !Assumption: all prior sapw and struct was lost during the fire.
-			       call bsap_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage, &
-			                      init_recruit_trim,a_sapw_nr,nrc_sapw_c)
-                               call bagw_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage,agw_c_nr)
-			       call bbgw_allom(nrc%dbh,currentCohort%pft,bgw_c_nr)
-		               call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
+			       !call bsap_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage, &
+			                    !  init_recruit_trim,a_sapw_nr,nrc_sapw_c)
+                               !call bagw_allom(nrc%dbh,currentCohort%pft,nrc%crowndamage,agw_c_nr)
+			       !call bbgw_allom(nrc%dbh,currentCohort%pft,bgw_c_nr)
+		               !call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,currentCohort%pft,nrc_struct_c)
 
                                !The target storage pool size is the amount in the doner cohort minus
 			       !the amount needed to make the leaf, struct, and sapw components of the
@@ -1014,30 +1019,30 @@ contains
 			       !Assumptions: storage is used to construct the tissues of the resprout,
 			       !fine root carbon stays the same as before the fire.
 			       
-                               nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
+                               !nrc_store_c = store_c - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
                                
 
-                               write(fates_log(),*) "nrc_store_c", nrc_store_c
-                               write(fates_log(),*) "store_c", store_c
-                               write(fates_log(),*) "nrc_leaf_c", nrc_leaf_c
-                               write(fates_log(),*) "nrc_sapw_c", nrc_sapw_c
-                               write(fates_log(),*) "nrc_struct_c", nrc_struct_c
+                               !write(fates_log(),*) "nrc_store_c", nrc_store_c
+                               !write(fates_log(),*) "store_c", store_c
+                               !write(fates_log(),*) "nrc_leaf_c", nrc_leaf_c
+                               !write(fates_log(),*) "nrc_sapw_c", nrc_sapw_c
+                               !write(fates_log(),*) "nrc_struct_c", nrc_struct_c
                                   
 
 
-                               if (nrc_leaf_c /= nrc_leaf_c) then
-                                  write(fates_log(),*) "nrc_leaf is na"
-                                  write(fates_log(),*) "dbh", nrc%dbh
-			       endif
+                               !if (nrc_leaf_c /= nrc_leaf_c) then
+                               !   write(fates_log(),*) "nrc_leaf is na"
+                               !   write(fates_log(),*) "dbh", nrc%dbh
+			       !endif
 
-			       if (leaf_c /= leaf_c) then
-			          write(fates_log(),*) "leaf c is na"
-			       endif
+			       !if (leaf_c /= leaf_c) then
+			       !   write(fates_log(),*) "leaf c is na"
+			       !endif
 
                                !Step 3. Set storage and above-ground biomass pools of the resprouts!!
 			       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                               do el = 1,num_elements
+                               !=================================================================================
+                               element_loop: do el = 1,num_elements
 
   		                   element_id = element_list(el)
 
@@ -1086,35 +1091,38 @@ contains
 				      call SetState(nrc%prt,sapw_organ, element_id, m_sapw)
 				      call SetState(nrc%prt,struct_organ, element_id, m_struct)
 				      call SetState(nrc%prt,repro_organ, element_id, m_repro)
-				      !call SetState(nrc%prt,store_organ, element_id, nrc_store_c)
 
-		                    case default
+		                   case default
 				      write(fates_log(),*) 'Unspecified PARTEH module during create_cohort'
 				      call endrun(msg=errMsg(sourcefile, __LINE__))
 			           end select
-			       end do !element loop																																			      
-			       !Calculate the fraction to reduce the doner storage pool by so that
-			       !we can use the PRTBurnLosses subroutine.
+			       end do element_loop
+
+			       !Storage is reduced to account for the construction costs of the resprout
 			       
+			       !Calculate the fraction to reduce the doner storage pool by so that
+			       !we can use the PRTBurnLosses subroutine to make the reduction.
 			       f_store = 1.0_r8 - nrc_store_c / store_c
-			       !f_struct = 1.0_r8 - nrc_struct_c / struct_c
-			       !f_sapw = 1.0_r8 - nrc_sapw_c / sapw_c
+			       call PRTBurnLosses(nrc%prt, store_organ, f_store)
                                
-                               if (nrc_store_c > store_c) then
-                                  write(fates_log(),*) "nrc_store_c > store_c; store_c:", store_c
-                               end if
+			       !DELETE
+			       !==============================================================
+			       !if (nrc_store_c > store_c) then
+                               !   write(fates_log(),*) "nrc_store_c > store_c; store_c:", store_c
+                               !end if
 
 
                                !Reduce the biomass pools
 			       !call PRTBurnLosses(nrc%prt, leaf_organ, f_leaf)
 			       !call PRTBurnLosses(nrc%prt, struct_organ, f_struct)
 			       !call PRTBurnLosses(nrc%prt, sapw_organ, f_sapw)
-			       call PRTBurnLosses(nrc%prt, store_organ, f_store)
 			       !call PRTBurnLosses(nrc%prt, repro_organ, 1.0_r8) !why is this not sent to lit/atm for nc?
 
                                !write(fates_log(),*) "pre routine nrc leaf:",nrc_leaf_c
                                !nrc_leaf_c = nrc%prt%GetState(leaf_organ, element_list(carbon12_element))                               
 			       !write(fates_log(),*) "post routine nrc leaf:",nrc_leaf_c 
+                               !=================================================================
+
 
                                !Add the new resprouting cohort into the linked list
 			       if (nrc%n > 0.0_r8) then
@@ -1124,7 +1132,11 @@ contains
 			          deallocate(nrc)
 			       endif
 
-                            endif !end resprouting
+                            endif if_resprouter
+
+                            ! loss of individuals from source patch due to area shrinking
+                            currentCohort%n = currentCohort%n * (1._r8 - patch_site_areadis/currentPatch%area)
+
 
 			 elseif (i_disturbance_type .eq. dtype_ilog ) then
 
