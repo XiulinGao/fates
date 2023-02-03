@@ -41,6 +41,9 @@ module EDTypesMod
   real(r8), parameter, public :: init_recruit_trim = 0.8_r8    ! This is the initial trimming value that
                                                                ! new recruits start with
 
+  real(r8), parameter, public :: store_c_ratio_ab2bg = 0.57_r8   !Storage carbon concentration ratio between
+                                                             !above-ground and below-ground organs
+							     !in resprouters
   ! -------------------------------------------------------------------------------------
   ! Radiation parameters
   ! These should be part of the radiation module, but since we only have one option

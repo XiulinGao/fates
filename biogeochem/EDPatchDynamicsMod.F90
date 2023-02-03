@@ -32,6 +32,7 @@ module EDPatchDynamicsMod
   use EDTypesMod           , only : dtype_ifire
   use EDTypesMod           , only : ican_upper
   use EDTypesMod           , only : init_recruit_trim
+  use EDTypesMod           , only : store_c_ratio_ag2bg
   use PRTGenericMod        , only : num_elements
   use PRTGenericMod        , only : element_list
   use PRTGenericMod        , only : StorageNutrientTarget
@@ -1935,7 +1936,9 @@ contains
              do dcmpy=1,ndcmpy
                  dcmpy_frac = GetDecompyFrac(pft,fnrt_organ,dcmpy)
                  do sl = 1,currentSite%nlevsoil
-                     donatable_mass = num_dead_trees * (fnrt_m+store_m) * currentSite%rootfrac_scr(sl)
+                     donatable_mass = (num_dead_trees * (fnrt_m+store_m) * currentSite%rootfrac_scr(sl)) + &
+		                      (num_resprouts * store_m * prt_params%allom_agb_frac(pft) * &
+				      store_c_ratio_ag2bg * currentSite%rootfrac_scr(sl))
 
                      new_litt%root_fines(dcmpy,sl) = new_litt%root_fines(dcmpy,sl) + &
                                                      donatable_mass*donate_m2*dcmpy_frac
