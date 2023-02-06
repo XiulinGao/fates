@@ -2611,7 +2611,7 @@ subroutine ForceDBH( ipft, crowndamage, canopy_trim, d, h, bdead, bl )
     call bbgw_allom(resprout_dbh,pft,bgw_c_nr)
     call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,pft,nrc_struct_c)
 
-    nrc_store_c = (store_c * (1.0_r8 - prt_params%allom_agb_frac(pft) * store_c_ratio_ab2bg)) - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
+    nrc_store_c = (store_c * (1.0_r8 - prt_params%allom_agb_frac(pft) * store_c_ratio_ag2bg)) - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
 
   end subroutine target_resprout_carbon_pools
 
