@@ -1787,6 +1787,8 @@ contains
        ! Loop over all patches and sum up the seed input for each PFT
        currentPatch => currentSite%oldest_patch
        do while (associated(currentPatch))
+          
+          currentPatch%intra_patch_seed_rain(:) = 0._r8
 
           currentCohort => currentPatch%tallest
           do while (associated(currentCohort))
@@ -1815,8 +1817,17 @@ contains
                 currentcohort%seed_prod = seed_prod
              end if
 
+
+             !how much seed remains in the patch
+             intra_patch_seed_frac = 1.0_r8 - EDPftvarcon_inst%inter_patch_disp_frac(pft)
+
+             currentPatch%intra_patch_seed_rain(pft) = currentPatch%intra_patch_seed_rain(pft) +&
+                (intra_patch_seed_frac * seed_prod * currentCohort%n)
+
+             !how much seed is distributed evenly over all patches (including the current patch)
              site_seed_rain(pft) = site_seed_rain(pft) +  &
-                  (seed_prod * currentCohort%n + store_m_to_repro)
+                  (EDPftvarcon_inst%inter_patch_disp_frac(pft) * seed_prod * currentCohort%n +&
+                  store_m_to_repro)
 
              currentCohort => currentCohort%shorter
           enddo !cohort loop
@@ -1843,7 +1854,12 @@ contains
           do pft = 1,numpft
 
              if(currentSite%use_this_pft(pft).eq.itrue)then
-                ! Seed input from local sources (within site)
+
+                ! Seed input from the current patch
+                litt%seed_in_local(pft) = litt%seed_in_local(pft) + &
+                currentPatch%intra_patch_seed_rain(pft)/area
+
+                ! Seed input from all patches within the site
                 litt%seed_in_local(pft) = litt%seed_in_local(pft) + site_seed_rain(pft)/area
 
                 ! If there is forced external seed rain, we calculate the input mass flux
