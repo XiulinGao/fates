@@ -1774,21 +1774,28 @@ contains
     integer  :: n_litt_types           ! number of litter element types (c,n,p, etc)
     integer  :: el                     ! loop counter for litter element types
     integer  :: element_id             ! element id consistent with parteh/PRTGenericMod.F90
+    real(r8),dimension(10,maxpft) :: intra_patch_seed_rain !ahb
+    integer :: p                       ! loop counter for patch ahb
+    real(r8) :: intra_patch_seed_frac  ! fraction of seed that stays in patch of origin
+    real(r8), parameter :: inter_patch_disp_frac = 0.1_r8
     !------------------------------------------------------------------------------------
+
 
     do el = 1, num_elements
 
        site_seed_rain(:) = 0._r8
 
+       intra_patch_seed_rain(:,:) = 0._r8 ! ahb
+       
        element_id = element_list(el)
 
        site_mass => currentSite%mass_balance(el)
 
        ! Loop over all patches and sum up the seed input for each PFT
+
+       p = 1 ! ahb
        currentPatch => currentSite%oldest_patch
        do while (associated(currentPatch))
-          
-          currentPatch%intra_patch_seed_rain(:) = 0._r8
 
           currentCohort => currentPatch%tallest
           do while (associated(currentCohort))
@@ -1818,21 +1825,22 @@ contains
              end if
 
 
-             !how much seed remains in the patch
-             intra_patch_seed_frac = 1.0_r8 - EDPftvarcon_inst%inter_patch_disp_frac(pft)
+             !how much seed remains in the patch ahb
+             intra_patch_seed_frac = 1.0_r8 - inter_patch_disp_frac
 
-             currentPatch%intra_patch_seed_rain(pft) = currentPatch%intra_patch_seed_rain(pft) +&
+             intra_patch_seed_rain(p,pft) = intra_patch_seed_rain(p,pft) +&
                 (intra_patch_seed_frac * seed_prod * currentCohort%n)
 
              !how much seed is distributed evenly over all patches (including the current patch)
              site_seed_rain(pft) = site_seed_rain(pft) +  &
-                  (EDPftvarcon_inst%inter_patch_disp_frac(pft) * seed_prod * currentCohort%n +&
+                  ( (inter_patch_disp_frac * seed_prod * currentCohort%n) +&
                   store_m_to_repro)
 
              currentCohort => currentCohort%shorter
           enddo !cohort loop
 
           currentPatch => currentPatch%younger
+          p = p + 1
        enddo
 
        ! We can choose to homogenize seeds. This is simple, we just
@@ -1847,6 +1855,7 @@ contains
        ! arrays
 
        ! Loop over all patches and sum up the seed input for each PFT
+       p = 1 !ahb
        currentPatch => currentSite%oldest_patch
        do while (associated(currentPatch))
 
@@ -1857,7 +1866,7 @@ contains
 
                 ! Seed input from the current patch
                 litt%seed_in_local(pft) = litt%seed_in_local(pft) + &
-                currentPatch%intra_patch_seed_rain(pft)/area
+                intra_patch_seed_rain(p,pft)/area
 
                 ! Seed input from all patches within the site
                 litt%seed_in_local(pft) = litt%seed_in_local(pft) + site_seed_rain(pft)/area
@@ -1890,6 +1899,7 @@ contains
 
 
           currentPatch => currentPatch%younger
+          p = p + 1 ! ahb
        enddo
 
     end do
