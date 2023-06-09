@@ -1793,10 +1793,12 @@ contains
 
        ! Loop over all patches and sum up the seed input for each PFT
 
-       p = 1 ! ahb
+       p = 0 ! ahb
        currentPatch => currentSite%oldest_patch
        do while (associated(currentPatch))
-
+          
+          p = p + 1
+          
           currentCohort => currentPatch%tallest
           do while (associated(currentCohort))
 
@@ -1840,7 +1842,6 @@ contains
           enddo !cohort loop
 
           currentPatch => currentPatch%younger
-          p = p + 1
        enddo
 
        ! We can choose to homogenize seeds. This is simple, we just
@@ -1855,10 +1856,12 @@ contains
        ! arrays
 
        ! Loop over all patches and sum up the seed input for each PFT
-       p = 1 !ahb
+       p = 0 !ahb
        currentPatch => currentSite%oldest_patch
        do while (associated(currentPatch))
-
+          
+          p = p + 1 ! ahb
+          
           litt => currentPatch%litter(el)
           do pft = 1,numpft
 
@@ -1867,6 +1870,9 @@ contains
                 ! Seed input from the current patch
                 litt%seed_in_local(pft) = litt%seed_in_local(pft) + &
                 intra_patch_seed_rain(p,pft)/area
+                
+                write(fates_log(), *) 'intra_patch_seed_rain'
+
 
                 ! Seed input from all patches within the site
                 litt%seed_in_local(pft) = litt%seed_in_local(pft) + site_seed_rain(pft)/area
@@ -1899,7 +1905,6 @@ contains
 
 
           currentPatch => currentPatch%younger
-          p = p + 1 ! ahb
        enddo
 
     end do
