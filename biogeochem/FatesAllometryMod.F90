@@ -1084,20 +1084,20 @@ contains
       select case(int(prt_params%allom_amode(ipft)))
       case(1) ! Saldariagga mass allometry originally calculated bdead directly.
               ! we assume proportionality between bdead and bagw
-         if(bsap == bagw .and. agb_fraction == 1.0_r8)then
+         if( prt_params%woody(ipft) .ne. itrue .and. prt_params%allom_smode(ipft) .eq. 2.0_r8 )then
             bdead = bagw + bbgw - bsap ! instead assigning 0 directly we calculate bdead
                                        ! to be consistent with case(2,3)
             if(present(dbdeaddd) .and. present(dbagwdd) .and. &
-               present(dbbgwdd)  .and. present(dbsapdd)then
+               present(dbbgwdd)  .and. present(dbsapdd))then
                  dbdeaddd = dbagwdd + dbbgwdd - dbsapdd
-             end if
+            end if
          else
             bdead = bagw/agb_fraction
             
             if(present(dbagwdd) .and. present(dbdeaddd))then
                dbdeaddd = dbagwdd/agb_fraction
             end if
-          end if
+         end if
             
          
       case(2,3)
