@@ -92,6 +92,7 @@ module FatesAllometryMod
   use FatesConstantsMod, only : calloc_abs_error
   use FatesConstantsMod, only : fates_unset_r8
   use FatesConstantsMod, only : itrue
+  use FatesConstantsMod, only : ifalse
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use FatesGlobals     , only : fates_log
   use FatesGlobals     , only : endrun => fates_endrun
@@ -977,12 +978,24 @@ contains
           end if
        end if
 
+
+    case(2) ! for non-woody monocot (e.g. grasses), we set bsap equal to
+            ! bagw as they do not have secondary growth
+       call h_allom(d,ipft,h,dhdd)
+       call bagw_allom(d,ipft,crowndamage,bagw,dbagwdd)
+       bsap = bagw
+
+       if(present(dbsapdd))then
+          dbsapdd = dbagwdd
+       end if
+
+
     case DEFAULT
        write(fates_log(),*) 'An undefined sapwood allometry was specified: ', &
             prt_params%allom_smode(ipft)
        write(fates_log(),*) 'Aborting'
        call endrun(msg=errMsg(sourcefile, __LINE__))
-    end select
+     end select
     return
   end subroutine bsap_allom
   
@@ -1151,11 +1164,23 @@ contains
       select case(int(prt_params%allom_amode(ipft)))
       case(1) ! Saldariagga mass allometry originally calculated bdead directly.
               ! we assume proportionality between bdead and bagw
-       
-         bdead = bagw/agb_fraction 
-         if(present(dbagwdd) .and. present(dbdeaddd))then
-            dbdeaddd = dbagwdd/agb_fraction
+         if( prt_params%woody(ipft) == ifalse .and. prt_params%allom_smode(ipft) == 2.0_r8 )then
+             bdead = bagw + bbgw - bsap ! instead assigning 0 directly we calculate bdead
+                                       ! to be consistent with case(2,3)
+             if(present(dbdeaddd) .and. present(dbagwdd) .and. &
+                present(dbbgwdd)  .and. present(dbsapdd))then
+                dbdeaddd = dbagwdd + dbbgwdd - dbsapdd
+             end if
+         
+         else
+            bdead = bagw/agb_fraction
+            
+            if(present(dbagwdd) .and. present(dbdeaddd))then
+               dbdeaddd = dbagwdd/agb_fraction
+            end if
+         
          end if
+            
          
       case(2,3)
          
