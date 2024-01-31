@@ -93,6 +93,7 @@ contains
     do while(associated(currentPatch))
        currentPatch%frac_burnt = 0.0_r8
        currentPatch%fire       = 0
+!       currentPatch%rxfire     = 0
        currentPatch => currentPatch%older
     enddo
 
@@ -102,6 +103,7 @@ contains
 
     if( hlm_spitfire_mode > hlm_sf_nofire_def )then
        call fire_danger_index(currentSite, bc_in)
+       call rxfire_burn_window(currentSite, bc_in)
        call wind_effect(currentSite, bc_in) 
        call charecteristics_of_fuel(currentSite)
        call rate_of_spread(currentSite)
@@ -177,7 +179,7 @@ contains
 
   !*****************************************************************
   subroutine  rxfire_burn_window ( currentSite, bc_in)
-    !*****************************************************************
+  !*****************************************************************
 
     use FatesConstantsMod , only : tfrz => t_water_freeze_k_1atm
     use FatesConstantsMod , only : sec_per_day
@@ -191,9 +193,15 @@ contains
     real(r8) :: rainfall   !daily precip in mm/day
     real(r8) :: rh         !daily relative humidity
     real(r8) :: wind       !daily wind speed in m/s
+    real(r8) :: t_check    !intermediate value derived from temp condition check
+    real(r8) :: rh_check   !rh check
+    real(r8) :: wd_check   !wind speed check
     integer  :: iofp       ! index of oldest the fates patch
+   
 
     
+    !User-defined weather conditions for intentional fires.
+    !These will be set as global parameters at later stage
     
     real(r8), parameter :: wd_up = 10.0_r8    !upper threshold for wind speed defining the burn window
     real(r8), parameter :: wd_lw = 2.0_r8     !lower threshold for wind speed
@@ -215,18 +223,18 @@ contains
     rainfall  = bc_in%precip24_pa(iofp)*sec_per_day
     rh        = bc_in%relhumid24_pa(iofp)
     wind      = bc_in%wind24_pa(iofp)
+    t_check   = (temp_in_C - tp_lw)*(temp_in_C - tp_up)
+    rh_check  = (rh - rh_lw)*(rh - rh_up)
+    wd_check  = (wind - wd_lw)*(wind - wd_up)
 
-    if (rainfall > 3.0_r8) then
-       currentSite%rx_ig = 0.0_r8 !when it rains no Rx fire
+    if(rainfall > 3.0_r8)then
+       currentSite%rx_flag = 0.0_r8 !when it rains no Rx fire
+    else if(t_check.le.0.0_r8 .and. rh_check.le.0.0_r8 .and. wd_check.le.0.0_r8)then
+       currentSite%rx_flag = 1.0_r8
     else
-
-       if (temp_in_C .le. tp_up .and. temp_in_C >= tm_lw .and.
-       rh .le. rh_up .and. rh >= lh_lw .and. wind .le. wd_up .and.
-       wind >= wd_lw) then
-       currentSite%rx_ig = 1.0_r8 !when conditions are met, rx ignition occurs
-       endif
+       currentSite%rx_flag = 0.0_r8
     endif
-
+   
 end subroutine  rxfire_burn_window
 
 
