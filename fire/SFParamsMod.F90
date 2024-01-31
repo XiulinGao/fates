@@ -41,6 +41,14 @@ module SFParamsMod
    real(r8),protected, public :: SF_val_mid_moisture_Coeff(NFSC)
    real(r8),protected, public :: SF_val_mid_moisture_Slope(NFSC)
 
+   ! Prescribed fire relevant parameters
+   real(r8),protected, public :: SF_val_rxfire_tpup   ! temprature upper threshold for conducting RX fire
+   real(r8),protected, public :: SF_val_rxfire_tplw   ! temprature lower threshold
+   real(r8),protected, public :: SF_val_rxfire_rhup   ! relative humidity upper threshold
+   real(r8),protected, public :: SF_val_rxfire_rhlw   ! relative humidity lower threshold
+   real(r8),protected, public :: SF_val_rxfire_wdup   ! wind speed upper threshold
+   real(r8),protected, public :: SF_val_rxfire_wdlw   ! wind speed lower threshold
+
    character(len=param_string_length),parameter :: SF_name_fdi_a = "fates_fire_fdi_a"
    character(len=param_string_length),parameter :: SF_name_fdi_b = "fates_fire_fdi_b"
    character(len=param_string_length),parameter :: SF_name_fdi_alpha = "fates_fire_fdi_alpha"
@@ -62,6 +70,12 @@ module SFParamsMod
    character(len=param_string_length),parameter :: SF_name_low_moisture_Slope = "fates_fire_low_moisture_Slope"
    character(len=param_string_length),parameter :: SF_name_mid_moisture_Coeff = "fates_fire_mid_moisture_Coeff"
    character(len=param_string_length),parameter :: SF_name_mid_moisture_Slope = "fates_fire_mid_moisture_Slope"
+   character(len=param_string_length),parameter :: SF_name_rxfire_tpup = "fates_rxfire_temp_upthreshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_tplw = "fates_rxfire_temp_lwthreshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_rhup = "fates_rxfire_rh_upthreshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_rhlw = "fates_rxfire_rh_lwthreshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_wdup = "fates_rxfire_wind_upthreshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_wdlw = "fates_rxfire_wind_lwthreshold"
 
    character(len=*), parameter, private :: sourcefile = &
          __FILE__
@@ -159,6 +173,12 @@ contains
     SF_val_durat_slope = nan
     SF_val_drying_ratio = nan
     SF_val_fire_threshold = nan
+    SF_val_rxfire_tpup = nan
+    SF_val_rxfire_tplw = nan
+    SF_val_rxfire_rhup = nan
+    SF_val_rxfire_rhlw = nan
+    SF_val_rxfire_wdup = nan
+    SF_val_rxfire_wdlw = nan
     SF_val_CWD_frac(:) = nan
     SF_val_max_decomp(:) = nan
     SF_val_SAV(:) = nan
@@ -247,6 +267,24 @@ contains
     call fates_params%RegisterParameter(name=SF_name_fire_threshold, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
 
+    call fates_params%RegisterParameter(name=SF_name_rxfire_tpup, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_tplw, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_rhup, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_rhlw, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_wdup, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_wdlw, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
   end subroutine SpitFireRegisterScalars
 
  !-----------------------------------------------------------------------
@@ -293,8 +331,25 @@ contains
     call fates_params%RetrieveParameter(name=SF_name_fire_threshold, &
          data=SF_val_fire_threshold)
 
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_tpup, &
+         data=SF_val_rxfire_tpup)
 
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_tplw, &
+	 data=SF_val_rxfire_tplw)
 
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_rhup, &
+	 data=SF_val_rxfire_rhup)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_rhlw, &
+	 data=SF_val_rxfire_rhlw)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_wdup, &
+	 data=SF_val_rxfire_wdup)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_wdlw, &
+	 data=SF_val_rxfire_wdlw)
+
+    
 
   end subroutine SpitFireReceiveScalars
 

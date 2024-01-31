@@ -181,6 +181,8 @@ contains
   subroutine  rxfire_burn_window ( currentSite, bc_in)
   !*****************************************************************
 
+    use SFParamsMod, only  : SF_val_rxfire_tpup, SF_val_rxfire_tplw, SF_val_rxfire_rhup,\
+                             SF_val_rxfire_rhlw, SF_val_rxfire_wdup, SF_val_rxfire_wdlw
     use FatesConstantsMod , only : tfrz => t_water_freeze_k_1atm
     use FatesConstantsMod , only : sec_per_day
 
@@ -203,12 +205,12 @@ contains
     !User-defined weather conditions for intentional fires.
     !These will be set as global parameters at later stage
     
-    real(r8), parameter :: wd_up = 10.0_r8    !upper threshold for wind speed defining the burn window
-    real(r8), parameter :: wd_lw = 2.0_r8     !lower threshold for wind speed
-    real(r8), parameter :: rh_up = 55.0_r8    !upper threshold for relative humidity
-    real(r8), parameter :: rh_lw = 30.0_r8    !lower threshold for rh
-    real(r8), parameter :: tp_up = 30.0_r8    !upper threshold for temprature
-    real(r8), parameter :: tp_lw = 5.0_r8     !lower threshold for temprature
+!    real(r8), parameter :: wd_up = 10.0_r8    !upper threshold for wind speed defining the burn window
+!    real(r8), parameter :: wd_lw = 2.0_r8     !lower threshold for wind speed
+!    real(r8), parameter :: rh_up = 55.0_r8    !upper threshold for relative humidity
+!    real(r8), parameter :: rh_lw = 30.0_r8    !lower threshold for rh
+!    real(r8), parameter :: tp_up = 30.0_r8    !upper threshold for temprature
+!    real(r8), parameter :: tp_lw = 5.0_r8     !lower threshold for temprature
    
 
     currentPatch => currentSite%oldest_patch
@@ -223,9 +225,9 @@ contains
     rainfall  = bc_in%precip24_pa(iofp)*sec_per_day
     rh        = bc_in%relhumid24_pa(iofp)
     wind      = bc_in%wind24_pa(iofp)
-    t_check   = (temp_in_C - tp_lw)*(temp_in_C - tp_up)
-    rh_check  = (rh - rh_lw)*(rh - rh_up)
-    wd_check  = (wind - wd_lw)*(wind - wd_up)
+    t_check   = (temp_in_C - SF_val_rxfire_tplw)*(temp_in_C - SF_val_rxfire_tpup)
+    rh_check  = (rh - SF_val_rxfire_rhlw)*(rh - SF_val_rxfire_rhup)
+    wd_check  = (wind - SF_val_rxfire_wdlw)*(wind - SF_val_rxfire_wdup)
 
     if(rainfall > 3.0_r8)then
        currentSite%rx_flag = 0.0_r8 !when it rains no Rx fire
