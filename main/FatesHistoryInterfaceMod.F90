@@ -391,6 +391,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_cleafon_si
 
   integer :: ih_nesterov_fire_danger_si
+  integer :: ih_rx_burn_window_si      
   integer :: ih_fire_nignitions_si
   integer :: ih_fire_fdi_si
   integer :: ih_fire_intensity_area_product_si
@@ -2355,6 +2356,7 @@ end subroutine flush_hvars
                hio_npp_si_pft  => this%hvars(ih_npp_si_pft)%r82d, &
                hio_npp_sec_si_pft      => this%hvars(ih_npp_sec_si_pft)%r82d, &
                hio_nesterov_fire_danger_si => this%hvars(ih_nesterov_fire_danger_si)%r81d, &
+               hio_rx_burn_window_si => this%hvars(ih_rx_burn_window_si)%r81d, &
                hio_fire_nignitions_si => this%hvars(ih_fire_nignitions_si)%r81d, &
                hio_fire_fdi_si => this%hvars(ih_fire_fdi_si)%r81d, &
                hio_spitfire_ros_si     => this%hvars(ih_spitfire_ros_si)%r81d, &
@@ -2723,6 +2725,9 @@ end subroutine flush_hvars
 
       ! Nesterov index (unitless)
       hio_nesterov_fire_danger_si(io_si) = sites(s)%acc_NI
+
+      ! Prescribed fire burn window
+      hio_rx_burn_window_si(io_si) = sites(s)%rx_flag
 
       ! number of ignitions [#/km2/day -> #/m2/s]
       hio_fire_nignitions_si(io_si) = sites(s)%NF_successful / m2_per_km2 /  &
@@ -5813,6 +5818,12 @@ end subroutine update_history_hifrq
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_nesterov_fire_danger_si)
 
+    call this%set_history_var(vname='FATES_RX_BURN_WINDOW', units='',          &
+         long='prescribed fire burn window', use_default='active',             &
+         avgflag='A', vtype=site_r8, hlms='CLM:ALM',                           &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rx_burn_window_si)
+    
     call this%set_history_var(vname='FATES_IGNITIONS',                         &
          units='m-2 s-1',                                                      &
          long='number of successful fire ignitions per m2 land area per second',  &
