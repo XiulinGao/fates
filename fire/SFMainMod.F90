@@ -958,6 +958,8 @@ end subroutine  rxfire_burn_window
                currentSite%NF_successful = currentSite%NF_successful + &
                        currentSite%NF * currentSite%FDI * currentPatch%area / area
                currentPatch%rxfire = 1 - currentPatch%fire
+               currentPatch%rxfire_FD = 0.0_r8
+               currentPatch%rxfire_frac_burnt = 0.0_r8 !zero rx fire variables
             endif
          else           ! not a patch that is suitable for conducting rx fire 
             currentPatch%rxfire            = 0
