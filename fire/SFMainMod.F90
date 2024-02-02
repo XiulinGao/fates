@@ -12,6 +12,8 @@
   use FatesInterfaceTypesMod     , only : hlm_masterproc ! 1= master process, 0=not master process
   use EDTypesMod            , only : numWaterMem
   use FatesGlobals          , only : fates_log
+  use FatesGlobals          , only : endrun => fates_endrun
+  use shr_log_mod           , only : errMsg => shr_log_errMsg
   use FatesInterfaceTypesMod, only : hlm_spitfire_mode
   use FatesInterfaceTypesMod, only : hlm_sf_nofire_def
   use FatesInterfaceTypesMod, only : hlm_sf_scalar_lightning_def
@@ -181,7 +183,7 @@ contains
   subroutine  rxfire_burn_window ( currentSite, bc_in)
   !*****************************************************************
 
-    use SFParamsMod, only  : SF_val_rxfire_tpup, SF_val_rxfire_tplw, SF_val_rxfire_rhup,\
+    use SFParamsMod, only  : SF_val_rxfire_tpup, SF_val_rxfire_tplw, SF_val_rxfire_rhup, &
                              SF_val_rxfire_rhlw, SF_val_rxfire_wdup, SF_val_rxfire_wdlw
     use FatesConstantsMod , only : tfrz => t_water_freeze_k_1atm
     use FatesConstantsMod , only : sec_per_day
@@ -199,19 +201,7 @@ contains
     real(r8) :: rh_check   !rh check
     real(r8) :: wd_check   !wind speed check
     integer  :: iofp       ! index of oldest the fates patch
-   
-
-    
-    !User-defined weather conditions for intentional fires.
-    !These will be set as global parameters at later stage
-    
-!    real(r8), parameter :: wd_up = 10.0_r8    !upper threshold for wind speed defining the burn window
-!    real(r8), parameter :: wd_lw = 2.0_r8     !lower threshold for wind speed
-!    real(r8), parameter :: rh_up = 55.0_r8    !upper threshold for relative humidity
-!    real(r8), parameter :: rh_lw = 30.0_r8    !lower threshold for rh
-!    real(r8), parameter :: tp_up = 30.0_r8    !upper threshold for temprature
-!    real(r8), parameter :: tp_lw = 5.0_r8     !lower threshold for temprature
-   
+     
 
     currentPatch => currentSite%oldest_patch
 
@@ -767,7 +757,10 @@ end subroutine  rxfire_burn_window
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
     use FatesConstantsMod, only : years_per_day
     use SFParamsMod,       only : SF_val_fdi_alpha,SF_val_fuel_energy, &
-         SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold
+         SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
+         SF_val_rxfire_AB, SF_val_rxfire_minthreshold, &
+         SF_val_rxfire_maxthreshold, SF_val_rxfire_fuel_min, &
+         SF_val_rxfire_fuel_max
     
     type(ed_site_type), intent(inout), target :: currentSite
     type(fates_patch_type), pointer :: currentPatch
@@ -780,6 +773,7 @@ end subroutine  rxfire_burn_window
     real(r8) df               !distance fire has travelled forward in m
     real(r8) db               !distance fire has travelled backward in m
     real(r8) AB               !daily area burnt in m2 per km2
+    !real(r8) rx_FI_range      !the range of rx fire intensity derived from the two rxfire threshold params
     
     real(r8) size_of_fire !in m2
     real(r8) cloud_to_ground_strikes  ! [fraction] depends on hlm_spitfire_mode
@@ -844,13 +838,19 @@ end subroutine  rxfire_burn_window
        currentPatch%fire       = 0
        currentPatch%FD         = 0.0_r8
        currentPatch%frac_burnt = 0.0_r8
+!       currentPatch%rxfire_FI  = 0.0_r8
+       currentPatch%rxfire     = 0
+       currentPatch%rxfire_FD  = 0.0_r8
+       currentPatch%rxfire_frac_burnt = 0.0_r8
        
-       if (currentSite%NF > 0.0_r8) then
+       if (currentSite%NF > 0.0_r8 .or. currentSite%rx_flag == 1.0_r8) then
           
           ! Equation 14 in Thonicke et al. 2010
           ! fire duration in minutes
           currentPatch%FD = (SF_val_max_durat+1.0_r8) / (1.0_r8 + SF_val_max_durat * &
-                            exp(SF_val_durat_slope*currentSite%FDI))
+                             exp(SF_val_durat_slope*currentSite%FDI))
+          currentPatch%rxfire_FD = currentPatch%FD  !it's the same calculation
+          
           if(write_SF == itrue)then
              if ( hlm_masterproc == itrue ) write(fates_log(),*) 'fire duration minutes',currentPatch%fd
           endif
@@ -909,14 +909,20 @@ end subroutine  rxfire_burn_window
              ! just a unit conversion from AB, to become area burned per area patch per day, 
              ! or just the fraction of the patch burned on that day
              currentPatch%frac_burnt = (min(0.99_r8, AB / km2_to_m2))
-             
+
+
              if(write_SF == itrue)then
                 if ( hlm_masterproc == itrue ) write(fates_log(),*) 'frac_burnt',currentPatch%frac_burnt
+                if (hlm_masterproc == itrue) write(fates_log(),*) 'rxfire_frac_burnt',currentPatch%rxfire_frac_burnt
              endif
 
           else
              currentPatch%frac_burnt = 0._r8
           endif ! lb
+
+         ! for prescribed fire, burned area is defined by user to reflect burn capacity
+         ! do we really need this as it is a parameter?
+         currentPatch%rxfire_frac_burnt = SF_val_rxfire_AB / km2_to_m2
 
          ROS   = currentPatch%ROS_front / 60.0_r8 !m/min to m/sec 
          W     = currentPatch%TFC_ROS / 0.45_r8 !kgC/m2 of burned area to kgbiomass/m2 of burned area
@@ -924,28 +930,67 @@ end subroutine  rxfire_burn_window
          ! EQ 15 Thonicke et al 2010
          !units of fire intensity = (kJ/kg)*(kgBiomass/m2)*(m/min)
          currentPatch%FI = SF_val_fuel_energy * W * ROS !kj/m/s, or kW/m
+         !currentPatch%rxfire_FI = SF_val_fuel_energy * W * ROS !do we need to track FI separately for wildfire and rx fire? it's always calculated no matter which fire
        
          if(write_sf == itrue)then
              if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
          endif
 
-         !'decide_fire' subroutine 
-         if (currentPatch%FI > SF_val_fire_threshold) then !track fires greater than kW/m energy threshold
-            currentPatch%fire = 1 ! Fire...    :D
-            !
-            currentSite%NF_successful = currentSite%NF_successful + &
-                 currentSite%NF * currentSite%FDI * currentPatch%area / area
-            !
-         else     
-            currentPatch%fire       = 0 ! No fire... :-/
-            currentPatch%FD         = 0.0_r8
-            currentPatch%frac_burnt = 0.0_r8
-         endif         
-          
-       endif ! NF ignitions check
-       endif ! nocomp_pft_label check
+         !'decide_fire' subroutine
+         
+         if (currentSite%rx_flag .eq. 1.0_r8 .and. &                   !rx fire condition check 
+             currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
+             currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
+            if ((currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
+               currentPatch%FI .lt. SF_val_rxfire_maxthreshold) .or. &
+               (currentSite%NF .gt. 0.0_r8 .and.  & !potential wildfire
+                currentPatch%FI .gt. SF_val_fire_threshold .and. &
+                currentPatch%FI .lt. SF_val_rxfire_maxthreshold)) then
+               currentPatch%fire = 0
+               currentPatch%rxfire = 1 - currentPatch%fire
+               currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
+               currentPatch%FD         = 0.0_r8      ! zero wildfire duration
+
+            else if (currentSite%NF .gt. 0.0_r8 .and. &
+                     currentPatch%FI .gt. SF_val_fire_threshold .and. & !do we really need this??? rxfire_max should always > fire_threshold?
+                     currentPatch%FI .gt. SF_val_rxfire_maxthreshold) then
+               currentPatch%fire = 1         !wildfire happens before start the rx fire
+               currentSite%NF_successful = currentSite%NF_successful + &
+                       currentSite%NF * currentSite%FDI * currentPatch%area / area
+               currentPatch%rxfire = 1 - currentPatch%fire
+            endif
+         else           ! not a patch that is suitable for conducting rx fire 
+            currentPatch%rxfire            = 0
+            currentPatch%rxfire_FD         = 0.0_r8
+            currentPatch%rxfire_frac_burnt = 0.0_r8
+            if (currentSite%NF .gt. 0.0_r8 .and. currentPatch%FI .gt. SF_val_fire_threshold) then
+                currentPatch%fire = 1
+                currentSite%NF_successful = currentSite%NF_successful + &
+                     currentSite%NF * currentSite%FDI * currentPatch%area / area
+            else
+               currentPatch%fire       = 0 ! No fire... :-/
+               currentPatch%FD         = 0.0_r8
+               currentPatch%frac_burnt = 0.0_r8
+               
+            endif
+         endif !end rx fire condition check
+         
+       endif ! NF ignitions or rx fire flag check
+    endif ! nocomp_pft_label check
+
+    !check if we have both rx and wildfire happening on the same patch
+    ! end run if that's the case?
+
+    if(write_sf == itrue)then
+       if( hlm_masterproc == itrue ) write(fates_log(),*) 'current fire and rx fire',currentPatch%fire,currentPatch%rxfire
+    endif
+!    if(currentPatch%fire * currentPatch%rxfire .eq. 1) then
+!    write(fates_log(),*) 'Both wildfire and management fire are happening, rxfire',currentPatch%rxfire
+!    write(fates_log(),*) 'fire',currentPatch%fire
+!    call endrun(msg=errMsg(sourcefile, __LINE__))
+!    endif
        
-       currentPatch => currentPatch%younger
+    currentPatch => currentPatch%younger
 
     enddo !end patch loop
 
@@ -979,7 +1024,7 @@ end subroutine  rxfire_burn_window
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
        
        tree_ag_biomass = 0.0_r8
-       if (currentPatch%fire == 1) then
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1)  then
           currentCohort => currentPatch%tallest;
           do while(associated(currentCohort))  
              if ( prt_params%woody(currentCohort%pft) == itrue) then !trees only
@@ -1035,7 +1080,7 @@ end subroutine  rxfire_burn_window
     do while(associated(currentPatch)) 
 
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
-       if (currentPatch%fire == 1) then
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then
 
           currentCohort=>currentPatch%tallest
 
@@ -1105,7 +1150,7 @@ end subroutine  rxfire_burn_window
 
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
 
-       if (currentPatch%fire == 1) then
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire ==1) then
           currentCohort => currentPatch%tallest;
           do while(associated(currentCohort))  
              if ( prt_params%woody(currentCohort%pft) == itrue) then !trees only
@@ -1158,7 +1203,7 @@ end subroutine  rxfire_burn_window
 
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
 
-       if (currentPatch%fire == 1) then 
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire ==1) then 
           currentCohort => currentPatch%tallest
           do while(associated(currentCohort))  
              currentCohort%fire_mort = 0.0_r8
