@@ -48,6 +48,11 @@ module SFParamsMod
    real(r8),protected, public :: SF_val_rxfire_rhlw   ! relative humidity lower threshold
    real(r8),protected, public :: SF_val_rxfire_wdup   ! wind speed upper threshold
    real(r8),protected, public :: SF_val_rxfire_wdlw   ! wind speed lower threshold
+   real(r8),protected, public :: SF_val_rxfire_AB     ! rx fire burned area m2/(km2.day)
+   real(r8),protected, public :: SF_val_rxfire_minthreshold ! minimum fire energy of rx fire, for management purpose really
+   real(r8),protected, public :: SF_val_rxfire_maxthreshold ! maximum fire energy
+   real(r8),protected, public :: SF_val_rxfire_fuel_min     ! minimum fuel load at the patch for the need of rx fire management
+   real(r8),protected, public :: SF_val_rxfire_fuel_max     ! maximum fuel load, above which might be risky for conducting rx fire
 
    character(len=param_string_length),parameter :: SF_name_fdi_a = "fates_fire_fdi_a"
    character(len=param_string_length),parameter :: SF_name_fdi_b = "fates_fire_fdi_b"
@@ -76,6 +81,11 @@ module SFParamsMod
    character(len=param_string_length),parameter :: SF_name_rxfire_rhlw = "fates_rxfire_rh_lwthreshold"
    character(len=param_string_length),parameter :: SF_name_rxfire_wdup = "fates_rxfire_wind_upthreshold"
    character(len=param_string_length),parameter :: SF_name_rxfire_wdlw = "fates_rxfire_wind_lwthreshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_AB   = "fates_rxfire_AB"
+   character(len=param_string_length),parameter :: SF_name_rxfire_min_threshold = "fates_rxfire_min_threshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_max_threshold = "fates_rxfire_max_threshold"
+   character(len=param_string_length),parameter :: SF_name_rxfire_fuel_min = "fates_rxfire_fuel_min"
+   character(len=param_string_length),parameter :: SF_name_rxfire_fuel_max = "fates_rxfire_fuel_max"
 
    character(len=*), parameter, private :: sourcefile = &
          __FILE__
@@ -179,6 +189,11 @@ contains
     SF_val_rxfire_rhlw = nan
     SF_val_rxfire_wdup = nan
     SF_val_rxfire_wdlw = nan
+    SF_val_rxfire_AB   = nan
+    SF_val_rxfire_minthreshold = nan
+    SF_val_rxfire_maxthreshold = nan
+    SF_val_rxfire_fuel_min = nan
+    SF_val_rxfire_fuel_max = nan
     SF_val_CWD_frac(:) = nan
     SF_val_max_decomp(:) = nan
     SF_val_SAV(:) = nan
@@ -285,6 +300,21 @@ contains
     call fates_params%RegisterParameter(name=SF_name_rxfire_wdlw, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
 
+    call fates_params%RegisterParameter(name=SF_name_rxfire_AB, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_min_threshold, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_max_threshold, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_fuel_min, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=SF_name_rxfire_fuel_max, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
   end subroutine SpitFireRegisterScalars
 
  !-----------------------------------------------------------------------
@@ -349,6 +379,20 @@ contains
     call fates_params%RetrieveParameter(name=SF_name_rxfire_wdlw, &
 	 data=SF_val_rxfire_wdlw)
 
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_AB, &
+         data=SF_val_rxfire_AB)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_min_threshold, &
+         data=SF_val_rxfire_minthreshold)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_max_threshold, &
+         data=SF_val_rxfire_maxthreshold)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_fuel_min, &
+         data=SF_val_rxfire_fuel_min)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire_fuel_max, &
+         data=SF_val_rxfire_fuel_max)
     
 
   end subroutine SpitFireReceiveScalars
