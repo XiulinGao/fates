@@ -1106,10 +1106,9 @@ end subroutine  rxfire_burn_window
 
                         currentCohort%fraction_crown_burned = (currentPatch%Scorch_ht(currentCohort%pft) - &
                              (currentCohort%height - crown_depth))/crown_depth
-
                    else 
                       ! Flames over top of canopy. 
-                      currentCohort%fraction_crown_burned =  1.0_r8 
+                       currentCohort%fraction_crown_burned =  1.0_r8    ! this else statement does not make sense. 
                    endif
 
                 endif
@@ -1205,7 +1204,7 @@ end subroutine  rxfire_burn_window
 
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
 
-       if (currentPatch%fire == 1 .or. currentPatch%rxfire ==1) then 
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then 
           currentCohort => currentPatch%tallest
           do while(associated(currentCohort))  
              currentCohort%fire_mort = 0.0_r8
@@ -1219,7 +1218,13 @@ end subroutine  rxfire_burn_window
              else
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees
-
+             if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0)then
+                currentCohort%rxfire_mort = currentCohort%fire_mort
+            !    currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
+                currentCohort%fire_mort = 0.0_r8
+            !    currentCohort%crownfire_mort = 0.0_r8
+             endif
+                    !if it is rx fire, pass mort to rx fire and zero wildfire mort
              currentCohort => currentCohort%shorter
 
           enddo !end cohort loop
