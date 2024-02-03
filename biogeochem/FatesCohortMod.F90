@@ -264,6 +264,8 @@ module FatesCohortMod
     real(r8) ::  crownfire_mort        ! probability of tree post-fire mortality from crown scorch [0-1]
                                        !  (conditional on the tree being subjected to the fire)
     real(r8) ::  fire_mort             ! post-fire mortality from cambial and crown damage assuming two are independent [0-1]
+ !   real(r8) ::  rxcrownfire_mort      ! crown fire mortality due to prescribed fire
+    real(r8) ::  rxfire_mort           ! post-fire mortality due to prescribed fire    
 
     !---------------------------------------------------------------------------
 
@@ -443,7 +445,9 @@ module FatesCohortMod
       this%fraction_crown_burned   = nan 
       this%cambial_mort            = nan 
       this%crownfire_mort          = nan 
-      this%fire_mort               = nan 
+      this%fire_mort               = nan
+!      this%rxcrownfire_mort        = nan
+      this%rxfire_more             = nan
    
     end subroutine NanValues
    
@@ -532,6 +536,7 @@ module FatesCohortMod
       this%cambial_mort            = 0._r8
       this%crownfire_mort          = 0._r8
       this%fire_mort               = 0._r8
+      this%rxfire_mort             = 0._r8
     
     end subroutine ZeroValues
    
@@ -779,6 +784,7 @@ module FatesCohortMod
       copyCohort%cambial_mort            = this%cambial_mort
       copyCohort%crownfire_mort          = this%crownfire_mort
       copyCohort%fire_mort               = this%fire_mort
+      copyCohort%rxfire_mort             = this%rxfire_mort
 
       ! HYDRAULICS
       if (hlm_use_planthydro .eq. itrue) then
@@ -1079,6 +1085,7 @@ module FatesCohortMod
       write(fates_log(),*) 'cohort%dbdeaddt               = ', this%dbdeaddt
       write(fates_log(),*) 'cohort%fraction_crown_burned  = ', this%fraction_crown_burned
       write(fates_log(),*) 'cohort%fire_mort              = ', this%fire_mort
+      write(fates_log(),*) 'cohort%rxfire_mort            = ', this%rxfire_mort
       write(fates_log(),*) 'cohort%crownfire_mort         = ', this%crownfire_mort
       write(fates_log(),*) 'cohort%cambial_mort           = ', this%cambial_mort
       write(fates_log(),*) 'cohort%size_class             = ', this%size_class
