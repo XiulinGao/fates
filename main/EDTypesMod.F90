@@ -362,7 +362,9 @@ module EDTypesMod
      real(r8) :: imort_crownarea                       ! crownarea of individuals killed due to impact mortality per year. [m2 day]
 
      real(r8) :: fmort_crownarea_canopy                ! crownarea of canopy indivs killed due to fire per year. [m2/sec]
-     real(r8) :: fmort_crownarea_ustory                ! crownarea of understory indivs killed due to fire per year [m2/sec] 
+     real(r8) :: fmort_crownarea_ustory                ! crownarea of understory indivs killed due to fire per year [m2/sec]
+     real(r8) :: rxfmort_crownarea_canopy              ! crownarea of canopy indivs killed due to precribed fire per year [m2/sec]
+     real(r8) :: rxfmort_crownarea_ustory              ! crownarea of undertsory indivs killed due to prescribed fire per year [m2/sec]
 
      real(r8), allocatable :: term_nindivs_canopy(:,:) ! number of canopy individuals that were in cohorts which 
                                                        ! were terminated this timestep, on size x pft
@@ -375,11 +377,14 @@ module EDTypesMod
                                                          ! with termination mortality, per canopy level.  [kgC/ha/day]    
      real(r8), allocatable :: imort_carbonflux(:)        ! biomass of individuals killed due to impact mortality per year. [kgC/m2/sec]
      real(r8), allocatable :: fmort_carbonflux_canopy(:) ! biomass of canopy indivs killed due to fire per year. [gC/m2/sec]
-     real(r8), allocatable :: fmort_carbonflux_ustory(:) ! biomass of understory indivs killed due to fire per year [gC/m2/sec] 
+     real(r8), allocatable :: fmort_carbonflux_ustory(:) ! biomass of understory indivs killed due to fire per year [gC/m2/sec]
+     real(r8), allocatable :: rxfmort_carbonflux_canopy(:) ! biomass of cnaopy indivs killed due to prescribed fire per year [gC/m2/sec]
+     real(r8), allocatable :: rxfmort_carbonflux_ustory(:) ! biomass of understory indivs killed due to prescribed fire per year [gC/m2/sec]
 
      real(r8), allocatable :: term_abg_flux(:,:)          ! aboveground biomass lost due to termination mortality x size x pft
      real(r8), allocatable :: imort_abg_flux(:,:)         ! aboveground biomass lost due to impact mortality x size x pft [kgC/m2/sec]
      real(r8), allocatable :: fmort_abg_flux(:,:)         ! aboveground biomass lost due to fire mortality x size x pft
+     real(r8), allocatable :: rxfmort_abg_flux(:,:)       ! aboveground biomass loss due to precribed fire mortality x size x pft
 
 
      real(r8) :: demotion_carbonflux                     ! biomass of demoted individuals from canopy to understory [kgC/ha/day]
@@ -392,8 +397,11 @@ module EDTypesMod
 
      real(r8), allocatable :: fmort_rate_canopy(:,:)     ! rate of canopy individuals killed due to fire mortality per year.  
                                                          ! on size x pft array  (1:nlevsclass,1:numpft)
-     real(r8), allocatable :: fmort_rate_ustory(:,:)     ! rate of understory individuals killed due to fire mortality per year.  
+     real(r8), allocatable :: fmort_rate_ustory(:,:)     ! rate of understory individuals killed due to fire mortality per year.
                                                          ! on size x pft array  (1:nlevsclass,1:numpft)
+     real(r8), allocatable :: rxfmort_rate_canopy(:,:)   ! rate of canopy individuals killed due to prescribed fire per year
+     real(r8), allocatable :: rxfmort_rate_ustory(:,:)   ! rate of understory individuals killed due to precribed fire per yr
+     
     
      real(r8), allocatable :: fmort_rate_cambial(:,:)    ! rate of individuals killed due to fire mortality 
                                                          ! from cambial damage per year.  on size x pft array
@@ -407,6 +415,10 @@ module EDTypesMod
      real(r8), allocatable :: fmort_rate_ustory_damage(:,:,:) ! number of individuals per damage class that die from fire - ustory
      real(r8), allocatable :: fmort_cflux_canopy_damage(:,:) ! cflux per damage class that die from fire - canopy
      real(r8), allocatable :: fmort_cflux_ustory_damage(:,:) ! cflux per damage class that die from fire - ustory
+     real(r8), allocatable :: rxfmort_rate_canopy_damage(:,:,:) ! number of indivs per damage class that die from precribed fire -canopy
+     real(r8), allocatable :: rxfmort_rate_ustory_damage(:,:,:) ! number of indivs per damage class that die from precribed fire -understory
+     real(r8), allocatable :: rxfmort_cflux_canopy_damage(:,:) ! cflux per damage class that die from prescribed fire -canopy
+     real(r8), allocatable :: rxfmort_cflux_ustory_damage(:,:) ! cflux per damage class that die from precribed fire - understory
      real(r8), allocatable :: imort_cflux_damage(:,:)         ! carbon flux from impact mortality by damage class [kgC/m2/sec]
      real(r8), allocatable :: term_cflux_canopy_damage(:,:)          ! carbon flux from termination mortality by damage class
      real(r8), allocatable :: term_cflux_ustory_damage(:,:)          ! carbon flux from termination mortality by damage class

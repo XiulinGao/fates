@@ -911,9 +911,18 @@ contains
                                           currentSite%fmort_rate_canopy(currentCohort%size_class, currentCohort%pft) + &
                                           nc%n * currentCohort%fire_mort / hlm_freq_day
 
+                                     currentSite%rxfmort_rate_canopy(currentCohort%size_class, currentCohort%pft) = &
+                                          currentSite%rxfmort_rate_canopy(currentCohort%size_class, currentCohort%pft) + &
+                                          nc%n * currentCohort%rxfire_mort / hlm_freq_day  ! for prescribed fire
+
                                      currentSite%fmort_carbonflux_canopy(currentCohort%pft) = &
                                           currentSite%fmort_carbonflux_canopy(currentCohort%pft) + &
                                           (nc%n * currentCohort%fire_mort) * &
+                                          total_c * g_per_kg * days_per_sec * ha_per_m2
+
+                                     currentSite%rxfmort_carbonflux_canopy(currentCohort%pft) = &
+                                          currentSite%rxfmort_carbonflux_canopy(currentCohort%pft) + &
+                                          (nc%n * currentCohort%rxfire_mort) * &
                                           total_c * g_per_kg * days_per_sec * ha_per_m2
 
                                   else
@@ -922,15 +931,31 @@ contains
                                           currentSite%fmort_rate_ustory(currentCohort%size_class, currentCohort%pft) + &
                                           nc%n * currentCohort%fire_mort / hlm_freq_day
 
+                                     currentSite%rxfmort_rate_ustory(currentCohort%size_class, currentCohort%pft) = &
+                                          currentSite%rxfmort_rate_ustory(currentCohort%size_class, currentCohort%pft) + &
+                                          nc%n * currentCohort%rxfire_mort / hlm_freq_day
+
                                      currentSite%fmort_carbonflux_ustory(currentCohort%pft) = &
                                           currentSite%fmort_carbonflux_ustory(currentCohort%pft) + &
                                           (nc%n * currentCohort%fire_mort) * &
+                                          total_c * g_per_kg * days_per_sec * ha_per_m2
+
+                                     currentSite%rxfmort_carbonflux_ustory(currentCohort%pft) = &
+                                          currentSite%rxfmort_carbonflux_ustory(currentCohort%pft) + &
+                                          (nc%n * currentCohort%rxfire_mort) * &
                                           total_c * g_per_kg * days_per_sec * ha_per_m2
                                   end if
 
                                   currentSite%fmort_abg_flux(currentCohort%size_class, currentCohort%pft) = &
                                        currentSite%fmort_abg_flux(currentCohort%size_class, currentCohort%pft) + &
                                        (nc%n * currentCohort%fire_mort) * &
+                                       ( (sapw_c + struct_c + store_c) * prt_params%allom_agb_frac(currentCohort%pft) + &
+                                       leaf_c ) * &
+                                       g_per_kg * days_per_sec * ha_per_m2
+
+                                  currentSite%rxfmort_abg_flux(currentCohort%size_class, currentCohort%pft) = &
+                                       currentSite%rxfmort_abg_flux(currentCohort%size_class, currentCohort%pft) + &
+                                       (nc%n * currentCohort%rxfire_mort) * &
                                        ( (sapw_c + struct_c + store_c) * prt_params%allom_agb_frac(currentCohort%pft) + &
                                        leaf_c ) * &
                                        g_per_kg * days_per_sec * ha_per_m2
@@ -944,7 +969,8 @@ contains
                                        nc%n * currentCohort%crownfire_mort / hlm_freq_day
 
                                   ! loss of individual from fire in new patch.
-                                  nc%n = nc%n * (1.0_r8 - currentCohort%fire_mort)
+                                  ! add loss of indivs from prescribed fire 
+                                  nc%n = nc%n * (1.0_r8 - currentCohort%fire_mort - currentCohort%rxfire_mort)
 
                                   nc%cmort            = currentCohort%cmort
                                   nc%hmort            = currentCohort%hmort
