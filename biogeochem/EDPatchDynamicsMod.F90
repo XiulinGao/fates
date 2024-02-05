@@ -1004,11 +1004,14 @@ contains
                                   if( (leaf_burn_frac < 0._r8) .or. &
                                        (leaf_burn_frac > 1._r8) .or. &
                                        (currentCohort%fire_mort < 0._r8) .or. &
-                                       (currentCohort%fire_mort > 1._r8)) then
+                                       (currentCohort%fire_mort > 1._r8) .or. &
+                                       (currentCohort%rxfire_mort < 0._r8) .or. &
+                                       (currentCohort%rxfire_mort > 1._r8) ) then
                                      write(fates_log(),*) 'unexpected fire fractions'
                                      write(fates_log(),*) prt_params%woody(currentCohort%pft)
                                      write(fates_log(),*) leaf_burn_frac
                                      write(fates_log(),*) currentCohort%fire_mort
+                                     write(fates_log(),*) currentCohort%rxfire_mort
                                      call endrun(msg=errMsg(sourcefile, __LINE__))
                                   end if
 
@@ -1740,14 +1743,14 @@ contains
     !---------------------------------------------------------------------
 
     ! Only do this if there was a fire in this actual patch. 
-    if ( currentPatch%fire  ==  ifalse ) return
+    if ( currentPatch%fire  ==  ifalse .and. currentPatch%rxfire == ifalse) return
 
     ! If plant hydraulics are turned on, account for water leaving the plant-soil
     ! mass balance through the dead trees
     if (hlm_use_planthydro == itrue) then
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))
-          num_dead_trees  = (currentCohort%fire_mort * &
+          num_dead_trees  = ( (currentCohort%fire_mort + currentCohort%rxfire_mort)* &
                 currentCohort%n*patch_site_areadis/currentPatch%area)
           call AccumulateMortalityWaterStorage(currentSite,currentCohort,num_dead_trees)
           currentCohort => currentCohort%taller
@@ -1821,8 +1824,8 @@ contains
 
 
              ! Absolute number of dead trees being transfered in with the donated area
-             num_dead_trees = (currentCohort%fire_mort*currentCohort%n * &
-                               patch_site_areadis/currentPatch%area)
+             num_dead_trees = ( (currentCohort%fire_mort + currentCohort%rxfire_mort)* &
+                               currentCohort%n * patch_site_areadis/currentPatch%area)
 
              ! Contribution of dead trees to leaf litter
              donatable_mass = num_dead_trees * (leaf_m+repro_m) * &
