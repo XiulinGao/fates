@@ -1334,12 +1334,12 @@ contains
     call this%set_restart_var(vname='fates_rxfmortrate_canopy', vtype=cohort_r8, &
          long_name='fates diagnostics on rx fire mortality canopy', &
          units='indiv/ha/year', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_cano_siscpf)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortrate_cano_siscpf)
 
     call this%set_restart_var(vname='fates_rxfmortrate_ustory', vtype=cohort_r8, &
          long_name='fates diagnostics on rx fire mortality ustory', &
          units='indiv/ha/year', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_usto_siscpf)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortrate_usto_siscpf)
 
     call this%set_restart_var(vname='fates_imortrate', vtype=cohort_r8, &
          long_name='fates diagnostics on impact mortality', &
@@ -1404,12 +1404,12 @@ contains
     call this%set_restart_var(vname='fates_rxfmortcflux_canopy', vtype=cohort_r8, &
          long_name='fates diagnostic biomass of canopy rx fire', &
          units='gC/m2/sec', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_cano_sipft)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortcflux_cano_sipft)
 
     call this%set_restart_var(vname='fates_rxfmortcflux_ustory', vtype=cohort_r8, &
          long_name='fates diagnostic biomass of understory rx fire', &
          units='gC/m2/sec', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_usto_sipft)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortcflux_usto_sipft)
 
     call this%set_restart_var(vname='fates_termcflux_canopy', vtype=cohort_r8, &
          long_name='fates diagnostic term carbon flux canopy', &
@@ -1439,7 +1439,7 @@ contains
    call this%set_restart_var(vname='fates_abg_rxfmort_flux', vtype=cohort_r8, &
          long_name='fates aboveground biomass loss from rx fire mortality', &
          units='', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_abg_fmort_flux_siscpf )
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_abg_rxfmort_flux_siscpf )
 
    call this%set_restart_var(vname='fates_democflux', vtype=site_r8, &
          long_name='fates diagnostic demotion carbon flux', &
@@ -1464,12 +1464,12 @@ contains
     call this%set_restart_var(vname='fates_rxfmortcarea_canopy', vtype=site_r8, &
          long_name='fates diagnostic crownarea of canopy rx fire', &
          units='m2/sec', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcarea_cano_si)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortcarea_cano_si)
 
     call this%set_restart_var(vname='fates_rxfmortcarea_ustory', vtype=site_r8, &
          long_name='fates diagnostic crownarea of understory rx fire', &
          units='m2/sec', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcarea_usto_si)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortcarea_usto_si)
 
     call this%set_restart_var(vname='fates_termcarea_canopy', vtype=site_r8, &
          long_name='fates diagnostic term crownarea canopy', &
@@ -1510,12 +1510,12 @@ contains
     call this%set_restart_var(vname='fates_rxfmortrate_cano_dam', vtype=cohort_r8, &
          long_name='fates diagnostics on rx fire mortality by damage class', &
          units='indiv/ha/year', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_cano_sicdpf)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortrate_cano_sicdpf)
 
     call this%set_restart_var(vname='fates_rxfmortrate_usto_dam', vtype=cohort_r8, &
          long_name='fates diagnostics on rx fire mortality by damage class', &
          units='indiv/ha/year', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_usto_sicdpf)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortrate_usto_sicdpf)
 
     call this%set_restart_var(vname='fates_imortcflux_dam', vtype=cohort_r8, &
          long_name='biomass of indivs killed due to impact mort by damage class', &
@@ -1545,12 +1545,12 @@ contains
     call this%set_restart_var(vname='fates_rxfmortcflux_cano_dam', vtype=cohort_r8, &
          long_name='biomass of indivs killed due to rx fire mort by damage class', &
          units='kgC/ha/day', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_cano_sicdsc)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortcflux_cano_sicdsc)
 
     call this%set_restart_var(vname='fates_rxfmortcflux_usto_dam', vtype=cohort_r8, &
          long_name='biomass of indivs killed due to rx fire mort by damage class', &
          units='kgC/ha/day', flushval = flushzero, &
-         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_usto_sicdsc)
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortcflux_usto_sicdsc)
 
     call this%set_restart_var(vname='fates_crownarea_canopy_damage', vtype=site_r8, &
          long_name='fates area lost from damage each year', &
