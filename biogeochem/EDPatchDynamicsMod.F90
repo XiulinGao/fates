@@ -391,11 +391,11 @@ contains
        endif
 
        ! Fire Disturbance Rate
-       currentPatch%disturbance_rates(dtype_ifire) = currentPatch%frac_burnt
+       currentPatch%disturbance_rates(dtype_ifire) = ( currentPatch%frac_burnt + currentPatch%rxfire_frac_burnt )  
 
        ! Fires can't burn the whole patch, as this causes /0 errors. 
        if (currentPatch%disturbance_rates(dtype_ifire) > 0.98_r8)then
-          msg = 'very high fire areas'//trim(A2S(currentPatch%disturbance_rates(:)))//trim(N2S(currentPatch%frac_burnt))
+          msg = 'very high fire areas'//trim(A2S(currentPatch%disturbance_rates(:)))//trim(N2S((currentPatch%frac_burnt + currentPatch%rxfire_frac_burnt)))
           call FatesWarn(msg,index=2)
        endif
 
@@ -970,7 +970,7 @@ contains
 
                                   ! loss of individual from fire in new patch.
                                   ! add loss of indivs from prescribed fire 
-                                  nc%n = nc%n * (1.0_r8 - currentCohort%fire_mort - currentCohort%rxfire_mort)
+                                  nc%n = nc%n * (1.0_r8 - ( currentCohort%fire_mort + currentCohort%rxfire_mort) )
 
                                   nc%cmort            = currentCohort%cmort
                                   nc%hmort            = currentCohort%hmort
@@ -1743,7 +1743,7 @@ contains
     !---------------------------------------------------------------------
 
     ! Only do this if there was a fire in this actual patch. 
-    if ( currentPatch%fire  ==  ifalse .and. currentPatch%rxfire == ifalse) return
+    if ( currentPatch%fire  ==  ifalse .and. currentPatch%rxfire == ifalse ) return
 
     ! If plant hydraulics are turned on, account for water leaving the plant-soil
     ! mass balance through the dead trees
@@ -2794,9 +2794,11 @@ contains
     rp%tfc_ros              = (dp%tfc_ros*dp%area + rp%tfc_ros*rp%area) * inv_sum_area
     rp%fi                   = (dp%fi*dp%area + rp%fi*rp%area) * inv_sum_area
     rp%fd                   = (dp%fd*dp%area + rp%fd*rp%area) * inv_sum_area
+    rp%rxfire_fd            = (dp%rxfire_fd*dp%area + rp%rxfire_fd*rp%area) * inv_sum_area
     rp%ros_back             = (dp%ros_back*dp%area + rp%ros_back*rp%area) * inv_sum_area
     rp%scorch_ht(:)         = (dp%scorch_ht(:)*dp%area + rp%scorch_ht(:)*rp%area) * inv_sum_area
     rp%frac_burnt           = (dp%frac_burnt*dp%area + rp%frac_burnt*rp%area) * inv_sum_area
+    rp%rxfire_frac_burnt    = (dp%rxfire_frac_burnt*dp%area + rp%rxfire_frac_burnt*rp%area) * inv_sum_area
     rp%burnt_frac_litter(:) = (dp%burnt_frac_litter(:)*dp%area + rp%burnt_frac_litter(:)*rp%area) * inv_sum_area
     rp%btran_ft(:)          = (dp%btran_ft(:)*dp%area + rp%btran_ft(:)*rp%area) * inv_sum_area
     rp%zstar                = (dp%zstar*dp%area + rp%zstar*rp%area) * inv_sum_area
