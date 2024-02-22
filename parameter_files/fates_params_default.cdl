@@ -723,6 +723,10 @@ variables:
 	double fates_fire_fuel_energy ;
 		fates_fire_fuel_energy:units = "kJ/kg" ;
 		fates_fire_fuel_energy:long_name = "spitfire parameter, heat content of fuel" ;
+        double fates_fire_lh_mod ;
+	        fates_fire_lh_mod:units = "NA" ;
+		fates_fire_lh_mod:long_name = "spitfire parameter, case selection for lethal heating duration calculation: case 1 using fraction litter burned (Peterson & Ryan 1986) \
+		case 2 using fire intensity, equation 18 in Mercer & Weber 2001" ;
 	double fates_fire_max_durat ;
 		fates_fire_max_durat:units = "minutes" ;
 		fates_fire_max_durat:long_name = "spitfire parameter, fire maximum duration, Equation 14 Thonicke et al 2010" ;
@@ -1663,6 +1667,8 @@ data:
  fates_fire_fdi_b = 243.12 ;
 
  fates_fire_fuel_energy = 18000 ;
+
+ fates_fire_lh_mod = 1 ;
 
  fates_fire_max_durat = 240 ;
 

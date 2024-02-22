@@ -124,7 +124,12 @@ integer, parameter, public :: isemi_stress_decid = 2 ! If the PFT is stress (dro
 
   ! This flag specifies the scaling of how we present
   ! nutrient competitors to the HLM's soil BGC model
-  
+
+  ! flags specify how to calculate lethal heating duration in SPITFIRE
+  integer, public, parameter :: pr_lh = 1     ! lethal heating duration is a function of litter fraction burned
+  integer, public, parameter :: merweb_lh = 2 ! lethal heating duration is a function of fire intensity 
+
+ 
   integer, public :: fates_np_comp_scaling = fates_unset_int
 
   real(fates_r8), parameter, public :: secondary_age_threshold = 94._fates_r8 ! less than this value is young secondary land
