@@ -1,5 +1,5 @@
 module SFParamsMod
-   !
+1;95;0c   !
    ! module that deals with reading the SF parameter file
    !
    use FatesConstantsMod , only: r8 => fates_r8
@@ -30,7 +30,8 @@ module SFParamsMod
    real(r8),protected, public :: SF_val_durat_slope
    real(r8),protected, public :: SF_val_drying_ratio
    real(r8),protected, public :: SF_val_fire_threshold    ! threshold for fires that spread or go out. kW/m (Pyne 1996)
-   real(r8),protected, public :: SF_val_CWD_frac(ncwd)
+   integer, protected, public :: SF_val_lh_mod            ! case selection for lethal heating duration calculation: case 1 calculation using litter burned fraction (Peterson & Ryan 1986)
+   real(r8),protected, public :: SF_val_CWD_frac(ncwd)    ! case 2 calculation using fire intensity, Eq.18 in Mercer & Weber 2001 'Fire Plumes'
    real(r8),protected, public :: SF_val_max_decomp(NFSC)
    real(r8),protected, public :: SF_val_SAV(NFSC)
    real(r8),protected, public :: SF_val_FBD(NFSC)
@@ -40,6 +41,7 @@ module SFParamsMod
    real(r8),protected, public :: SF_val_low_moisture_Slope(NFSC)
    real(r8),protected, public :: SF_val_mid_moisture_Coeff(NFSC)
    real(r8),protected, public :: SF_val_mid_moisture_Slope(NFSC)
+   
 
    ! Prescribed fire relevant parameters
    real(r8),protected, public :: SF_val_rxfire_tpup   ! temprature upper threshold for conducting RX fire
@@ -71,6 +73,7 @@ module SFParamsMod
    character(len=param_string_length),parameter :: SF_name_FBD = "fates_fire_FBD"
    character(len=param_string_length),parameter :: SF_name_min_moisture = "fates_fire_min_moisture"
    character(len=param_string_length),parameter :: SF_name_mid_moisture = "fates_fire_mid_moisture"
+   character(len=param_string_length),parameter :: SF_name_lh_mod = "fates_fire_lh_mod"
    character(len=param_string_length),parameter :: SF_name_low_moisture_Coeff = "fates_fire_low_moisture_Coeff"
    character(len=param_string_length),parameter :: SF_name_low_moisture_Slope = "fates_fire_low_moisture_Slope"
    character(len=param_string_length),parameter :: SF_name_mid_moisture_Coeff = "fates_fire_mid_moisture_Coeff"
@@ -159,7 +162,6 @@ contains
          call endrun(msg=errMsg(sourcefile, __LINE__))
      end if
 
-
      return
   end subroutine SpitFireCheckParams
 
@@ -175,6 +177,7 @@ contains
     SF_val_fdi_a = nan
     SF_val_fdi_b = nan
     SF_val_fdi_alpha = nan
+    SF_val_lh_mod = nan
     SF_val_miner_total = nan
     SF_val_fuel_energy = nan
     SF_val_part_dens = nan
@@ -258,6 +261,9 @@ contains
     call fates_params%RegisterParameter(name=SF_name_fdi_alpha, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
 
+    call fates_params%RegisterParameter(name=SF_name_lh_mod, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
     call fates_params%RegisterParameter(name=SF_name_miner_total, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
 
@@ -337,6 +343,9 @@ contains
     call fates_params%RetrieveParameter(name=SF_name_fdi_alpha, &
          data=SF_val_fdi_alpha)
 
+    call fates_params%RetrieveParameter(name=SF_name_lh_mod, &
+         data=SF_val_lh_mod)
+    
     call fates_params%RetrieveParameter(name=SF_name_miner_total, &
          data=SF_val_miner_total)
 
