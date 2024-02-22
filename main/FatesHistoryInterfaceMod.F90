@@ -2467,6 +2467,7 @@ end subroutine flush_hvars
 
                hio_crownfiremort_si_scpf     => this%hvars(ih_crownfiremort_si_scpf)%r82d, &
                hio_cambialfiremort_si_scpf   => this%hvars(ih_cambialfiremort_si_scpf)%r82d, &
+             
 
                hio_abg_mortality_cflux_si_scpf    => this%hvars(ih_abg_mortality_cflux_si_scpf)%r82d, &
                hio_abg_productivity_cflux_si_scpf => this%hvars(ih_abg_productivity_cflux_si_scpf)%r82d, &
@@ -2734,7 +2735,7 @@ end subroutine flush_hvars
       hio_nesterov_fire_danger_si(io_si) = sites(s)%acc_NI
 
       ! Prescribed fire burn window
-      hio_rx_burn_window_si(io_si) = sites(s)%rx_flag
+      hio_rx_burn_window_si(io_si) = hio_rx_burn_window_si(io_si) + sites(s)%rx_flag
 
       ! number of ignitions [#/km2/day -> #/m2/s]
       hio_fire_nignitions_si(io_si) = sites(s)%NF_successful / m2_per_km2 /  &
@@ -3945,6 +3946,7 @@ end subroutine flush_hvars
             !
             hio_crownfiremort_si_scpf(io_si,i_scpf) = sites(s)%fmort_rate_crown(i_scls, i_pft) / m2_per_ha
             hio_cambialfiremort_si_scpf(io_si,i_scpf) = sites(s)%fmort_rate_cambial(i_scls, i_pft) / m2_per_ha
+            
             !
             ! fire components of overall canopy and understory mortality
             hio_mortality_canopy_si_scpf(io_si,i_scpf) = hio_mortality_canopy_si_scpf(io_si,i_scpf) + &
@@ -7275,6 +7277,7 @@ end subroutine update_history_hifrq
           use_default='inactive', avgflag='A', vtype=site_size_pft_r8,         &
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
           initialize=initialize_variables, index = ih_cambialfiremort_si_scpf)
+
 
     call this%set_history_var(vname='FATES_MORTALITY_TERMINATION_SZPF',        &
           units = 'm-2 yr-1',                                                  &
