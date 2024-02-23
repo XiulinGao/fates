@@ -1247,18 +1247,7 @@ contains
                    else
                       currentCohort%cambial_mort = 0.0_r8
                    endif
-                endif
-
-                if ((currentPatch%lethal_tot/tau_c) .ge. 2.0_r8) then
-                   currentCohort%ck_merweb = 1.0_r8
-                else
-                   if ((currentPatch%lethal_tot/tau_c) .gt. 0.22_r8) then
-                      currentCohort%ck_merweb = (0.563_r8*(currentPatch%lethal_tot/tau_c)) - 0.125_r8
-                   else
-                      currentCohort%ck_merweb = 0.0_r8
-                   endif
-                endif
-                
+                endif                
              endif !trees 
 
              currentCohort => currentCohort%shorter;
