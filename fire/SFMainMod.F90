@@ -844,18 +844,16 @@ end subroutine  rxfire_burn_window
        currentPatch%fire       = 0
        currentPatch%FD         = 0.0_r8
        currentPatch%frac_burnt = 0.0_r8
-!       currentPatch%rxfire_FI  = 0.0_r8
+       currentPatch%rxfire_FI  = 0.0_r8
        currentPatch%rxfire     = 0
-       currentPatch%rxfire_FD  = 0.0_r8
        currentPatch%rxfire_frac_burnt = 0.0_r8
        
-       if (currentSite%NF > 0.0_r8 .or. currentSite%rx_flag == 1.0_r8) then
+       if (currentSite%NF > 0.0_r8 .or. currentSite%rx_flag .eq. itrue) then
           
           ! Equation 14 in Thonicke et al. 2010
           ! fire duration in minutes
           currentPatch%FD = (SF_val_max_durat+1.0_r8) / (1.0_r8 + SF_val_max_durat * &
                              exp(SF_val_durat_slope*currentSite%FDI))
-          currentPatch%rxfire_FD = currentPatch%FD  !it's the same calculation
           
           if(write_SF == itrue)then
              if ( hlm_masterproc == itrue ) write(fates_log(),*) 'fire duration minutes',currentPatch%fd
@@ -923,19 +921,7 @@ end subroutine  rxfire_burn_window
 
           else
              currentPatch%frac_burnt = 0._r8
-          endif ! lb
-
-         ! for prescribed fire, burned area is defined by user to reflect burn capacity
-          ! do we really need this as it is a parameter?
-          if(currentSite%rx_flag .eq. 1.0_r8)then
-             currentPatch%rxfire_frac_burnt = SF_val_rxfire_AB / km2_to_m2
-             if(write_SF .eq. itrue)then
-                if ( hlm_masterproc .eq. itrue) write(fates_log(),*) 'rxfire_frac_burnt', currentPatch%rxfire_frac_burnt
-             endif
-          else
-             currentPatch%rxfire_frac_burnt = 0.0_r8
-          endif
-          
+          endif ! lb          
 
          ROS   = currentPatch%ROS_front / 60.0_r8 !m/min to m/sec 
          W     = currentPatch%TFC_ROS / 0.45_r8 !kgC/m2 of burned area to kgbiomass/m2 of burned area
@@ -943,10 +929,27 @@ end subroutine  rxfire_burn_window
          ! EQ 15 Thonicke et al 2010
          !units of fire intensity = (kJ/kg)*(kgBiomass/m2)*(m/min)
          currentPatch%FI = SF_val_fuel_energy * W * ROS !kj/m/s, or kW/m
+
+         ! for prescribed fire, burned area is defined by user to reflect burn capacity
+         ! currently we only calculated theoretical burned fraction and fire intensity when burn window presents
+
+          if(currentSite%rx_flag .eq. itrue)then
+             currentPatch%rxfire_frac_burnt = SF_val_rxfire_AB / km2_to_m2
+             currentPatch%rxfire_FI = SF_val_fuel_energy * W * ROS 
+             if(write_SF .eq. itrue)then
+                if ( hlm_masterproc .eq. itrue) write(fates_log(),*) 'rxfire_frac_burnt', currentPatch%rxfire_frac_burnt
+                if ( hlm_masterproc .eq. itrue) write(fates_log(),*) 'rxfire_FI', currentPatch%rxfire_FI
+             endif
+          else
+             currentPatch%rxfire_frac_burnt = 0.0_r8
+             currentPatch%rxfire_FI = 0.0_r8
+          endif
+
          !currentPatch%rxfire_FI = SF_val_fuel_energy * W * ROS !do we need to track FI separately for wildfire and rx fire? it's always calculated no matter which fire
        
          if(write_sf == itrue)then
-             if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
+            if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
+            if( hlm_masterproc == itrue ) write(fates_log(),*) 'lethal_heating_duration', currentPatch%tau_l
          endif
 
          !'decide_fire' subroutine
@@ -958,7 +961,7 @@ end subroutine  rxfire_burn_window
               currentPatch%FI .gt. SF_val_fire_threshold .and. &
               currentPatch%FI .lt. SF_val_rxfire_maxthreshold)
 
-         if (currentSite%rx_flag .eq. 1.0_r8 .and. &                   !rx fire condition check 
+         if (currentSite%rx_flag .eq. itrue .and. &                   !rx fire condition check 
              currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
              currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
             if(is_rxfire .or. is_managed_wildfire) then
@@ -974,12 +977,12 @@ end subroutine  rxfire_burn_window
                currentSite%NF_successful = currentSite%NF_successful + &
                        currentSite%NF * currentSite%FDI * currentPatch%area / area
                currentPatch%rxfire = 0
-               currentPatch%rxfire_FD = 0.0_r8
                currentPatch%rxfire_frac_burnt = 0.0_r8 !zero rx fire variables
+               currentPatch%rxfire_FI = 0.0_r8
             else
                currentPatch%rxfire = 0
-               currentPatch%rxfire_FD = 0.0_r8
                currentPatch%rxfire_frac_burnt = 0.0_r8
+               currentPatch%rxfire_FI = 0.0_r8
                currentPatch%fire = 0
                currentPatch%FD = 0.0_r8
                currentPatch%frac_burnt = 0.0_r8  !no rx fire no wildfire
@@ -987,8 +990,8 @@ end subroutine  rxfire_burn_window
             
          else           ! not a patch that is suitable for conducting rx fire 
             currentPatch%rxfire            = 0
-            currentPatch%rxfire_FD         = 0.0_r8
             currentPatch%rxfire_frac_burnt = 0.0_r8
+            currentPatch%rxfire_FI = 0.0_r8
             if (currentSite%NF .gt. 0.0_r8 .and. currentPatch%FI .gt. SF_val_fire_threshold) then
                 currentPatch%fire = 1
                 currentSite%NF_successful = currentSite%NF_successful + &
@@ -1191,9 +1194,9 @@ end subroutine  rxfire_burn_window
                    else
                       currentCohort%cambial_mort = 0.0_r8
                    endif
-                endif
-             endif !trees 
-
+                endif                
+             endif !trees
+             
              currentCohort => currentCohort%shorter;
 
           enddo !end cohort loop
@@ -1233,6 +1236,7 @@ end subroutine  rxfire_burn_window
              currentCohort%fire_mort = 0.0_r8
              currentCohort%rxfire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
+             currentCohort%rx_crownfire_mort = 0.0_r8
              if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
@@ -1243,14 +1247,18 @@ end subroutine  rxfire_burn_window
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees
 
-             ! if it is rx fire, assign calculated fire_mort to rxfire_mort and zero fire_mort to track them separately
+             ! if it is rx fire, pass calculated mortality rates to rxfire and zero them for wildfire to track them separately
              if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0)then
                 currentCohort%rxfire_mort = currentCohort%fire_mort
-!                currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
+                currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
+                currentCohort%rxcambial_mort = currentCohort%cambial_mort
                 currentCohort%fire_mort = 0.0_r8
-                !    currentCohort%crownfire_mort = 0.0_r8
+                currentCohort%crownfire_mort = 0.0_r8
+                currentCohort%cambial_mort = 0.0_r8
              else
                 currentCohort%rxfire_mort = 0.0_r8
+                currentCohort%rxcrownfire_mort = 0.0_r8
+                currentCohort%rxcambial_mort = 0.0_r8
              endif
                     
              currentCohort => currentCohort%shorter
