@@ -407,7 +407,9 @@ module EDTypesMod
                                                          ! from cambial damage per year.  on size x pft array
      real(r8), allocatable :: fmort_rate_crown(:,:)      ! rate of individuals killed due to fire mortality 
                                                          ! from crown damage per year.  on size x pft array
-
+     real(r8), allocatable :: rxfmort_rate_cambial(:,:)  ! cambial mortality rate due to prescribed fire
+     real(r8), allocatable :: rxfmort_rate_crown(:,:)    ! crown damage mortality due to prescribed fire
+     
      real(r8), allocatable :: imort_rate_damage(:,:,:)     ! number of individuals per damage class that die from impact mortality
      real(r8), allocatable :: term_nindivs_canopy_damage(:,:,:) ! number of individuals per damage class that die from termination mortality - canopy
      real(r8), allocatable :: term_nindivs_ustory_damage(:,:,:) ! number of individuals per damage class that die from termination mortality - canopy

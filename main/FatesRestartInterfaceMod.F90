@@ -234,7 +234,9 @@ module FatesRestartInterfaceMod
   integer :: ir_rxfmortrate_usto_siscpf
   integer :: ir_imortrate_siscpf
   integer :: ir_fmortrate_crown_siscpf
+  integer :: ir_rxfmortrate_crown_siscpf
   integer :: ir_fmortrate_cambi_siscpf
+  integer :: ir_rxfmortrate_cambi_siscpf
   integer :: ir_termnindiv_cano_siscpf
   integer :: ir_termnindiv_usto_siscpf
   integer :: ir_growflx_fusion_siscpf
@@ -1351,11 +1353,21 @@ contains
          units='indiv/ha/year', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_crown_siscpf)
 
+    call this%set_restart_var(vname='fates_rxfmortrate_crown', vtype=cohort_r8, &
+         long_name='fates diagnostics on rx fire crown fire mortality', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortrate_crown_siscpf)
+
     call this%set_restart_var(vname='fates_fmortrate_cambi', vtype=cohort_r8, &
          long_name='fates diagnostics on fire cambial mortality', &
          units='indiv/ha/year', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_cambi_siscpf)
 
+    call this%set_restart_var(vname='fates_rxfmortrate_cambi', vtype=cohort_r8, &
+         long_name='fates diagnostics on rx fire cambial mortality', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_rxfmortrate_cambi_siscpf)
+    
     call this%set_restart_var(vname='fates_termn_canopy', vtype=cohort_r8, &
          long_name='fates diagnostics on termin mortality canopy', &
          units='indiv/ha/day', flushval = flushzero, &
@@ -2169,7 +2181,9 @@ contains
            rio_rxfmortrate_usto_siscpf => this%rvars(ir_rxfmortrate_usto_siscpf)%r81d, &
            rio_imortrate_siscpf        => this%rvars(ir_imortrate_siscpf)%r81d, &
            rio_fmortrate_crown_siscpf  => this%rvars(ir_fmortrate_crown_siscpf)%r81d, &
+           rio_rxfmortrate_crown_siscpf => this%rvars(ir_rxfmortrate_crown_siscpf)%r81d, &
            rio_fmortrate_cambi_siscpf  => this%rvars(ir_fmortrate_cambi_siscpf)%r81d, &
+           rio_rxfmortrate_cambi_siscpf => this%rvars(ir_rxfmortrate_cambi_siscpf)%r81d, &
            rio_termnindiv_cano_siscpf  => this%rvars(ir_termnindiv_cano_siscpf)%r81d, &
            rio_termnindiv_usto_siscpf  => this%rvars(ir_termnindiv_usto_siscpf)%r81d, &
            rio_growflx_fusion_siscpf   => this%rvars(ir_growflx_fusion_siscpf)%r81d,  &
@@ -2273,7 +2287,9 @@ contains
                 rio_rxfmortrate_usto_siscpf(io_idx_si_scpf)  = sites(s)%rxfmort_rate_ustory(i_scls, i_pft)
                 rio_imortrate_siscpf(io_idx_si_scpf)       = sites(s)%imort_rate(i_scls, i_pft)
                 rio_fmortrate_crown_siscpf(io_idx_si_scpf) = sites(s)%fmort_rate_crown(i_scls, i_pft)
+                rio_rxfmortrate_crown_siscpf(io_idx_si_scpf) = sites(s)%rxfmort_rate_crown(i_scls, i_pft)
                 rio_fmortrate_cambi_siscpf(io_idx_si_scpf) = sites(s)%fmort_rate_cambial(i_scls, i_pft)
+                rio_rxfmortrate_cambi_siscpf(io_idx_si_scpf) = sites(s)%rxfmort_rate_cambial(i_scls, i_pft)
                 rio_termnindiv_cano_siscpf(io_idx_si_scpf) = sites(s)%term_nindivs_canopy(i_scls,i_pft)
                 rio_termnindiv_usto_siscpf(io_idx_si_scpf) = sites(s)%term_nindivs_ustory(i_scls,i_pft)
                 rio_growflx_fusion_siscpf(io_idx_si_scpf)  = sites(s)%growthflux_fusion(i_scls, i_pft)
@@ -3149,7 +3165,9 @@ contains
           rio_rxfmortrate_usto_siscpf   => this%rvars(ir_rxfmortrate_usto_siscpf)%r81d, &
           rio_imortrate_siscpf        => this%rvars(ir_imortrate_siscpf)%r81d, &
           rio_fmortrate_crown_siscpf  => this%rvars(ir_fmortrate_crown_siscpf)%r81d, &
+          rio_rxfmortrate_crown_siscpf => this%rvars(ir_rxfmortrate_crown_siscpf)%r81d, &
           rio_fmortrate_cambi_siscpf  => this%rvars(ir_fmortrate_cambi_siscpf)%r81d, &
+          rio_rxfmortrate_cambi_siscpf => this%rvars(ir_rxfmortrate_cambi_siscpf)%r81d, &
           rio_disturbance_rates_siluludi => this%rvars(ir_disturbance_rates_siluludi)%r81d, &
           rio_termnindiv_cano_siscpf  => this%rvars(ir_termnindiv_cano_siscpf)%r81d, &
           rio_termnindiv_usto_siscpf  => this%rvars(ir_termnindiv_usto_siscpf)%r81d, &
@@ -3250,7 +3268,9 @@ contains
                 sites(s)%rxfmort_rate_ustory(i_scls, i_pft)  = rio_rxfmortrate_usto_siscpf(io_idx_si_scpf)
                 sites(s)%imort_rate(i_scls, i_pft)         = rio_imortrate_siscpf(io_idx_si_scpf)
                 sites(s)%fmort_rate_crown(i_scls, i_pft)   = rio_fmortrate_crown_siscpf(io_idx_si_scpf)
+                sites(s)%rxfmort_rate_crown(i_scls, i_pft) = rio_rxfmortrate_crown_siscpf(io_idx_si_scpf)
                 sites(s)%fmort_rate_cambial(i_scls, i_pft) = rio_fmortrate_cambi_siscpf(io_idx_si_scpf)
+                sites(s)%rxfmort_rate_cambial(i_scls, i_pft) = rio_rxfmortrate_cambi_siscpf(io_idx_si_scpf)
                 sites(s)%term_nindivs_canopy(i_scls,i_pft) = rio_termnindiv_cano_siscpf(io_idx_si_scpf)
                 sites(s)%term_nindivs_ustory(i_scls,i_pft) = rio_termnindiv_usto_siscpf(io_idx_si_scpf)
                 sites(s)%growthflux_fusion(i_scls, i_pft)  = rio_growflx_fusion_siscpf(io_idx_si_scpf)

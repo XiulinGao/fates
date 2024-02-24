@@ -208,9 +208,10 @@ module FatesPatchMod
     real(r8)              :: fi                      ! average fire intensity of flaming front [kJ/m/s] or [kW/m]
     integer               :: fire                    ! is there a fire? [1=yes; 0=no]
     real(r8)              :: fd                      ! fire duration [min]
-    real(r8)              :: rxfire_fd               ! fire duration for prescribed fire, do we need this?
+!    real(r8)              :: rxfire_fd               ! fire duration for prescribed fire, do we need this?
     integer               :: rxfire                  ! is there a prescribed fire? [1=yes; 0=no] note, fire + rxfire should be 1 or 0 cannot be 2            
-
+    real(r8)              :: rxfire_fi               ! average fire intensity of prescribed fire flaming front
+    
     ! fire effects      
     real(r8)              :: scorch_ht(maxpft)       ! scorch height [m] 
     real(r8)              :: frac_burnt              ! fraction burnt [0-1/day]  
@@ -393,7 +394,8 @@ module FatesPatchMod
       this%fire                         = fates_unset_int
       this%fd                           = nan
       this%rxfire                       = fates_unset_int
-      this%rxfire_fd                    = nan
+      this%rxfire_fi                    = nan
+    !  this%rxfire_fd                    = nan
       this%scorch_ht(:)                 = nan 
       this%frac_burnt                   = nan
       this%rxfire_frac_burnt            = nan
@@ -472,8 +474,9 @@ module FatesPatchMod
       this%effect_wspeed                     = 0.0_r8
       this%tau_l                             = 0.0_r8
       this%fi                                = 0.0_r8
+      this%rxfire_fi                         = 0.0_r8
       this%fd                                = 0.0_r8
-      this%rxfire_fd                         = 0.0_r8
+!      this%rxfire_fd                         = 0.0_r8
       this%scorch_ht(:)                      = 0.0_r8  
       this%frac_burnt                        = 0.0_r8
       this%rxfire_frac_burnt                 = 0.0_r8

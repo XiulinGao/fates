@@ -144,6 +144,8 @@ contains
     allocate(site_in%rxfmort_rate_ustory(1:nlevsclass,1:numpft))
     allocate(site_in%fmort_rate_cambial(1:nlevsclass,1:numpft))
     allocate(site_in%fmort_rate_crown(1:nlevsclass,1:numpft))
+    allocate(site_in%rxfmort_rate_cambial(1:nlevsclass,1:numpft))
+    allocate(site_in%rxfmort_rate_crown(nlevsclass,1:numpft))
     allocate(site_in%growthflux_fusion(1:nlevsclass,1:numpft))
     allocate(site_in%mass_balance(1:num_elements))
     allocate(site_in%flux_diags(1:num_elements))
@@ -326,6 +328,8 @@ contains
     site_in%rxfmort_carbonflux_canopy(:) = 0._r8
     site_in%fmort_rate_cambial(:,:) = 0._r8
     site_in%fmort_rate_crown(:,:) = 0._r8
+    site_in%rxfmort_rate_cambial(:,:) = 0._r8
+    site_in%rxfmort_rate_crown(:,:) = 0._r8
     site_in%term_abg_flux(:,:) = 0._r8
     site_in%imort_abg_flux(:,:) = 0._r8
     site_in%fmort_abg_flux(:,:) = 0._r8
@@ -850,6 +854,7 @@ contains
           currentPatch%fuel_frac(:)               = 0._r8
           currentPatch%tfc_ros                    = 0._r8
           currentPatch%fi                         = 0._r8
+          currentPatch%rxfire_fi                  = 0._r8
           currentPatch%fire                       = 0
           currentPatch%rxfire                     = 0
           currentPatch%fd                         = 0._r8

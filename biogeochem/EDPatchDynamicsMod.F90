@@ -968,6 +968,13 @@ contains
                                        currentSite%fmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
                                        nc%n * currentCohort%crownfire_mort / hlm_freq_day
 
+                                  currentSite%rxfmort_rate_cambial(currentCohort%size_calss, currentCohort%pft) = &
+                                       currentSite%rxfmort_rate_cambial(currentCohort%size_calss, currentCohort%pft) + &
+                                       nc%n * currentCohort%rxcambial_mort / hlm_freq_day
+                                  currentSite%rxfmort_rate_crown(currentCohort%size_calss, currentCohort%pft) = &
+                                       currentSite%rxfmort_rate_crown(currentCohort%size_calss, currentCohort%pft) + &
+                                       nc%n * currentCohort%rxcrownfire_mort / hlm_freq_day
+
                                   ! loss of individual from fire in new patch.
                                   ! add loss of indivs from prescribed fire 
                                   nc%n = nc%n * (1.0_r8 - ( currentCohort%fire_mort + currentCohort%rxfire_mort) )
