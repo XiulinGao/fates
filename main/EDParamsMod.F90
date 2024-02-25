@@ -76,7 +76,8 @@ module EDParamsMod
                                                                       ! (1) for Fates default
                                                                       ! (2) for the Tree Recruitment Scheme (Hanbury-Brown et al., 2022)
                                                                       ! (3) for the Tree Recruitment Scheme without seedling dynamics
-   
+   integer,protected, public  :: lethal_heating_model                 ! (1) deafult calculation using fraction litter burned (Peterson & Ryan 1986)
+                                                                      ! (2) lethal heating duration is calculated using fire intensity (Eq. 18 in Mercer & Weber 2001 "Fire Plumes")
    
    logical,protected, public :: active_crown_fire        ! flag, 1=active crown fire 0=no active crown fire
    character(len=param_string_length),parameter :: fates_name_active_crown_fire = "fates_fire_active_crown_fire"
@@ -187,6 +188,7 @@ integer, parameter, public :: maxpft = 16      ! maximum number of PFTs allowed
    character(len=param_string_length),parameter,public :: ED_name_canopy_closure_thresh= "fates_canopy_closure_thresh"      
    character(len=param_string_length),parameter,public :: ED_name_stomatal_model= "fates_leaf_stomatal_model"
    character(len=param_string_length),parameter,public :: ED_name_regeneration_model= "fates_regeneration_model"
+   character(len=param_string_length),parameter,public :: ED_name_lethal_heating_model= "fates_fire_lh_mod"
 
    character(len=param_string_length),parameter,public :: name_theta_cj_c3 = "fates_leaf_theta_cj_c3"
    character(len=param_string_length),parameter,public :: name_theta_cj_c4 = "fates_leaf_theta_cj_c4"
@@ -359,6 +361,7 @@ contains
     stomatal_model                        = -9
     regeneration_model                    = -9
     stomatal_assim_model                  = -9
+    lethal_heating_model                  = -9
     max_cohort_per_patch                  = -9
     hydr_kmax_rsurf1                      = nan
     hydr_kmax_rsurf2                      = nan
@@ -510,6 +513,9 @@ contains
          dimension_names=dim_names_scalar)
 	 
     call fates_params%RegisterParameter(name=ED_name_regeneration_model, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=ED_name_lethal_heating_model, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
 	 
     call fates_params%RegisterParameter(name=stomatal_assim_name, dimension_shape=dimension_shape_scalar, &
@@ -727,6 +733,10 @@ contains
     call fates_params%RetrieveParameter(name=ED_name_regeneration_model, &
          data=tmpreal)
     regeneration_model = nint(tmpreal)
+
+    call fates_params%RetrieveParameter(name=ED_name_lethal_heating_model, &
+         data=tmpreal)
+    lethal_heating_model = nint(tmpreal)
     
     call fates_params%RetrieveParameter(name=stomatal_assim_name, &
          data=tmpreal)
@@ -893,6 +903,7 @@ contains
         write(fates_log(),fmt0) 'ED_val_canopy_closure_thresh = ',ED_val_canopy_closure_thresh
         write(fates_log(),fmt0) 'regeneration_model = ',regeneration_model      
         write(fates_log(),fmt0) 'stomatal_model = ',stomatal_model
+        write(fates_log(),fmt0) 'lethal_heating_model = ',lethal_heating_model
         write(fates_log(),fmt0) 'stomatal_assim_model = ',stomatal_assim_model            
         write(fates_log(),fmt0) 'hydro_kmax_rsurf1 = ',hydr_kmax_rsurf1
         write(fates_log(),fmt0) 'hydro_kmax_rsurf2 = ',hydr_kmax_rsurf2  

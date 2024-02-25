@@ -858,7 +858,7 @@ contains
           currentPatch%fire                       = 0
           currentPatch%rxfire                     = 0
           currentPatch%fd                         = 0._r8
-          currentPatch%rxfire_fd                  = 0._r8
+!          currentPatch%rxfire_fd                  = 0._r8
           currentPatch%ros_back                   = 0._r8
           currentPatch%scorch_ht(:)               = 0._r8
           currentPatch%frac_burnt                 = 0._r8

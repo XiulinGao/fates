@@ -6029,7 +6029,7 @@ end subroutine update_history_hifrq
     call this%set_history_var(vname='FATES_RXFIRE_INTENSITY_BURNFRAC_AP',      &
          units='J m-1 s-1',                                                    &
          long='product of prescribed fire intensity and burned fraction, resolved by patch age, to be devided by FATES_RXFIRE_BURNFRAC_AP to get area-weighted mean intensity)', &
-         use_default='active', avgflag='A'. vtype=site_age_r8, hlms='CLM:ALM', &
+         use_default='active', avgflag='A', vtype=site_age_r8, hlms='CLM:ALM', &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index = ih_rxfire_intensity_si_age)
 
@@ -7339,7 +7339,7 @@ end subroutine update_history_hifrq
          long='fire mortality from cambial burn due to prescribed fire by pft/size in number of plants per m2 per year', &
          use_default='inactive', avgflag='A', vtype=site_size_pft_r8,          &
          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                  &
-         initialize=initialize_variable, index = ih_rxcambialfiremort_si_scpf)
+         initialize=initialize_variables, index = ih_rxcambialfiremort_si_scpf)
 
 
     call this%set_history_var(vname='FATES_MORTALITY_TERMINATION_SZPF',        &

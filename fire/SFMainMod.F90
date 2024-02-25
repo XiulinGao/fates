@@ -762,13 +762,15 @@ contains
     use FatesInterfaceTypesMod, only : hlm_spitfire_mode
     use EDParamsMod,       only : ED_val_nignitions
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
+    use EDParamsMod,       only : lethal_heating_model !how to calculate lethal heating duration
     use FatesConstantsMod, only : years_per_day
-    use FatesConstantsMod , only : tfrz => t_water_freeze_k_1atm
+    use FatesConstantsMod, only : tfrz => t_water_freeze_k_1atm
+    use FatesConstantsMod, only : pr_lh, merweb_lh
     use SFParamsMod,       only : SF_val_fdi_alpha,SF_val_fuel_energy, &
          SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
          SF_val_rxfire_AB, SF_val_rxfire_minthreshold, &
          SF_val_rxfire_maxthreshold, SF_val_rxfire_fuel_min, &
-         SF_val_rxfire_fuel_max, SF_val_lh_mod
+         SF_val_rxfire_fuel_max
     
     type(ed_site_type), intent(inout), target :: currentSite
     type(fates_patch_type), pointer :: currentPatch
@@ -972,7 +974,7 @@ contains
          !1) lethal heating duration is a function of litter burned fraction, which is determined by FMC and associated params (Peterson & Ryan (1986)
          !2) lethal heating duration is a function of fire intensity (Eq. 18 in Mercer & Weber 2001)
 
-         case_lethal_heating: select case (int(SF_val_lh_mod))
+         case_lethal_heating: select case (lethal_heating_model)
 
          case (pr_lh)
          !Following used for determination of cambial kill follows from Peterson & Ryan (1986) scheme
@@ -996,7 +998,7 @@ contains
             currentPatch%tau_l = min(8.0_r8, (l_tot / 60.0_r8))  !in min, and cap it to 8 min, as suggested by literature survey by P&R (1986).
 
          case DEFAULT
-            write(fates_log(),*) 'An undefined lethal heating calculation was specified: ',SF_val_lh_mod
+            write(fates_log(),*) 'An undefined lethal heating calculation was specified: ',lethal_heating_model
             write(fates_log(),*) 'Aborting'
             call endrun(msg=errMsg(sourcefile, __LINE__))
 
@@ -1294,7 +1296,7 @@ contains
              currentCohort%fire_mort = 0.0_r8
              currentCohort%rxfire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
-             currentCohort%rx_crownfire_mort = 0.0_r8
+             currentCohort%rxcrownfire_mort = 0.0_r8
              if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8

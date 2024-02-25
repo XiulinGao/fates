@@ -968,11 +968,11 @@ contains
                                        currentSite%fmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
                                        nc%n * currentCohort%crownfire_mort / hlm_freq_day
 
-                                  currentSite%rxfmort_rate_cambial(currentCohort%size_calss, currentCohort%pft) = &
-                                       currentSite%rxfmort_rate_cambial(currentCohort%size_calss, currentCohort%pft) + &
+                                  currentSite%rxfmort_rate_cambial(currentCohort%size_class, currentCohort%pft) = &
+                                       currentSite%rxfmort_rate_cambial(currentCohort%size_class, currentCohort%pft) + &
                                        nc%n * currentCohort%rxcambial_mort / hlm_freq_day
-                                  currentSite%rxfmort_rate_crown(currentCohort%size_calss, currentCohort%pft) = &
-                                       currentSite%rxfmort_rate_crown(currentCohort%size_calss, currentCohort%pft) + &
+                                  currentSite%rxfmort_rate_crown(currentCohort%size_class, currentCohort%pft) = &
+                                       currentSite%rxfmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
                                        nc%n * currentCohort%rxcrownfire_mort / hlm_freq_day
 
                                   ! loss of individual from fire in new patch.
@@ -2801,7 +2801,7 @@ contains
     rp%tfc_ros              = (dp%tfc_ros*dp%area + rp%tfc_ros*rp%area) * inv_sum_area
     rp%fi                   = (dp%fi*dp%area + rp%fi*rp%area) * inv_sum_area
     rp%fd                   = (dp%fd*dp%area + rp%fd*rp%area) * inv_sum_area
-    rp%rxfire_fd            = (dp%rxfire_fd*dp%area + rp%rxfire_fd*rp%area) * inv_sum_area
+!    rp%rxfire_fd            = (dp%rxfire_fd*dp%area + rp%rxfire_fd*rp%area) * inv_sum_area
     rp%ros_back             = (dp%ros_back*dp%area + rp%ros_back*rp%area) * inv_sum_area
     rp%scorch_ht(:)         = (dp%scorch_ht(:)*dp%area + rp%scorch_ht(:)*rp%area) * inv_sum_area
     rp%frac_burnt           = (dp%frac_burnt*dp%area + rp%frac_burnt*rp%area) * inv_sum_area
