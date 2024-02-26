@@ -4096,6 +4096,8 @@ end subroutine flush_hvars
       sites(s)%rxfmort_carbonflux_ustory(:) = 0._r8
       sites(s)%fmort_rate_cambial(:,:) = 0._r8
       sites(s)%fmort_rate_crown(:,:) = 0._r8
+      sites(s)%rxfmort_rate_cambial(:,:) = 0._r8
+      sites(s)%rxfmort_rate_crown(:,:) = 0._r8
       sites(s)%growthflux_fusion(:,:) = 0._r8
       sites(s)%fmort_abg_flux(:,:) = 0._r8
       sites(s)%rxfmort_abg_flux(:,:) = 0._r8

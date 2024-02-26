@@ -1304,7 +1304,7 @@ contains
                 currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.
              else
-                link_fun = -0.193 + 0.233_r8 * currentCohort%dbh - 0.926_r8 * currentPatch%tau_l + &
+                link_fun = -0.193_r8 + 0.233_r8 * currentCohort%dbh - 0.926_r8 * currentPatch%tau_l + &
                      0.106_r8 * currentCohort%dbh * currentPatch%tau_l            ! using data from Gao & Schwilk 2022, in which grass survival accounts for reprouting prob
                                                                                   ! heating duration measured in Gao & Schwilk is at 0.1m above the ground, set r to be PFT specific?
                 currentCohort%fire_mort = 1.0_r8 - (1.0_r8 / (1.0_r8 + exp(-link_fun))) ! Oops, we kill grasses in fire :] 
