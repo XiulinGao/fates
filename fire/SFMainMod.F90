@@ -967,8 +967,6 @@ contains
              currentPatch%rxfire_FI = 0.0_r8
           endif
 
-         !currentPatch%rxfire_FI = SF_val_fuel_energy * W * ROS !do we need to track FI separately for wildfire and rx fire? it's always calculated no matter which fire
-
 
          !There are two ways to calculate lethal heating duration:
          !1) lethal heating duration is a function of litter burned fraction, which is determined by FMC and associated params (Peterson & Ryan (1986)
@@ -994,7 +992,7 @@ contains
             ambient_t = currentPatch%tveg24%GetMean() - tfrz
             delta_t   = 60.0_r8 - ambient_t
             ln_base   = (k * (currentPatch%FI**0.667_r8)) / (z * delta_t)
-            l_tot     = (beta * z * (log(ln_base))**0.5_r8) + (1/r) * log(ln_base) ! in sec
+            l_tot     = (beta * z * (log(ln_base))**0.5_r8) + (1.0_r8 / r) * log(ln_base) ! in sec
             currentPatch%tau_l = min(8.0_r8, (l_tot / 60.0_r8))  !in min, and cap it to 8 min, as suggested by literature survey by P&R (1986).
 
          case DEFAULT
@@ -1305,16 +1303,25 @@ contains
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.
              else
                 link_fun = -0.193_r8 + 0.233_r8 * currentCohort%dbh - 0.926_r8 * currentPatch%tau_l + &
-                     0.106_r8 * currentCohort%dbh * currentPatch%tau_l            ! using data from Gao & Schwilk 2022, in which grass survival accounts for reprouting prob
-                                                                                  ! heating duration measured in Gao & Schwilk is at 0.1m above the ground, set r to be PFT specific?
+                     0.106_r8 * currentCohort%dbh * currentPatch%tau_l                  ! using data from Gao & Schwilk 2022, in which grass survival accounts for reprouting prob
+                                                                                        ! heating duration measured in Gao & Schwilk is at 0.1m above the ground, set z to be PFT specific?
                 currentCohort%fire_mort = 1.0_r8 - (1.0_r8 / (1.0_r8 + exp(-link_fun))) ! Oops, we kill grasses in fire :] 
              endif !trees
 
              ! if it is rx fire, pass calculated mortality rates to rxfire and zero them for wildfire to track them separately
-             if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0)then
-                currentCohort%rxfire_mort = currentCohort%fire_mort
-                currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
-                currentCohort%rxcambial_mort = currentCohort%cambial_mort
+             ! but only apply rxfire-caused mortality to cohort with DBH <= 10 cm 
+             
+             if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0) then
+                if(currentCohort%dbh .le. 10.0_r8) then
+                   currentCohort%rxfire_mort = min(0.5_r8, currentCohort%fire_mort)         ! we also cap rxfire mortality to 50% 
+                   currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
+                   currentCohort%rxcambial_mort = currentCohort%cambial_mort
+                else
+                   currentCohort%rxfire_mort = 0.0_r8
+                   currentCohort%rxcrownfire_mort = 0.0_r8
+                   currentCohort%rxcambial_mort = 0.0_r8
+                endif   
+
                 currentCohort%fire_mort = 0.0_r8
                 currentCohort%crownfire_mort = 0.0_r8
                 currentCohort%cambial_mort = 0.0_r8
