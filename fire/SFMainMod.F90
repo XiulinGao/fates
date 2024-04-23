@@ -368,6 +368,7 @@ contains
           currentPatch%litter_moisture(tr_sf)       = fuel_moisture(tr_sf)/MEF(tr_sf)
           currentPatch%litter_moisture(dl_sf)       = fuel_moisture(dl_sf)/MEF(dl_sf)
           currentPatch%litter_moisture(lg_sf)       = fuel_moisture(lg_sf)/MEF(lg_sf)
+          currentPatch%sum_fuel = currentPatch%sum_fuel - litt_c%ag_cwd(tr_sf)
           
        else
 
@@ -790,7 +791,10 @@ contains
     real(r8) :: tau_b(nfsc)   !lethal heating rates for each fuel class (min)   
 
     logical  :: is_rxfire           ! is it a rx fire?
+    logical  :: rx_man              ! rxfire use human igniton
+    logical  :: rx_hyb              ! rxfire due to both strike and human ignition
     logical  :: is_managed_wildfire ! is it a wildfire with FI lower than the max rxfire intensity?
+    logical  :: is_wildfire         ! is it a wildfire that cannot be managed?
     
     real(r8) size_of_fire !in m2
     real(r8) cloud_to_ground_strikes  ! [fraction] depends on hlm_spitfire_mode
@@ -955,7 +959,7 @@ contains
          ! for prescribed fire, burned area is defined by user to reflect burn capacity
          ! currently we only calculated theoretical burned fraction and fire intensity when burn window presents
 
-          if(currentSite%rx_flag .eq. itrue)then
+         if(currentSite%rx_flag .eq. itrue) then
              currentPatch%rxfire_frac_burnt = SF_val_rxfire_AB / km2_to_m2
              currentPatch%rxfire_FI = SF_val_fuel_energy * W * ROS 
              if(write_SF .eq. itrue)then
@@ -1011,29 +1015,48 @@ contains
          !'decide_fire' subroutine
          ! store some condition check here to simplify the decision tree
 
-         is_rxfire = (currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
-              currentPatch%FI .lt. SF_val_rxfire_maxthreshold)
+         rx_man = (currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
+              currentPatch%FI .lt. SF_val_rxfire_maxthreshold .and. &
+              currentSite%NF .eq. 0.0_r8)
+         rx_hyb = (currentPatch%FI .lt. SF_val_fire_threshold .and. &
+              currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
+              currentPatch%FI .lt. SF_val_rxfire_maxthreshold .and. &
+              currentSite%NF .gt. 0.0_r8)
+         is_rxfire = (rx_man .or. rx_hyb)
+         
          is_managed_wildfire = (currentSite%NF .gt. 0.0_r8 .and.  &
               currentPatch%FI .gt. SF_val_fire_threshold .and. &
               currentPatch%FI .lt. SF_val_rxfire_maxthreshold)
-
+         
+         is_wildfire = (currentSite%NF .gt. 0.0_r8 .and. &
+              currentPatch%FI .gt. SF_val_fire_threshold .and. &
+              currentPatch%FI .gt. SF_val_rxfire_maxthreshold)
+         
          if (currentSite%rx_flag .eq. itrue .and. &                   !rx fire condition check 
              currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
              currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
-            if(is_rxfire .or. is_managed_wildfire) then
+            !            if(is_rxfire .or. is_managed_wildfire) then
+            if(is_rxfire) then
                currentPatch%fire = 0
                currentPatch%rxfire = 1
                currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
                currentPatch%FD         = 0.0_r8      ! zero wildfire duration
 
-            else if (currentSite%NF .gt. 0.0_r8 .and. &
-                 currentPatch%FI .gt. SF_val_fire_threshold .and. &
-                 currentPatch%FI .gt. SF_val_rxfire_maxthreshold) then
-               currentPatch%fire = 1         !wildfire happens before start the rx fire
+            else if (is_managed_wildfire) then
+               currentPatch%fire = 1                 !wildfire happens before start the rx fire
                currentSite%NF_successful = currentSite%NF_successful + &
                        currentSite%NF * currentSite%FDI * currentPatch%area / area
+               currentPatch%rxfire = 1
+!               currentPatch%rxfire_frac_burnt = currentPatch%frac_burnt !we let managed wildfire burn freely and pass the area burnt to rxfire 
+               currentPatch%rxfire_frac_burnt = 0.0_r8
+               currentPatch%rxfire_FI         = 0.0_r8
+
+            else if (is_wildfire) then
+               currentPatch%fire = 1                 !wildfire that cannot be managed 
+               currentSite%NF_successful = currentSite%NF_successful + &
+                    currentSite%NF * currentSite%FDI * currentPatch%area / area
                currentPatch%rxfire = 0
-               currentPatch%rxfire_frac_burnt = 0.0_r8 !zero rx fire variables
+               currentPatch%rxfire_frac_burnt = 0.0_r8
                currentPatch%rxfire_FI = 0.0_r8
             else
                currentPatch%rxfire = 0
@@ -1064,15 +1087,15 @@ contains
     endif ! nocomp_pft_label check
 
     !check if we have both rx and wildfire happening on the same patch
-    ! end run if that's the case?
-    if(currentPatch%fire * currentPatch%rxfire .eq. 1) then
+    ! end run if that's the case? OK, CURRENTLY WE ALLOW THIS TO HAPPEN
+!    if(currentPatch%fire * currentPatch%rxfire .eq. 1) then
        
-       write(fates_log(),*) 'Both wildfire and management fire are happening'
-       write(fates_log(),*) 'rxfire =',currentPatch%rxfire
-       write(fates_log(),*) 'fire =',currentPatch%fire
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+!       write(fates_log(),*) 'Both wildfire and management fire are happening'
+!       write(fates_log(),*) 'rxfire =',currentPatch%rxfire
+!       write(fates_log(),*) 'fire =',currentPatch%fire
+!       call endrun(msg=errMsg(sourcefile, __LINE__))
 
-    endif
+!    endif
        
     currentPatch => currentPatch%younger
 
@@ -1312,19 +1335,31 @@ contains
              ! but only apply rxfire-caused mortality to cohort with DBH <= 10 cm 
              
              if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0) then
-                if(currentCohort%dbh .le. 10.0_r8) then
-                   currentCohort%rxfire_mort = min(0.5_r8, currentCohort%fire_mort)         ! we also cap rxfire mortality to 50% 
-                   currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
-                   currentCohort%rxcambial_mort = currentCohort%cambial_mort
-                else
-                   currentCohort%rxfire_mort = 0.0_r8
-                   currentCohort%rxcrownfire_mort = 0.0_r8
-                   currentCohort%rxcambial_mort = 0.0_r8
-                endif   
+!                if(currentCohort%dbh .le. 10.0_r8) then
+!                  if(currentPatch%fire == 0) then
+                    !                      currentCohort%rxfire_mort = min(0.5_r8, currentCohort%fire_mort)         ! we also cap rxfire mortality to 50%
+                    currentCohort%rxfire_mort = currentCohort%fire_mort
+                    currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
+                    currentCohort%rxcambial_mort = currentCohort%cambial_mort
+                    currentCohort%fire_mort = 0.0_r8
+                    currentCohort%crownfire_mort = 0.0_r8
+                    currentCohort%cambial_mort = 0.0_r8
+!                 else if(currentPatch%fire == 1) then
+                    !currentCohort%fire_mort = min(0.5_r8, currentCohort%fire_mort)           ! for managed wildfire we capped mortality as well
+!                    currentCohort%rxfire_mort = 0.0_r8
+!                    currentCohort%rxcrownfire_mort = 0.0_r8
+!                    currentCohort%rxcambial_mort = 0.0_r8
+!                 endif
+                   
+             !else
+             !      currentCohort%rxfire_mort = 0.0_r8
+             !      currentCohort%rxcrownfire_mort = 0.0_r8
+             !      currentCohort%rxcambial_mort = 0.0_r8
+             !      currentCohort%fire_mort = 0.0_r8
+             !      currentCohort%crownfire_mort = 0.0_r8
+             !      currentCohort%cambial_mort = 0.0_r8
+             !   endif   
 
-                currentCohort%fire_mort = 0.0_r8
-                currentCohort%crownfire_mort = 0.0_r8
-                currentCohort%cambial_mort = 0.0_r8
              else
                 currentCohort%rxfire_mort = 0.0_r8
                 currentCohort%rxcrownfire_mort = 0.0_r8
