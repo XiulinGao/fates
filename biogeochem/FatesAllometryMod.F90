@@ -412,6 +412,12 @@ contains
       case (3) !"chave14") 
          call h_allom(d,ipft,h,dhdd)
          call dh2bagw_chave2014(d,h,dhdd,p1,p2,wood_density,c2b,bagw,dbagwdd)
+      case (4) ! 3par_pwr
+         call h_allom(d,ipft,h,dhdd)
+         call dh2bagw_3pwr(d,h,dhdd,p1,p2,p3,wood_density,c2b,bagw,dbagwdd)
+      case (5) ! 3par_pwr_grass
+         call h_allom(d,ipft,h,dhdd)
+         call dh2bagw_3pwr_grass(d,h,dhdd,p1,p2,p3,c2b,bagw,dbagwdd)
       case DEFAULT
          write(fates_log(),*) 'An undefined AGB allometry was specified: ',allom_amode
          write(fates_log(),*) 'Aborting'
@@ -464,6 +470,12 @@ contains
          call d2blmax_2pwr(d,p1,p2,c2b,blmax,dblmaxdd)
       case(3) ! dh2blmax_2pwr
          call dh2blmax_2pwr(d,p1,p2,dbh_maxh,c2b,blmax,dblmaxdd)
+      case(4) ! dh2blmax_3pwr
+         call h_allom(d,ipft,h,dhdd)
+         call dh2blmax_3pwr(d,h,dhdd,p1,p2,p3,slatop,dbh_maxh,c2b,blmax,dblmaxdd)
+      case (5) ! dh2blmax_3pwr_grass
+         call h_allom(d,ipft,h,dhdd)
+         call dh2blmax_3pwr_grass(d,h,dhdd,p1,p2,p3,c2b,blmax,dblmaxdd)
       case DEFAULT
          write(fates_log(),*) 'An undefined leaf allometry was specified: ', &
               allom_lmode
@@ -1648,7 +1660,7 @@ contains
 
   ! =========================================================================
 
-  subroutine dh2blmax_3pwr_grass(d,p1,p2,p3,h,dhdd,c2b,blmax,dblmaxdd)
+  subroutine dh2blmax_3pwr_grass(d,h,dhdd,p1,p2,p3,c2b,blmax,dblmaxdd)
     !------------------------------------------------------------------------
     !
     ! This function calculates the maximum leaf biomass using diameter (basal
