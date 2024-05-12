@@ -890,6 +890,7 @@ contains
       ! initialize new cohorts on bare ground
       !
 
+
       ! ARGUMENTS
       type(ed_site_type),     intent(inout),  pointer  :: site_in
       type(fates_patch_type), intent(inout),  pointer  :: patch_in
@@ -934,6 +935,7 @@ contains
       real(r8),parameter               :: zero_co_age = 0._r8   ! The age of a newly recruited cohort is zero
       !-------------------------------------------------------------------------------------
 
+
       patch_in%tallest  => null()
       patch_in%shortest => null()
 
@@ -970,11 +972,13 @@ contains
          endif
       end do
 
+
       pft_loop: do pft =  1, numpft
          if_use_this_pft: if (use_pft_local(pft) .eq. itrue) then
             l2fr         = prt_params%allom_l2fr(pft)
             canopy_trim  = 1.0_r8
             crown_damage = 1  ! Assume no damage to begin with
+            resprout = 0 ! Cohorts initialized on bare ground are not resprouts
 
             ! retrieve drop fraction of non-leaf tissues for phenology initialization
             fnrt_drop_fraction = prt_params%phen_fnrt_drop_fraction(pft)

@@ -39,6 +39,9 @@ module EDTypesMod
   real(r8), parameter, public :: init_recruit_trim = 0.8_r8    ! This is the initial trimming value that
                                                                ! new recruits start with
 
+  real(r8), parameter, public :: store_c_ratio_ag2bg = 0.54_r8   !Storage carbon concentration ratio between
+                                                             !above-ground and below-ground organs
+							     !in resprouters
   ! -------------------------------------------------------------------------------------
   ! Radiation parameters
   ! These should be part of the radiation module, but since we only have one option
@@ -323,6 +326,9 @@ module EDTypesMod
      real(r8) ::  NF                                           ! daily ignitions in km2
      real(r8) ::  NF_successful                                ! daily ignitions in km2 that actually lead to fire
      integer  ::  rx_flag                                      ! dainly burn window flag
+     integer  ::  resprout                               ! flag to indicate if the cohort is a post-fire resprout
+     real(r8) ::  frac_resprout                          ! what fraction of the cohort resprouts in response to fire damage
+
 
      ! PLANT HYDRAULICS
      type(ed_site_hydr_type), pointer :: si_hydr
