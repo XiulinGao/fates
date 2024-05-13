@@ -1322,6 +1322,11 @@ contains
     !real(r8) :: agw_c_nr                     ! AGW carbon of nrc (intermediary var) [kg]
     !real(r8) :: bgw_c_nr                     ! BGW carbon of nrc (intermediary var) [kg]
     real(r8) :: store_c                      ! Storage carbon of current cohort
+    real(r8) :: nrc_dbldd
+    real(r8) :: nrc_dbagwdd
+    real(r8) :: nrc_dbbgwdd
+    real(r8) :: nrc_dbdeaddd
+    real(r8) :: nrc_dbsapwdd
     !real(r8) :: resprout_dbh                 ! dbh of the resprout
     !integer :: resprout_crowndamage          ! Crown damage level of resprout
     
@@ -1360,8 +1365,7 @@ contains
 		   !storage to make the resprout.
 
                    call target_resprout_carbon_pools(EDPftvarcon_inst%hgt_min(currentCohort%pft),currentCohort%pft,&
-		   store_c,nrc_leaf_c,nrc_sapw_c,nrc_struct_c,nrc_store_c)
-
+		   store_c,nrc_leaf_c,nrc_sapw_c,nrc_struct_c,nrc_store_c,nrc_dbldd,nrc_dbagwdd,nrc_dbsapwdd,nrc_dbbgwdd,nrc_dbdeaddd)
 
                    !resprout_crowndamage = 1 !Resprouts start undamaged. Needed to calculate construction
 		                            !costs for a resprout.

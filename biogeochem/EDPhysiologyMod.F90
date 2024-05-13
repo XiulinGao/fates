@@ -68,6 +68,7 @@ module EDPhysiologyMod
   use EDParamsMod         , only : nlevleaf
   use EDTypesMod          , only : num_vegtemp_mem
   use EDParamsMod         , only : maxpft
+  use EDParamsMod         , only : maxpatch_total
   use EDTypesMod          , only : ed_site_type
   use FatesPatchMod,        only : fates_patch_type
   use FatesCohortMod,       only : fates_cohort_type
@@ -87,7 +88,7 @@ module EDPhysiologyMod
   use EDTypesMod          , only : phen_dstat_timeon
   use EDTypesMod          , only : phen_dstat_pshed
   use EDTypesMod          , only : phen_dstat_pshed
-  use EDTypesMod          , only : init_recruit_trim
+  use EDParamsMod          , only : init_recruit_trim
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use FatesGlobals          , only : fates_log
   use FatesGlobals          , only : endrun => fates_endrun
@@ -2061,6 +2062,9 @@ contains
     integer  :: n_litt_types           ! number of litter element types (c,n,p, etc)
     integer  :: el                     ! loop counter for litter element types
     integer  :: element_id             ! element id consistent with parteh/PRTGenericMod.F90
+    real(r8),dimension(maxpatch_total,maxpft) :: intra_patch_seed_rain !ahb: array to track seed that stays in its patch of origin
+    integer :: ipatch                       ! loop counter for patch ahb
+
 
     ! If the dispersal kernel is not turned on, keep the dispersal fraction at zero
     site_disp_frac(:) = 0._r8
@@ -2068,16 +2072,26 @@ contains
       site_disp_frac(:) = EDPftvarcon_inst%seed_dispersal_fraction(:)
     end if
 
+    !------------------------------------------------------------------------------------
+
+
     el_loop: do el = 1, num_elements
 
        site_seed_rain(:) = 0._r8
+
+       intra_patch_seed_rain(:,:) = 0._r8 ! ahb: this array temporarily holds seed that stays in the patch where its produced
+       
        element_id = element_list(el)
 
        site_mass => currentSite%mass_balance(el)
 
        ! Loop over all patches and sum up the seed input for each PFT
+
+       ipatch = 0 ! ahb
        currentPatch => currentSite%oldest_patch
+
        seed_rain_loop: do while (associated(currentPatch))
+          ipatch = ipatch + 1
 
           currentCohort => currentPatch%tallest
           do while (associated(currentCohort))
@@ -2106,9 +2120,15 @@ contains
                 currentcohort%seed_prod = seed_prod
              end if
 
+             !how much seed remains in the patch ahb
+             intra_patch_seed_rain(ipatch,pft) = intra_patch_seed_rain(ipatch,pft) +&
+                  ( ( 1.0_r8 - EDPftvarcon_inst%inter_patch_disp_frac(pft) ) * seed_prod * currentCohort%n)
 
+             
+             !how much seed is distributed evenly over all patches(including the current patch)
              site_seed_rain(pft) = site_seed_rain(pft) +  &
-                  (seed_prod * currentCohort%n + store_m_to_repro) ![kg/site/day, kg/ha/day]
+                  ( (EDPftvarcon_inst%inter_patch_disp_frac(pft) * seed_prod * currentCohort%n) +&
+                  store_m_to_repro)  
 
              currentCohort => currentCohort%shorter
           enddo !cohort loop
@@ -2126,13 +2146,25 @@ contains
        ! Loop over all patches again and disperse the mixed seeds into the input flux
        ! arrays
        ! Loop over all patches and sum up the seed input for each PFT
+       ipatch = 0 
        currentPatch => currentSite%oldest_patch
+
        seed_in_loop: do while (associated(currentPatch))
 
+          ipatch = ipatch + 1 
+          
           litt => currentPatch%litter(el)
           do pft = 1,numpft
 
              if(currentSite%use_this_pft(pft).eq.itrue)then
+
+                ! Seed input from the current patch
+                litt%seed_in_local(pft) = litt%seed_in_local(pft) + &
+                intra_patch_seed_rain(ipatch,pft)/currentPatch%area
+
+
+                ! Seed input from all patches within the site
+                litt%seed_in_local(pft) = litt%seed_in_local(pft) + site_seed_rain(pft)/area
 
                 ! Seed input from local sources (within site).  Note that a fraction of the
                 ! internal seed rain is sent out to neighboring gridcells.

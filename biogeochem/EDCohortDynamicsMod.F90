@@ -1855,16 +1855,17 @@ end subroutine create_cohort
      use FatesAllometryMod, only : bfineroot 
      
      !ARGUMENTS
-     type(ed_cohort_type), intent(inout) :: currentCohort
+     type(fates_cohort_type), intent(inout) :: currentCohort
 
 
      !LOCAL VARIABLES
      real(r8) :: target_fnrt_c !target fine root carbon pool [kg]
      real(r8) :: fnrt_c !actual fine root carbon pool [kg]
+     real(r8) :: dbfrdd !fine root derivative
 
 
      call bfineroot(currentCohort%dbh,currentCohort%pft,&
-          currentCohort%canopy_trim,currentCohort%l2fr,target_fnrt_c)
+          currentCohort%canopy_trim,currentCohort%l2fr,target_fnrt_c,dbfrdd)
 
      fnrt_c = currentCohort%prt%GetState(fnrt_organ,carbon12_element)
      

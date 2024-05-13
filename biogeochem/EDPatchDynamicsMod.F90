@@ -7,6 +7,7 @@ module EDPatchDynamicsMod
   use FatesGlobals         , only : FatesWarn,N2S,A2S
   use FatesInterfaceTypesMod, only : hlm_freq_day
   use FatesInterfaceTypesMod, only : hlm_current_tod
+  use FatesInterfaceTypesMod, only : nleafage
   use EDPftvarcon          , only : EDPftvarcon_inst
   use EDPftvarcon          , only : GetDecompyFrac
   use PRTParametersMod      , only : prt_params
@@ -31,12 +32,14 @@ module EDPatchDynamicsMod
   use EDTypesMod           , only : min_patch_area_forced
   use EDParamsMod          , only : nclmax
   use EDParamsMod          , only : regeneration_model
+  use EDParamsMod          , only : store_c_ratio_ag2bg
   use FatesInterfaceTypesMod, only : numpft
   use FatesConstantsMod     , only : dtype_ifall
   use FatesConstantsMod     , only : dtype_ilog
   use FatesConstantsMod     , only : dtype_ifire
   use FatesConstantsMod     , only : dtype_ilandusechange
   use FatesConstantsMod    , only : ican_upper
+  use PRTGenericMod        , only : SetState
   use PRTGenericMod        , only : num_elements
   use PRTGenericMod        , only : element_list
   use FatesLitterMod       , only : lg_sf
@@ -496,7 +499,7 @@ contains
 
     !Resprouting variables
 
-    type (ed_cohort_type), pointer :: nrc    ! The new resprouting cohort
+    type (fates_cohort_type), pointer :: nrc    ! The new resprouting cohort
     real(r8) :: nrc_leaf_c                   ! Target leaf carbon pool of nrc [kg]     
     real(r8) :: nrc_sapw_c                   ! Target sapw carbon pool of nrc [kg]
     real(r8) :: nrc_struct_c                 ! Target struct carbon pool of nrc [kg]
@@ -1108,9 +1111,9 @@ contains
                                   nrc%prt => null()
                             
                                   call InitPRTObject(nrc%prt)
-                                  call InitPRTBoundaryConditions(nrc)
-                                  call zero_cohort(nrc)
-                                  call copy_cohort(currentCohort, nrc)
+                                  call nrc%InitPRTBoundaryConditions()
+                                  call nrc%ZeroValues()
+                                  call currentCohort%Copy(nrc)
                                   nrc%canopy_layer = 1
                                   nrc%canopy_layer_yesterday = 1._r8
                               
@@ -1281,9 +1284,10 @@ contains
 
                                !Add the new resprouting cohort into the linked list
                                   if (nrc%n > 0.0_r8) then
-                                     call cohort_to_linked_list(new_patch,nrc)
+                                     call insert_cohort(newPatch,nrc,newPatch%tallest, newPatch%shortest,&
+                                          tnull, snull)
                                   else
-                                     call DeallocateCohort(nrc)
+                                     call nrc%FreeMemory()
                                      deallocate(nrc)
                                   endif
 
@@ -2127,11 +2131,7 @@ contains
 
              do c = 1,ncwd
                 do sl = 1,currentSite%nlevsoil
-<<<<<<< HEAD
-                   donatable_mass =  num_dead_trees * SF_val_CWD_frac_adj(c) * &
-=======
                    donatable_mass =  (num_dead_trees + num_resprouts) * SF_val_CWD_frac(c) * &
->>>>>>> adam-resprout
                          bcroot * currentSite%rootfrac_scr(sl)
 
                    new_litt%bg_cwd(c,sl) = new_litt%bg_cwd(c,sl) + &
@@ -2166,8 +2166,9 @@ contains
 
 
             currentCohort => currentCohort%taller
-        enddo
-    end do
+         enddo
+      enddo
+      
     
     return
   end subroutine fire_litter_fluxes

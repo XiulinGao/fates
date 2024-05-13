@@ -31,7 +31,7 @@ module PRTInitParamsFatesMod
   use FatesAllometryMod  , only : CheckIntegratedAllometries
   use FatesAllometryMod, only : set_root_fraction
   use PRTGenericMod, only : StorageNutrientTarget
-  use EDTypesMod,          only : init_recruit_trim
+  use EDParamsMod,          only : init_recruit_trim
   use FatesConstantsMod,   only : ihard_stress_decid, isemi_stress_decid
   
   !

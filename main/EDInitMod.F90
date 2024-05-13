@@ -904,7 +904,8 @@ contains
       integer                          :: el                    ! index for element loop
       integer                          :: element_id            ! element index consistent with defs in PRTGeneric
       integer                          :: use_pft_local(numpft) ! determine whether this PFT is used for this patch and site
-      integer                          :: crown_damage          ! crown damage class of the cohort [1 = undamaged, >1 = damaged] 
+      integer                          :: crown_damage          ! crown damage class of the cohort [1 = undamaged, >1 = damaged]
+      integer                          :: resprout              ! resprout flag
       real(r8)                         :: l2fr                  ! leaf to fineroot biomass ratio [kg kg-1]
       real(r8)                         :: canopy_trim           ! fraction of the maximum leaf biomass that we are targeting [0-1]
       real(r8)                         :: cohort_n              ! cohort density
