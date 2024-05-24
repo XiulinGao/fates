@@ -1344,13 +1344,12 @@ contains
              currentCohort%rxfire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
              currentCohort%frac_resprout = 0.0_r8
-
              currentCohort%rxcrownfire_mort = 0.0_r8
              if_woody: if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
                 ! Equation 18 in Thonicke et al. 2010. 
-                currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
+                fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.
                       ! If the pft is eligible to resprout a fraction of the cohort will resprout rather than die.
                 if_resprouter: if ( EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. fire_mort > 0.0_r8) then

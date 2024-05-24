@@ -2164,7 +2164,7 @@ contains
 
 
                 ! Seed input from all patches within the site
-                litt%seed_in_local(pft) = litt%seed_in_local(pft) + site_seed_rain(pft)/area
+!                litt%seed_in_local(pft) = litt%seed_in_local(pft) + site_seed_rain(pft)/area
 
                 ! Seed input from local sources (within site).  Note that a fraction of the
                 ! internal seed rain is sent out to neighboring gridcells.
@@ -2355,7 +2355,7 @@ contains
     integer                   , intent(in) :: cold_stat    ! Is the site in cold leaf-off status?
     integer, dimension(numpft), intent(in) :: drought_stat ! Is the site in drought leaf-off status?
     type(bc_in_type),           intent(in) :: bc_in
-    type(fates_patch_type),        intent(in) :: currentPatch
+    type(fates_patch_type),     intent(in) :: currentPatch
     !
     ! !LOCAL VARIABLES:
     integer :: pft
@@ -2399,6 +2399,13 @@ contains
 
           litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft), &  
                max_germination)*years_per_day
+          ! Disturbance sensitive germinaiton   -ahb
+          if (prt_params%allom_dbh_maxheight(pft) < 20.0_r8 .and. currentPatch%age < 2.0_r8)then
+             litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft)* &
+                  EDPftvarcon_inst%disturbance_germ(pft), max_germination)* &
+                  years_per_day
+          end if
+          
 
           ! If TRS seedling dynamics is switched on we calculate seedling emergence (i.e. germination)
           ! as a pft-specific function of understory light and soil moisture.

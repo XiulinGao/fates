@@ -504,6 +504,11 @@ contains
     real(r8) :: nrc_sapw_c                   ! Target sapw carbon pool of nrc [kg]
     real(r8) :: nrc_struct_c                 ! Target struct carbon pool of nrc [kg]
     real(r8) :: nrc_store_c                  ! Target storage carbon pool of nrc [kg]
+    real(r8) :: nrc_dbldd
+    real(r8) :: nrc_dbagwdd
+    real(r8) :: nrc_dbbgwdd
+    real(r8) :: nrc_dbdeaddd
+    real(r8) :: nrc_dbsapwdd
     !real(r8) :: a_sapw_nr                    ! Sapwood area of new recruit (dummy)
     !real(r8) :: agw_c_nr                     ! agw carbon of new recruit (intermediary var) [kg]
     !real(r8) :: bgw_c_nr                     ! bgw carbon of new recruit (intermediary var) [kg]
@@ -1116,6 +1121,7 @@ contains
                                   call currentCohort%Copy(nrc)
                                   nrc%canopy_layer = 1
                                   nrc%canopy_layer_yesterday = 1._r8
+                                  nrc%resprout = 1 
                               
                                ! Reduce number of resprouters in the new patch due to new patch area
                                ! and fraction of cohort resprouting. Note: the doner cohort number 
@@ -1152,7 +1158,7 @@ contains
 			       !Carbon pools for fnrt and storage are preserved from the doner cohort.
 
                                   call target_resprout_carbon_pools(nrc%height,nrc%pft,store_c,nrc_leaf_c,&
-                                       nrc_sapw_c,nrc_struct_c,nrc_store_c)
+                                       nrc_sapw_c,nrc_struct_c,nrc_store_c,nrc_dbldd,nrc_dbagwdd,nrc_dbsapwdd,nrc_dbbgwdd,nrc_dbdeaddd)
 
 			       !Set the biomass pool sizes for nrc. Mass fluxes associated
                                !with the reduction in above-ground biomass pools were already sent to 
@@ -1292,6 +1298,8 @@ contains
                                   endif
 
                                endif if_resprouter
+                               ! loss of individuals from source patch due to area shrinking
+                         !      currentCohort%n = currentCohort%n * (1._r8 - patch_site_areadis/currentPatch%area)
 
 
                                ! Logging is the current disturbance

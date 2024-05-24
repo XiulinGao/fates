@@ -543,6 +543,9 @@ variables:
 	double fates_recruit_inter_patch_disp_frac(fates_pft) ;
       		fates_recruit_inter_patch_disp_frac:units = "fraction" ;
 		fates_recruit_inter_patch_disp_frac:long_name = "fraction of seed that disperses to other patches within a site" ;
+	double fates_disturbance_germ(fates_pft) ;
+	       fates_disturbance_germ:units = "unitless" ;
+	       fates_disturbance_germ:long_name = "Multipication factor for post-disturbance germination rate" ;
 	double fates_seed_dispersal_fraction(fates_pft) ;
 		fates_seed_dispersal_fraction:units = "fraction" ;
 		fates_seed_dispersal_fraction:long_name = "fraction of seed rain to be dispersed to other grid cells" ;
@@ -1210,6 +1213,8 @@ data:
     0.51, 0.51, 0.51, 0.51 ;
 
  fates_recruit_inter_patch_disp_frac = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ;
+
+ fates_disturbance_germ = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ;
 
  fates_grperc = 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 
     0.11, 0.11 ;
