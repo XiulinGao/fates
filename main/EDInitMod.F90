@@ -810,6 +810,7 @@ contains
       ! initialize new cohorts on bare ground
       !
 
+
       ! ARGUMENTS
       type(ed_site_type),     intent(inout),  pointer  :: site_in
       type(fates_patch_type), intent(inout),  pointer  :: patch_in
@@ -863,6 +864,7 @@ contains
             site_in%spread = init_spread_inventory
          end if
       end do
+
 
       
       ! Manage interactions of fixed biogeog (site level filter) and nocomp (patch level filter)

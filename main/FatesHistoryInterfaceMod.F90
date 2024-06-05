@@ -335,6 +335,8 @@ module FatesHistoryInterfaceMod
   integer :: ih_biomass_si_agepft
   integer :: ih_npp_si_agepft
   integer :: ih_scorch_height_si_agepft
+  integer :: ih_canopycrownarea_si_agepft
+  integer :: ih_crownarea_si_agepft
 
   ! Indices to (site) variables
   integer :: ih_tveg24_si
@@ -568,6 +570,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_leafbiomass_si_pft
   integer :: ih_storebiomass_si_pft
   integer :: ih_nindivs_si_pft
+  integer :: ih_nindivs_resprout_si_pft
   integer :: ih_nindivs_sec_si_pft
   integer :: ih_recruitment_si_pft
   integer :: ih_mortality_si_pft
@@ -580,6 +583,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_gpp_si_pft
   integer :: ih_gpp_sec_si_pft
   integer :: ih_npp_si_pft
+  integer :: ih_seed_bank_si_pft
   integer :: ih_npp_sec_si_pft
   integer :: ih_site_dstatus_si_pft
   integer :: ih_dleafoff_si_pft
@@ -2236,6 +2240,7 @@ end subroutine flush_hvars
                hio_leafbiomass_si_pft  => this%hvars(ih_leafbiomass_si_pft)%r82d, &
                hio_storebiomass_si_pft => this%hvars(ih_storebiomass_si_pft)%r82d, &
                hio_nindivs_si_pft      => this%hvars(ih_nindivs_si_pft)%r82d, &
+               hio_nindivs_resprout_si_pft      => this%hvars(ih_nindivs_resprout_si_pft)%r82d, &
                hio_nindivs_sec_si_pft  => this%hvars(ih_nindivs_sec_si_pft)%r82d, &
                hio_recruitment_si_pft  => this%hvars(ih_recruitment_si_pft)%r82d, &
                hio_seeds_out_gc_si_pft => this%hvars(ih_seeds_out_gc_si_pft)%r82d, &
@@ -2250,6 +2255,7 @@ end subroutine flush_hvars
                hio_gpp_si_pft  => this%hvars(ih_gpp_si_pft)%r82d, &
                hio_gpp_sec_si_pft      => this%hvars(ih_gpp_sec_si_pft)%r82d, &
                hio_npp_si_pft  => this%hvars(ih_npp_si_pft)%r82d, &
+               hio_seed_bank_si_pft  => this%hvars(ih_seed_bank_si_pft)%r82d, &
                hio_npp_sec_si_pft      => this%hvars(ih_npp_sec_si_pft)%r82d, &
                hio_nesterov_fire_danger_si => this%hvars(ih_nesterov_fire_danger_si)%r81d, &
                hio_fire_nignitions_si => this%hvars(ih_fire_nignitions_si)%r81d, &
@@ -2445,6 +2451,8 @@ end subroutine flush_hvars
                hio_nplant_si_scagpft                => this%hvars(ih_nplant_si_scagpft)%r82d, &
                hio_npp_si_agepft                    => this%hvars(ih_npp_si_agepft)%r82d, &
                hio_biomass_si_agepft                => this%hvars(ih_biomass_si_agepft)%r82d, &
+               hio_canopycrownarea_si_agepft        => this%hvars(ih_canopycrownarea_si_agepft)%r82d, &
+               hio_crownarea_si_agepft              => this%hvars(ih_crownarea_si_agepft)%r82d, &
                hio_scorch_height_si_agepft          => this%hvars(ih_scorch_height_si_agepft)%r82d, &
                hio_yesterdaycanopylevel_canopy_si_scls     => this%hvars(ih_yesterdaycanopylevel_canopy_si_scls)%r82d, &
                hio_yesterdaycanopylevel_understory_si_scls => this%hvars(ih_yesterdaycanopylevel_understory_si_scls)%r82d, &
@@ -2914,6 +2922,11 @@ end subroutine flush_hvars
 
                   hio_nindivs_si_pft(io_si,ft) = hio_nindivs_si_pft(io_si,ft) + &
                      ccohort%n * AREA_INV
+                  
+                  if (ccohort%resprout .eq. 1) then
+                     hio_nindivs_resprout_si_pft(io_si,ft) = hio_nindivs_resprout_si_pft(io_si,ft) + &
+                        ccohort%n * AREA_INV
+                  end if
 
                   if ( cpatch%anthro_disturbance_label .eq. secondaryforest ) then
                      hio_nindivs_sec_si_pft(io_si,ft) = hio_nindivs_sec_si_pft(io_si,ft) + &
@@ -3344,6 +3357,14 @@ end subroutine flush_hvars
 
                hio_biomass_si_agepft(io_si,iagepft) = hio_biomass_si_agepft(io_si,iagepft) + &
                   total_m * ccohort%n * AREA_INV
+              
+               hio_crownarea_si_agepft(io_si,iagepft) = hio_crownarea_si_agepft(io_si,iagepft) + &
+                  ccohort%c_area * AREA_INV
+               
+               if (ccohort%canopy_layer .eq. 1) then
+                   hio_canopycrownarea_si_agepft(io_si,iagepft) = hio_canopycrownarea_si_agepft(io_si,iagepft) + &
+                      ccohort%c_area * AREA_INV
+               end if
 
                ! update SCPF/SCLS- and canopy/subcanopy- partitioned quantities
                canlayer: if (ccohort%canopy_layer .eq. 1) then
@@ -4009,8 +4030,10 @@ end subroutine flush_hvars
 
       hio_litter_out_si(io_si) = 0._r8
       hio_seed_bank_si(io_si)  = 0._r8
+
       hio_ungerm_seed_bank_si(io_si)  = 0._r8
       hio_seedling_pool_si(io_si)  = 0._r8
+      hio_seed_bank_si_pft(io_si,:)  = 0._r8
       hio_seeds_in_si(io_si)   = 0._r8
       hio_seeds_in_local_si(io_si)   = 0._r8
 
@@ -4043,6 +4066,13 @@ end subroutine flush_hvars
          ! Sum up total seedling pool  
          hio_seedling_pool_si(io_si) = hio_seedling_pool_si(io_si) + &
             sum(litt%seed_germ(:)) * area_frac
+
+         
+         ! Sum up pft-specific seed bank (ungerminated only)
+         do i_pft = 1, numpft 
+         hio_seed_bank_si_pft(io_si,i_pft) = hio_seed_bank_si_pft(io_si,i_pft) + &
+            (litt%seed(i_pft) * area_frac)
+         end do
 
          ! Sum up the input flux into the seed bank (local and external)
          hio_seeds_in_si(io_si) = hio_seeds_in_si(io_si) + &
@@ -5481,6 +5511,12 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_pft_r8, hlms='CLM:ALM', &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_npp_si_pft)
+   
+    call this%set_history_var(vname='FATES_SEEDBANK_PF', units='kg m-2',       &
+         long='total mass of seeds in the seed bank',  &
+         use_default='active', avgflag='A', vtype=site_pft_r8, hlms='CLM:ALM', &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_seed_bank_si_pft)
 
     call this%set_history_var(vname='FATES_GPP_SE_PF', units='kg m-2 s-1',        &
          long='total PFT-level GPP in kg carbon per m2 land area per second, secondary patches',  &
@@ -5499,6 +5535,12 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_pft_r8, hlms='CLM:ALM', &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_nindivs_si_pft)
+
+    call this%set_history_var(vname='FATES_NPLANT_RESPROUT_PF', units='m-2',           &
+         long='total PFT-level number of individual resprouts per m2 land area',        &
+         use_default='active', avgflag='A', vtype=site_pft_r8, hlms='CLM:ALM', &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_nindivs_resprout_si_pft)
 
     call this%set_history_var(vname='FATES_NPLANT_SEC_PF', units='m-2',           &
          long='total PFT-level number of individuals per m2 land area, secondary patches',        &
@@ -6923,6 +6965,18 @@ end subroutine update_history_hifrq
           use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
           initialize=initialize_variables, index = ih_biomass_si_agepft)
+    
+    call this%set_history_var(vname='FATES_CANOPYCROWNAREA_APPF',units = 'kg m-2',        &
+          long='total PFT-level canopy-layer crown area per m2 land X age bin',          &
+          use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
+          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
+          initialize=initialize_variables, index = ih_canopycrownarea_si_agepft)
+
+    call this%set_history_var(vname='FATES_CROWNAREA_APPF',units = 'kg m-2',        &
+          long='total PFT-level canopy-layer crown area per m2 land X age bin',          &
+          use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
+          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
+          initialize=initialize_variables, index = ih_crownarea_si_agepft)
 
     call this%set_history_var(vname='FATES_SCORCH_HEIGHT_APPF',units = 'm',    &
           long='SPITFIRE flame Scorch Height (calculated per PFT in each patch age bin)', &

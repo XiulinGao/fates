@@ -36,6 +36,7 @@ module EDMainMod
   use EDCohortDynamicsMod      , only : sort_cohorts
   use EDCohortDynamicsMod      , only : count_cohorts
   use EDCohortDynamicsMod      , only : EvaluateAndCorrectDBH
+  use EDCohortDynamicsMod      , only : RefreshResproutFlag
   use EDCohortDynamicsMod      , only : DamageRecovery
   use EDPatchDynamicsMod       , only : disturbance_rates
   use EDPatchDynamicsMod       , only : fuse_patches
@@ -559,6 +560,14 @@ contains
           ! correct the dbh to match.
           call EvaluateAndCorrectDBH(currentCohort,delta_dbh,delta_height)
           
+          ! If current cohort is a resprout, check if it should no longer be flagged
+	  ! as a resprout (for cohort fusion purposes). Resprout status is based on ratio 
+	  ! of actual fine root to target fine root ratio.
+
+	  if (currentCohort%resprout == 1) then
+             call RefreshResproutFlag(currentCohort)
+          endif
+
           ! We want to save these values for the newly recovered cohort as well
           height_old = currentCohort%height
           dbh_old  = currentCohort%dbh
@@ -928,6 +937,8 @@ contains
        else
           error_frac      = 0.0_r8
        end if
+          
+	  write(fates_log(),*), "error fraction:", error_frac
 
        if ( error_frac > 10e-6_r8 .or. (error /= error) ) then
           write(fates_log(),*) 'mass balance error detected'

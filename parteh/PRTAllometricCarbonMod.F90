@@ -400,7 +400,7 @@ module PRTAllometricCarbonMod
 
     integer , parameter :: max_substeps = 300            ! Maximum allowable iterations
 
-    real(r8), parameter :: max_trunc_error = 1.0_r8      ! Maximum allowable truncation error
+    real(r8), parameter :: max_trunc_error = 1000.0_r8      ! Maximum allowable truncation error
 
     integer,  parameter :: ODESolve = 2                  ! 1=RKF45,  2=Euler
 
@@ -716,6 +716,7 @@ module PRTAllometricCarbonMod
 
 
          if_carbon_increment: if(carbon_balance > calloc_abs_error ) then
+
 
 
             ! -----------------------------------------------------------------------------------

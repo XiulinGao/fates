@@ -128,6 +128,13 @@ integer, parameter, public :: ipar = ivis     ! The photosynthetically active ba
   ! can be approximated to be equal to the visible band
 
 
+!resprout parameters
+real(r8), parameter, public :: init_recruit_trim = 0.8_r8    ! This is the initial trimming value that                                                                                            
+                                                               ! new recruits start with                                                                                                           
+real(r8), parameter, public :: store_c_ratio_ag2bg = 0.54_r8   !Storage carbon concentration ratio between                                                                                        
+                                                             !above-ground and below-ground organs                                                                                                  
+                                                             !in resprouters     
+
 
 integer, parameter, public :: maxpft = 16      ! maximum number of PFTs allowed
    

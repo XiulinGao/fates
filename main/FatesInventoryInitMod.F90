@@ -1032,6 +1032,7 @@ contains
          temp_cohort%n           = c_nplant * cpatch%area / real(ncohorts_to_create,r8)
          temp_cohort%dbh         = c_dbh
          temp_cohort%crowndamage = 1  ! assume undamaged 
+         temp_cohort%resprout    = 0  ! assume not a resprout
 
          call h_allom(c_dbh,temp_cohort%pft,temp_cohort%height)
          temp_cohort%canopy_trim = 1.0_r8

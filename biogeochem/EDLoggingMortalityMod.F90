@@ -767,6 +767,7 @@ contains
       integer  :: ilyr                   ! soil layer loop index
       integer  :: el                     ! elemend loop index
       real(r8) :: SF_val_CWD_frac_adj(4) !Updated wood partitioning to CWD based on dbh
+      
 
       nlevsoil = currentSite%nlevsoil
 

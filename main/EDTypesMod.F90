@@ -36,9 +36,6 @@ module EDTypesMod
   private               ! By default everything is private
   save
               
-  real(r8), parameter, public :: init_recruit_trim = 0.8_r8    ! This is the initial trimming value that
-                                                               ! new recruits start with
-
   ! -------------------------------------------------------------------------------------
   ! Radiation parameters
   ! These should be part of the radiation module, but since we only have one option

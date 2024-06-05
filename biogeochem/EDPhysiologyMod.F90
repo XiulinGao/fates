@@ -97,6 +97,7 @@ module EDPhysiologyMod
   use EDParamsMod           , only : logging_export_frac
   use EDParamsMod           , only : regeneration_model
   use EDParamsMod           , only : sdlng_mort_par_timescale
+  use EDParamsMod           , only : maxpatch_total
   use FatesPlantHydraulicsMod  , only : AccumulateMortalityWaterStorage
   use FatesConstantsMod     , only : itrue,ifalse
   use FatesConstantsMod     , only : area_error_3
@@ -473,6 +474,7 @@ contains
        ! Calculate seed germination rate, the status flags prevent
        ! germination from occuring when the site is in a drought
        ! (for drought deciduous) or too cold (for cold deciduous)
+
        call SeedGermination(litt, currentSite%cstatus, currentSite%dstatus(1:numpft), bc_in, currentPatch)
 
        ! Send fluxes from newly created litter into the litter pools
@@ -2062,6 +2064,11 @@ contains
     integer  :: el                     ! loop counter for litter element types
     integer  :: element_id             ! element id consistent with parteh/PRTGenericMod.F90
 
+    real(r8),dimension(maxpatch_total,maxpft) :: intra_patch_seed_rain ! array to track seed that stays
+                                       ! in its patch of origin
+    integer :: ipatch                  ! loop counter for patch
+
+
     ! If the dispersal kernel is not turned on, keep the dispersal fraction at zero
     site_disp_frac(:) = 0._r8
     if (hlm_seeddisp_cadence .ne. fates_dispersal_cadence_none) then
@@ -2071,14 +2078,24 @@ contains
     el_loop: do el = 1, num_elements
 
        site_seed_rain(:) = 0._r8
+       
+       intra_patch_seed_rain(:,:) = 0._r8 ! this array temporarily holds seed that stays in the patch
+                                          ! where it was produced
+       
+
        element_id = element_list(el)
 
        site_mass => currentSite%mass_balance(el)
 
        ! Loop over all patches and sum up the seed input for each PFT
+
+       ipatch = 0 
        currentPatch => currentSite%oldest_patch
+       
        seed_rain_loop: do while (associated(currentPatch))
 
+          ipatch = ipatch + 1
+          
           currentCohort => currentPatch%tallest
           do while (associated(currentCohort))
 
@@ -2107,8 +2124,14 @@ contains
              end if
 
 
+             !how much seed remains in the patch where it was produced
+             intra_patch_seed_rain(ipatch,pft) = intra_patch_seed_rain(ipatch,pft) +&
+                ( ( 1.0_r8 - EDPftvarcon_inst%inter_patch_disp_frac(pft) ) * seed_prod * currentCohort%n)
+
+             !how much seed is distributed evenly over all patches (including the current patch)
              site_seed_rain(pft) = site_seed_rain(pft) +  &
-                  (seed_prod * currentCohort%n + store_m_to_repro) ![kg/site/day, kg/ha/day]
+                  ( (EDPftvarcon_inst%inter_patch_disp_frac(pft) * seed_prod * currentCohort%n) +&
+                  store_m_to_repro)
 
              currentCohort => currentCohort%shorter
           enddo !cohort loop
@@ -2126,14 +2149,22 @@ contains
        ! Loop over all patches again and disperse the mixed seeds into the input flux
        ! arrays
        ! Loop over all patches and sum up the seed input for each PFT
+       ipatch = 0 
        currentPatch => currentSite%oldest_patch
+
        seed_in_loop: do while (associated(currentPatch))
 
+          ipatch = ipatch + 1 
+          
           litt => currentPatch%litter(el)
           do pft = 1,numpft
 
              if(currentSite%use_this_pft(pft).eq.itrue)then
 
+                ! Seed input from the current patch
+                litt%seed_in_local(pft) = litt%seed_in_local(pft) + &
+                intra_patch_seed_rain(ipatch,pft)/currentPatch%area
+                
                 ! Seed input from local sources (within site).  Note that a fraction of the
                 ! internal seed rain is sent out to neighboring gridcells.
                 litt%seed_in_local(pft) = litt%seed_in_local(pft) + site_seed_rain(pft)*(1-site_disp_frac(pft))/area ![kg/m2/day]
@@ -2310,6 +2341,7 @@ contains
   end subroutine SeedDecay
 
   ! ============================================================================
+
   subroutine SeedGermination( litt, cold_stat, drought_stat, bc_in, currentPatch )
     !
     ! !DESCRIPTION:
@@ -2359,6 +2391,7 @@ contains
     !==============================================================================================
     do pft = 1,numpft
 
+
        ! If the TRS's seedling dynamics is switched off, then we use FATES's default approach
        ! to germination 
        if_tfs_or_def: if ( regeneration_model == default_regeneration .or. &
@@ -2367,6 +2400,18 @@ contains
 
           litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft), &  
                max_germination)*years_per_day
+
+                 ! Disturbance sensitive germination for shrubs. -ahb
+          if (prt_params%allom_dbh_maxheight(pft) < 20.0_r8 .and. currentPatch%age < 2.0_r8) then
+             litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft)* &
+                                    EDPftvarcon_inst%disturbance_germ(pft), max_germination)* &
+                                    years_per_day
+
+             !write(fates_log(),*) '100X germination for:', pft
+          end if
+
+       !set the germination only under the growing season...c.xu
+
 
           ! If TRS seedling dynamics is switched on we calculate seedling emergence (i.e. germination)
           ! as a pft-specific function of understory light and soil moisture.
@@ -2538,6 +2583,7 @@ contains
                efleaf_coh = currentSite%elong_factor(ft)
                effnrt_coh = 1.0_r8 - (1.0_r8 - efleaf_coh)*fnrt_drop_fraction
                efstem_coh = 1.0_r8 - (1.0_r8 - efleaf_coh)*stem_drop_fraction
+
 
                ! For the initial state, we always assume that leaves are flushing (instead of partially abscissing)
                ! whenever the elongation factor is non-zero.  If the elongation factor is zero, then leaves are in
