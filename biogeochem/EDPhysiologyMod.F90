@@ -87,7 +87,7 @@ module EDPhysiologyMod
   use EDTypesMod          , only : phen_dstat_timeon
   use EDTypesMod          , only : phen_dstat_pshed
   use EDTypesMod          , only : phen_dstat_pshed
-  use EDTypesMod          , only : init_recruit_trim
+  use EDParamsMod          , only : init_recruit_trim
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use FatesGlobals          , only : fates_log
   use FatesGlobals          , only : endrun => fates_endrun

@@ -37,6 +37,7 @@ module EDPatchDynamicsMod
   use FatesConstantsMod     , only : dtype_ilog
   use FatesConstantsMod     , only : dtype_ifire
   use FatesConstantsMod    , only : ican_upper
+  use PRTGenericMod        , only : SetState
   use PRTGenericMod        , only : num_elements
   use PRTGenericMod        , only : element_list
   use FatesLitterMod       , only : lg_sf
@@ -1201,7 +1202,7 @@ contains
 
                                !Add the new resprouting cohort into the linked list
 			       if (nrc%n > 0.0_r8) then
-			          call insert_cohort(newPatch,nrc,newPatch%tallest, newPatch%shortest,&
+			          call insert_cohort(new_patch,nrc,new_patch%tallest, new_patch%shortest,&
                                           tnull, snull)
 			       else
 			          call nrc%FreeMemory()
