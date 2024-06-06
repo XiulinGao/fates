@@ -379,7 +379,7 @@ contains
        endif
 
        ! Fire Disturbance Rate
-       currentPatch%disturbance_rates(dtype_ifire) = currentPatch%frac_burnt
+       currentPatch%disturbance_rates(dtype_ifire) = ( currentPatch%frac_burnt + currentPatch%rxfire_frac_burnt )
 
        ! calculate a disgnostic sum of disturbance rates for different classes of disturbance across all patches in this site. 
        do i_dist = 1,N_DIST_TYPES
@@ -389,7 +389,8 @@ contains
 
        ! Fires can't burn the whole patch, as this causes /0 errors. 
        if (currentPatch%disturbance_rates(dtype_ifire) > 0.98_r8)then
-          msg = 'very high fire areas'//trim(A2S(currentPatch%disturbance_rates(:)))//trim(N2S(currentPatch%frac_burnt))
+          msg = 'very high fire areas'//trim(A2S(currentPatch%disturbance_rates(:)))//trim(N2S((currentPatch%frac_burnt +
+          currentPatch%rxfire_frac_burnt)))
           call FatesWarn(msg,index=2)
        endif
 
@@ -901,20 +902,38 @@ contains
                                     currentSite%fmort_rate_canopy(currentCohort%size_class, currentCohort%pft) + &
                                     nc%n * currentCohort%fire_mort / hlm_freq_day
 
+                               currentSite%rxfmort_rate_canopy(currentCohort%size_class, currentCohort%pft) = &
+                                          currentSite%rxfmort_rate_canopy(currentCohort%size_class, currentCohort%pft) + &
+                                          nc%n * currentCohort%rxfire_mort / hlm_freq_day  ! for prescribed fire
+
                                currentSite%fmort_carbonflux_canopy(currentCohort%pft) = &
                                     currentSite%fmort_carbonflux_canopy(currentCohort%pft) + &
                                     (nc%n * currentCohort%fire_mort) * &
                                     total_c * g_per_kg * days_per_sec * ha_per_m2
+
+                               currentSite%rxfmort_carbonflux_canopy(currentCohort%pft) = &
+                                          currentSite%rxfmort_carbonflux_canopy(currentCohort%pft) + &
+                                          (nc%n * currentCohort%rxfire_mort) * &
+                                          total_c * g_per_kg * days_per_sec * ha_per_m2
 
                             else
                                currentSite%fmort_rate_ustory(currentCohort%size_class, currentCohort%pft) = &
                                     currentSite%fmort_rate_ustory(currentCohort%size_class, currentCohort%pft) + &
                                     nc%n * currentCohort%fire_mort / hlm_freq_day
 
+                               currentSite%rxfmort_rate_ustory(currentCohort%size_class, currentCohort%pft) = &
+                                          currentSite%rxfmort_rate_ustory(currentCohort%size_class, currentCohort%pft) + &
+                                          nc%n * currentCohort%rxfire_mort / hlm_freq_day
+
                                currentSite%fmort_carbonflux_ustory(currentCohort%pft) = &
                                     currentSite%fmort_carbonflux_ustory(currentCohort%pft) + &
                                     (nc%n * currentCohort%fire_mort) * &
                                     total_c * g_per_kg * days_per_sec * ha_per_m2
+
+                               currentSite%rxfmort_carbonflux_ustory(currentCohort%pft) = &
+                                          currentSite%rxfmort_carbonflux_ustory(currentCohort%pft) + &
+                                          (nc%n * currentCohort%rxfire_mort) * &
+                                          total_c * g_per_kg * days_per_sec * ha_per_m2
                             end if
 
                             currentSite%fmort_abg_flux(currentCohort%size_class, currentCohort%pft) = &
@@ -924,7 +943,13 @@ contains
                                  leaf_c ) * &
                                  g_per_kg * days_per_sec * ha_per_m2
                             
-
+                            currentSite%rxfmort_abg_flux(currentCohort%size_class, currentCohort%pft) = &
+                                       currentSite%rxfmort_abg_flux(currentCohort%size_class, currentCohort%pft) + &
+                                       (nc%n * currentCohort%rxfire_mort) * &
+                                       ( (sapw_c + struct_c + store_c) * prt_params%allom_agb_frac(currentCohort%pft) + &
+                                       leaf_c ) * &
+                                       g_per_kg * days_per_sec * ha_per_m2
+                            
                             currentSite%fmort_rate_cambial(currentCohort%size_class, currentCohort%pft) = &
                                  currentSite%fmort_rate_cambial(currentCohort%size_class, currentCohort%pft) + &
                                  nc%n * currentCohort%cambial_mort / hlm_freq_day
@@ -932,8 +957,15 @@ contains
                                  currentSite%fmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
                                  nc%n * currentCohort%crownfire_mort / hlm_freq_day
 
+                            currentSite%rxfmort_rate_cambial(currentCohort%size_class, currentCohort%pft) = &
+                                       currentSite%rxfmort_rate_cambial(currentCohort%size_class, currentCohort%pft) + &
+                                       nc%n * currentCohort%rxcambial_mort / hlm_freq_day
+                            currentSite%rxfmort_rate_crown(currentCohort%size_class, currentCohort%pft) = &
+                                       currentSite%rxfmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
+                                       nc%n * currentCohort%rxcrownfire_mort / hlm_freq_day
+
                             ! loss of individuals from fire in new patch.
-                            nc%n = nc%n * (1.0_r8 - (currentCohort%fire_mort + currentCohort%frac_resprout))
+                            nc%n = nc%n * (1.0_r8 - (currentCohort%fire_mort + currentCohort%frac_resprout + currentCohort%rxfire_mort))
 
                             nc%cmort            = currentCohort%cmort
                             nc%hmort            = currentCohort%hmort
@@ -967,11 +999,14 @@ contains
                             if( (leaf_burn_frac < 0._r8) .or. &
                                  (leaf_burn_frac > 1._r8) .or. &
                                  (currentCohort%fire_mort < 0._r8) .or. &
-                                 (currentCohort%fire_mort > 1._r8)) then
+                                 (currentCohort%fire_mort > 1._r8) .or. &
+                                 (currentCohort%rxfire_mort < 0._r8) .or. &
+                                 (currentCohort%rxfire_mort > 1._r8) ) then  
                                write(fates_log(),*) 'unexpected fire fractions'
                                write(fates_log(),*) prt_params%woody(currentCohort%pft)
                                write(fates_log(),*) leaf_burn_frac
                                write(fates_log(),*) currentCohort%fire_mort
+                               write(fates_log(),*) currentCohort%rxfire_mort
                                call endrun(msg=errMsg(sourcefile, __LINE__))
                             end if
 
@@ -1931,14 +1966,14 @@ contains
     !---------------------------------------------------------------------
 
     ! Only do this if there was a fire in this actual patch. 
-    if ( currentPatch%fire  ==  ifalse ) return
+    if ( currentPatch%fire  ==  ifalse .and. currentPatch%rxfire == ifalse ) return
 
     ! If plant hydraulics are turned on, account for water leaving the plant-soil
     ! mass balance through the dead trees
     if (hlm_use_planthydro == itrue) then
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))
-          num_dead_trees  = (currentCohort%fire_mort * &
+          num_dead_trees  = ( (currentCohort%fire_mort + currentCohort%rxfire_mort)* &
                 currentCohort%n*patch_site_areadis/currentPatch%area)
           call AccumulateMortalityWaterStorage(currentSite,currentCohort,num_dead_trees)
           currentCohort => currentCohort%taller
@@ -2012,8 +2047,8 @@ contains
 
 
              ! Absolute number of dead trees being transfered in with the donated area
-             num_dead_trees = (currentCohort%fire_mort*currentCohort%n * &
-                               patch_site_areadis/currentPatch%area)
+             num_dead_trees = ( (currentCohort%fire_mort + currentCohort%rxfire_mort)* &
+                               currentCohort%n * patch_site_areadis/currentPatch%area ) 
 
              ! Absolute number of resprouting trees being transfered in with the donated area
              num_resprouts = (currentCohort%frac_resprout*currentCohort%n * &
@@ -2751,6 +2786,7 @@ contains
     rp%ros_back             = (dp%ros_back*dp%area + rp%ros_back*rp%area) * inv_sum_area
     rp%scorch_ht(:)         = (dp%scorch_ht(:)*dp%area + rp%scorch_ht(:)*rp%area) * inv_sum_area
     rp%frac_burnt           = (dp%frac_burnt*dp%area + rp%frac_burnt*rp%area) * inv_sum_area
+    rp%rxfire_frac_burnt    = (dp%rxfire_frac_burnt*dp%area + rp%rxfire_frac_burnt*rp%area) * inv_sum_area
     rp%burnt_frac_litter(:) = (dp%burnt_frac_litter(:)*dp%area + rp%burnt_frac_litter(:)*rp%area) * inv_sum_area
     rp%btran_ft(:)          = (dp%btran_ft(:)*dp%area + rp%btran_ft(:)*rp%area) * inv_sum_area
     rp%zstar                = (dp%zstar*dp%area + rp%zstar*rp%area) * inv_sum_area

@@ -60,7 +60,8 @@
   private
 
   public :: fire_model
-  public :: fire_danger_index 
+  public :: fire_danger_index
+  public :: rxfire_burn_window
   public :: charecteristics_of_fuel
   public :: rate_of_spread
   public :: ground_fuel_consumption
@@ -99,7 +100,9 @@ contains
     currentPatch => currentSite%youngest_patch
     do while(associated(currentPatch))
        currentPatch%frac_burnt = 0.0_r8
+       currentPatch%rxfire_frac_burnt = 0.0_r8
        currentPatch%fire       = 0
+       currentPatch%rxfire     = 0
        currentPatch => currentPatch%older
     enddo
 
@@ -109,6 +112,7 @@ contains
 
     if( hlm_spitfire_mode > hlm_sf_nofire_def )then
        call fire_danger_index(currentSite, bc_in)
+       call rxfire_burn_window(currentSite, bc_in)
        call wind_effect(currentSite, bc_in) 
        call charecteristics_of_fuel(currentSite)
        call rate_of_spread(currentSite)
@@ -180,6 +184,57 @@ contains
 
   end subroutine fire_danger_index
 
+
+  !*****************************************************************
+  subroutine  rxfire_burn_window ( currentSite, bc_in)
+  !*****************************************************************
+
+    use SFParamsMod, only  : SF_val_rxfire_tpup, SF_val_rxfire_tplw, SF_val_rxfire_rhup, &
+                             SF_val_rxfire_rhlw, SF_val_rxfire_wdup, SF_val_rxfire_wdlw
+    use FatesConstantsMod , only : tfrz => t_water_freeze_k_1atm
+    use FatesConstantsMod , only : sec_per_day
+
+    type(ed_site_type)     , intent(inout), target :: currentSite
+    type(bc_in_type)       , intent(in)            :: bc_in
+
+    type(fates_patch_type),  pointer :: currentPatch
+
+    real(r8) :: temp_in_C  !daily averaged temperature in celcius
+!    real(r8) :: rainfall   !daily precip in mm/day
+    real(r8) :: rh         !daily relative humidity
+    real(r8) :: wind       !daily wind speed in m/s
+    real(r8) :: t_check    !intermediate value derived from temp condition check
+    real(r8) :: rh_check   !rh check
+    real(r8) :: wd_check   !wind speed check
+    integer  :: iofp       ! index of oldest the fates patch
+     
+
+    currentPatch => currentSite%oldest_patch
+
+    if(currentPatch%nocomp_pft_label .eq. nocomp_bareground)then
+       currentPatch => currentPatch%younger
+    endif
+
+    iofp = currentPatch%patchno
+
+    temp_in_C = currentPatch%tveg24%GetMean() - tfrz
+ !   rainfall  = bc_in%precip24_pa(iofp)*sec_per_day
+    rh        = bc_in%relhumid24_pa(iofp)
+    wind      = bc_in%wind24_pa(iofp)
+    t_check   = (temp_in_C - SF_val_rxfire_tplw)*(temp_in_C - SF_val_rxfire_tpup)
+    rh_check  = (rh - SF_val_rxfire_rhlw)*(rh - SF_val_rxfire_rhup)
+    wd_check  = (wind - SF_val_rxfire_wdlw)*(wind - SF_val_rxfire_wdup)
+
+  !  if(rainfall > 3.0_r8)then
+  !     currentSite%rx_flag = 0.0_r8 !when it rains no Rx fire
+    if(t_check.le.0.0_r8 .and. rh_check.le.0.0_r8 .and. wd_check.le.0.0_r8)then
+       currentSite%rx_flag = 1
+    else
+       currentSite%rx_flag = 0
+    endif
+   
+  end subroutine  rxfire_burn_window
+  
 
   !*****************************************************************
   subroutine  charecteristics_of_fuel ( currentSite )
@@ -675,13 +730,13 @@ contains
        ! taul is the duration of the lethal heating.  
        ! The /10 is to convert from kgC/m2 into gC/cm2, as in the Peterson and Ryan paper #Rosie,Jun 2013
         
-       do c = 1,nfsc  
-          tau_b(c)   =  39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
-               (1.0_r8-((1.0_r8-currentPatch%burnt_frac_litter(c))**0.5_r8))  
-       enddo
-       tau_b(tr_sf)   =  0.0_r8
+!       do c = 1,nfsc  
+!          tau_b(c)   =  39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
+!               (1.0_r8-((1.0_r8-currentPatch%burnt_frac_litter(c))**0.5_r8))  
+!       enddo
+!       tau_b(tr_sf)   =  0.0_r8
        ! Cap the residence time to 8mins, as suggested by literature survey by P&R (1986).
-       currentPatch%tau_l = min(8.0_r8,sum(tau_b)) 
+!       currentPatch%tau_l = min(8.0_r8,sum(tau_b)) 
 
        !---calculate overall fuel consumed by spreading fire --- 
        ! ignore 1000hr fuels. Just interested in fuels affecting ROS   
@@ -712,7 +767,10 @@ contains
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
     use FatesConstantsMod, only : years_per_day
     use SFParamsMod,       only : SF_val_fdi_alpha,SF_val_fuel_energy, &
-         SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold
+         SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
+         SF_val_rxfire_AB, SF_val_rxfire_minthreshold, &
+         SF_val_rxfire_maxthreshold, SF_val_rxfire_fuel_min, &
+         SF_val_rxfire_fuel_max
     
     type(ed_site_type), intent(inout), target :: currentSite
     type(fates_patch_type), pointer :: currentPatch
@@ -725,6 +783,17 @@ contains
     real(r8) df               !distance fire has travelled forward in m
     real(r8) db               !distance fire has travelled backward in m
     real(r8) AB               !daily area burnt in m2 per km2
+    real(r8) ambient_t        !ambient mean temp in C
+    real(r8) delta_t          !difference between ambient temp and the lethal temp 
+    real(r8) ln_base          !nature log base for calculating lethal heating duration
+    real(r8) l_tot            !total time in min when flame temperature is above 60 celsius degree
+    real(r8) :: tau_b(nfsc)   !lethal heating rates for each fuel class (min)
+
+    logical  :: is_rxfire           ! is it a rx fire?
+    logical  :: rx_man              ! rxfire use human igniton
+    logical  :: rx_hyb              ! rxfire due to both strike and human ignition
+    logical  :: is_managed_wildfire ! is it a wildfire with FI lower than the max rxfire intensity?
+    logical  :: is_wildfire         ! is it a wildfire that cannot be managed?
     
     real(r8) size_of_fire !in m2
     real(r8) cloud_to_ground_strikes  ! [fraction] depends on hlm_spitfire_mode
@@ -734,6 +803,15 @@ contains
     real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
     real(r8), parameter :: m_per_min__to__km_per_hour = 0.06_r8  ! convert wind speed from m/min to km/hr
     real(r8), parameter :: forest_grassland_lengthtobreadth_threshold = 0.55_r8 ! tree canopy cover below which to use grassland length-to-breadth eqn
+
+    ! some constants in Mercer & Weber 2001 'Fire Plumes' to estimate lethal heating duration
+    ! this calculation is based on location above the fire source and fire intensity
+    
+    real(r8), parameter :: z = 1.0_r8     !vertical distance from the fire, set to 1m
+    real(r8), parameter :: k = 4.47_r8    !see Eq. 1, 2, and 18 in Mercer & Weber 2001
+    real(r8), parameter :: r = 0.016_r8   !fuel type specific constant, influencing how fast a fire cools down
+                                          !once pass the max. temp. larger value leads to faster cooling process thus shorter heating duration
+    real(r8), parameter :: beta = 0.16_r8 ! see Eq. 3 in Mercer & Weber 2001
 
     !  ---initialize site parameters to zero--- 
     currentSite%NF_successful = 0._r8
@@ -789,8 +867,11 @@ contains
        currentPatch%fire       = 0
        currentPatch%FD         = 0.0_r8
        currentPatch%frac_burnt = 0.0_r8
+       currentPatch%rxfire_FI  = 0.0_r8
+       currentPatch%rxfire     = 0
+       currentPatch%rxfire_frac_burnt = 0.0_r8
        
-       if (currentSite%NF > 0.0_r8) then
+       if (currentSite%NF > 0.0_r8 .or. currentSite%rx_flag .eq. itrue) then
           
           ! Equation 14 in Thonicke et al. 2010
           ! fire duration in minutes
@@ -869,23 +950,133 @@ contains
          ! EQ 15 Thonicke et al 2010
          !units of fire intensity = (kJ/kg)*(kgBiomass/m2)*(m/min)
          currentPatch%FI = SF_val_fuel_energy * W * ROS !kj/m/s, or kW/m
-       
-         if(write_sf == itrue)then
-             if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
-         endif
 
-         !'decide_fire' subroutine 
-         if (currentPatch%FI > SF_val_fire_threshold) then !track fires greater than kW/m energy threshold
-            currentPatch%fire = 1 ! Fire...    :D
-            !
-            currentSite%NF_successful = currentSite%NF_successful + &
-                 currentSite%NF * currentSite%FDI * currentPatch%area / area
-            !
-         else     
-            currentPatch%fire       = 0 ! No fire... :-/
-            currentPatch%FD         = 0.0_r8
-            currentPatch%frac_burnt = 0.0_r8
-         endif         
+         ! for prescribed fire, burned area is defined by user to reflect burn capacity
+         ! currently we only calculated theoretical burned fraction and fire intensity when burn window presents
+
+         if(currentSite%rx_flag .eq. itrue) then
+             currentPatch%rxfire_frac_burnt = SF_val_rxfire_AB / km2_to_m2
+             currentPatch%rxfire_FI = SF_val_fuel_energy * W * ROS 
+             if(write_SF .eq. itrue)then
+                if ( hlm_masterproc .eq. itrue) write(fates_log(),*) 'rxfire_frac_burnt', currentPatch%rxfire_frac_burnt
+                if ( hlm_masterproc .eq. itrue) write(fates_log(),*) 'rxfire_FI', currentPatch%rxfire_FI
+             endif
+          else
+             currentPatch%rxfire_frac_burnt = 0.0_r8
+             currentPatch%rxfire_FI = 0.0_r8
+          endif
+
+          !There are two ways to calculate lethal heating duration:
+         !1) lethal heating duration is a function of litter burned fraction, which is determined by FMC and associated params (Peterson & Ryan (1986)
+         !2) lethal heating duration is a function of fire intensity (Eq. 18 in Mercer & Weber 2001)
+
+         case_lethal_heating: select case (lethal_heating_model)
+
+         case (pr_lh)
+         !Following used for determination of cambial kill follows from Peterson & Ryan (1986) scheme
+         !less empirical cf current scheme used in SPITFIRE which attempts to mesh Rothermel
+         !and P&R, and while solving potential inconsistencies, actually results in BIG values for
+         !fire residence time, thus lots of vegetation death!
+         !taul is the duration of the lethal heating.
+         !The /10 is to convert from kgC/m2 into gC/cm2, as in the Peterson and Ryan paper #Rosie,Jun 2013 
+            do c = 1,nfsc
+               tau_b(c) = 39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
+                    (1.0_r8-((1.0_r8-currentPatch%burnt_frac_litter(c))**0.5_r8))
+            enddo
+            tau_b(tr_sf)   =  0.0_r8
+            currentPatch%tau_l = min(8.0_r8,sum(tau_b))
+
+         case (merweb_lh)
+            ambient_t = currentPatch%tveg24%GetMean() - tfrz
+            delta_t   = 60.0_r8 - ambient_t
+            ln_base   = (k * (currentPatch%FI**0.667_r8)) / (z * delta_t)
+            l_tot     = (beta * z * (log(ln_base))**0.5_r8) + (1.0_r8 / r) * log(ln_base) ! in sec
+            currentPatch%tau_l = min(8.0_r8, (l_tot / 60.0_r8))  !in min, and cap it to 8 min, as suggested by literature survey by P&R (1986).
+
+         case DEFAULT
+            write(fates_log(),*) 'An undefined lethal heating calculation was specified: ',lethal_heating_model
+            write(fates_log(),*) 'Aborting'
+            call endrun(msg=errMsg(sourcefile, __LINE__))
+
+         end select case_lethal_heating
+         
+    
+         if(write_sf == itrue)then
+            if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
+            if( hlm_masterproc == itrue ) write(fates_log(),*) 'lethal_heating_duration', currentPatch%tau_l
+         endif
+       
+
+         !'decide_fire' subroutine
+         ! store some condition check here to simplify the decision tree
+
+         rx_man = (currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
+              currentPatch%FI .lt. SF_val_rxfire_maxthreshold .and. &
+              currentSite%NF .eq. 0.0_r8)
+         rx_hyb = (currentPatch%FI .lt. SF_val_fire_threshold .and. &
+              currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
+              currentPatch%FI .lt. SF_val_rxfire_maxthreshold .and. &
+              currentSite%NF .gt. 0.0_r8)
+         is_rxfire = (rx_man .or. rx_hyb)
+         
+         is_managed_wildfire = (currentSite%NF .gt. 0.0_r8 .and.  &
+              currentPatch%FI .gt. SF_val_fire_threshold .and. &
+              currentPatch%FI .lt. SF_val_rxfire_maxthreshold)
+         
+         is_wildfire = (currentSite%NF .gt. 0.0_r8 .and. &
+              currentPatch%FI .gt. SF_val_fire_threshold .and. &
+              currentPatch%FI .gt. SF_val_rxfire_maxthreshold)
+         
+         if (currentSite%rx_flag .eq. itrue .and. &                   !rx fire condition check 
+             currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
+             currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
+            !            if(is_rxfire .or. is_managed_wildfire) then
+            if(is_rxfire) then
+               currentPatch%fire = 0
+               currentPatch%rxfire = 1
+               currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
+               currentPatch%FD         = 0.0_r8      ! zero wildfire duration
+
+            else if (is_managed_wildfire) then
+               currentPatch%fire = 1                 !wildfire happens before start the rx fire
+               currentSite%NF_successful = currentSite%NF_successful + &
+                       currentSite%NF * currentSite%FDI * currentPatch%area / area
+               currentPatch%rxfire = 1
+!               currentPatch%rxfire_frac_burnt = currentPatch%frac_burnt !we let managed wildfire burn freely and pass the area burnt to rxfire 
+               currentPatch%rxfire_frac_burnt = 0.0_r8
+               currentPatch%rxfire_FI         = 0.0_r8
+
+            else if (is_wildfire) then
+               currentPatch%fire = 1                 !wildfire that cannot be managed 
+               currentSite%NF_successful = currentSite%NF_successful + &
+                    currentSite%NF * currentSite%FDI * currentPatch%area / area
+               currentPatch%rxfire = 0
+               currentPatch%rxfire_frac_burnt = 0.0_r8
+               currentPatch%rxfire_FI = 0.0_r8
+            else
+               currentPatch%rxfire = 0
+               currentPatch%rxfire_frac_burnt = 0.0_r8
+               currentPatch%rxfire_FI = 0.0_r8
+               currentPatch%fire = 0
+               currentPatch%FD = 0.0_r8
+               currentPatch%frac_burnt = 0.0_r8  !no rx fire no wildfire
+            endif
+            
+         else           ! not a patch that is suitable for conducting rx fire 
+            currentPatch%rxfire            = 0
+            currentPatch%rxfire_frac_burnt = 0.0_r8
+            currentPatch%rxfire_FI = 0.0_r8
+            if (currentSite%NF .gt. 0.0_r8 .and. currentPatch%FI .gt. SF_val_fire_threshold) then
+                currentPatch%fire = 1
+                currentSite%NF_successful = currentSite%NF_successful + &
+                     currentSite%NF * currentSite%FDI * currentPatch%area / area
+            else
+               currentPatch%fire       = 0 ! No fire... :-/
+               currentPatch%FD         = 0.0_r8
+               currentPatch%frac_burnt = 0.0_r8
+               
+            endif
+         endif !end rx fire condition check
           
        endif ! NF ignitions check
        endif ! nocomp_pft_label check
@@ -924,7 +1115,7 @@ contains
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
        
        tree_ag_biomass = 0.0_r8
-       if (currentPatch%fire == 1) then
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then
           currentCohort => currentPatch%tallest;
           do while(associated(currentCohort))  
              if ( prt_params%woody(currentCohort%pft) == itrue) then !trees only
@@ -980,7 +1171,7 @@ contains
     do while(associated(currentPatch)) 
 
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
-       if (currentPatch%fire == 1) then
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then
 
           currentCohort=>currentPatch%tallest
 
@@ -1050,7 +1241,7 @@ contains
 
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
 
-       if (currentPatch%fire == 1) then
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then
           currentCohort => currentPatch%tallest;
           do while(associated(currentCohort))  
              if ( prt_params%woody(currentCohort%pft) == itrue) then !trees only
@@ -1124,12 +1315,14 @@ contains
 
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
 
-       if (currentPatch%fire == 1) then 
+       if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then 
           currentCohort => currentPatch%tallest
           do while(associated(currentCohort))  
              currentCohort%fire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
 	     currentCohort%frac_resprout = 0.0_r8
+             currentCohort%rxfire_mort = 0.0_r8
+             currentCohort%rxcrownfire_mort = 0.0_r8
              if_woody: if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
@@ -1194,8 +1387,27 @@ contains
                 endif if_resprouter !resprouting
                   
              else
-                currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
+                link_fun = -0.193_r8 + 0.233_r8 * currentCohort%dbh - 0.926_r8 * currentPatch%tau_l + &
+                     0.106_r8 * currentCohort%dbh * currentPatch%tau_l                  ! using data from Gao & Schwilk 2022, in which grass survival accounts for reprouting prob
+                                                                                        ! heating duration measured in Gao & Schwilk is at 0.1m above the ground, set z to be PFT specific?
+                currentCohort%fire_mort = 1.0_r8 - (1.0_r8 / (1.0_r8 + exp(-link_fun))) ! Oops, we kill grasses in fire :] 
              endif if_woody !trees
+
+             ! if it is rx fire, pass calculated mortality rates to rxfire and zero them for wildfire to track them separately
+             ! but only apply rxfire-caused mortality to cohort with DBH <= 10 cm 
+             
+             if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0) then
+                    currentCohort%rxfire_mort = currentCohort%fire_mort
+                    currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
+                    currentCohort%rxcambial_mort = currentCohort%cambial_mort
+                    currentCohort%fire_mort = 0.0_r8
+                    currentCohort%crownfire_mort = 0.0_r8
+                    currentCohort%cambial_mort = 0.0_r8
+             else
+                currentCohort%rxfire_mort = 0.0_r8
+                currentCohort%rxcrownfire_mort = 0.0_r8
+                currentCohort%rxcambial_mort = 0.0_r8
+             endif
 
 
              currentCohort => currentCohort%shorter

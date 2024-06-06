@@ -408,6 +408,10 @@ module FatesHistoryInterfaceMod
   integer :: ih_fire_fuel_sav_si
   integer :: ih_fire_fuel_mef_si
   integer :: ih_sum_fuel_si
+  integer :: ih_rx_burn_window_si
+  integer :: ih_rxfire_intensity_area_product_si
+  integer :: ih_rxfire_intensity_si
+  integer :: ih_rxfire_area_si
   integer :: ih_fragmentation_scaler_sl
 
   integer :: ih_nplant_si_scpf
@@ -451,9 +455,12 @@ module FatesHistoryInterfaceMod
   integer :: ih_m9_si_scpf
   integer :: ih_m10_si_scpf
   integer :: ih_m11_si_scpf
+  integer :: ih_m12_si_scpf
   
   integer :: ih_crownfiremort_si_scpf
   integer :: ih_cambialfiremort_si_scpf
+  integer :: ih_rxcrownfiremort_si_scpf
+  integer :: ih_rxcambialfiremort_si_scpf
 
   integer :: ih_abg_mortality_cflux_si_scpf
   integer :: ih_abg_productivity_cflux_si_scpf
@@ -508,6 +515,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_m8_si_scls
   integer :: ih_m9_si_scls
   integer :: ih_m10_si_scls
+  integer :: ih_m12_si_scls
 
   integer :: ih_m1_sec_si_scls
   integer :: ih_m2_sec_si_scls
@@ -612,9 +620,11 @@ module FatesHistoryInterfaceMod
   integer :: ih_agesince_anthrodist_si_age
   integer :: ih_secondaryforest_area_si_age
   integer :: ih_area_burnt_si_age
+  integer :: ih_rx_area_burnt_si_age
   ! integer :: ih_fire_rate_of_spread_front_si_age
   integer :: ih_fire_intensity_si_age
   integer :: ih_fire_sum_fuel_si_age
+  integer :: ih_rxfire_intensity_si_age
 
   integer :: ih_lai_secondary_si
 
@@ -2258,6 +2268,7 @@ end subroutine flush_hvars
                hio_seed_bank_si_pft  => this%hvars(ih_seed_bank_si_pft)%r82d, &
                hio_npp_sec_si_pft      => this%hvars(ih_npp_sec_si_pft)%r82d, &
                hio_nesterov_fire_danger_si => this%hvars(ih_nesterov_fire_danger_si)%r81d, &
+               hio_rx_burn_window_si => this%hvars(ih_rx_burn_window_si)%r81d, &
                hio_fire_nignitions_si => this%hvars(ih_fire_nignitions_si)%r81d, &
                hio_fire_fdi_si => this%hvars(ih_fire_fdi_si)%r81d, &
                hio_spitfire_ros_si     => this%hvars(ih_spitfire_ros_si)%r81d, &
@@ -2265,7 +2276,10 @@ end subroutine flush_hvars
                hio_effect_wspeed_si    => this%hvars(ih_effect_wspeed_si)%r81d, &
                hio_fire_intensity_si   => this%hvars(ih_fire_intensity_si)%r81d, &
                hio_fire_intensity_area_product_si => this%hvars(ih_fire_intensity_area_product_si)%r81d, &
+               hio_rxfire_intensity_si => this%hvars(ih_rxfire_intensity_si)%r81d, &
+               hio_rxfire_intensity_area_product_si => this%hvars(ih_rxfire_intensity_area_product_si)%r81d, &
                hio_fire_area_si        => this%hvars(ih_fire_area_si)%r81d, &
+               hio_rxfire_area_si      => this%hvars(ih_rxfire_area_si)%r81d, &
                hio_fire_fuel_bulkd_si  => this%hvars(ih_fire_fuel_bulkd_si)%r81d, &
                hio_fire_fuel_eff_moist_si => this%hvars(ih_fire_fuel_eff_moist_si)%r81d, &
                hio_fire_fuel_sav_si    => this%hvars(ih_fire_fuel_sav_si)%r81d, &
@@ -2362,9 +2376,12 @@ end subroutine flush_hvars
                hio_m9_si_scpf          => this%hvars(ih_m9_si_scpf)%r82d, &
                hio_m10_si_scpf         => this%hvars(ih_m10_si_scpf)%r82d, &
                hio_m10_si_capf         => this%hvars(ih_m10_si_capf)%r82d, &
+               hio_m12_si_scpf         => this%hvars(ih_m12_si_scpf)%r82d, &
 
                hio_crownfiremort_si_scpf     => this%hvars(ih_crownfiremort_si_scpf)%r82d, &
                hio_cambialfiremort_si_scpf   => this%hvars(ih_cambialfiremort_si_scpf)%r82d, &
+               hio_rxcrownfiremort_si_scpf   => this%hvars(ih_rxcrownfiremort_si_scpf)%r82d, &
+               hio_rxcambialfiremort_si_scpf => this%hvars(ih_rxcambialfiremort_si_scpf)%r82d, &
 
                hio_abg_mortality_cflux_si_scpf    => this%hvars(ih_abg_mortality_cflux_si_scpf)%r82d, &
                hio_abg_productivity_cflux_si_scpf => this%hvars(ih_abg_productivity_cflux_si_scpf)%r82d, &
@@ -2383,6 +2400,7 @@ end subroutine flush_hvars
                hio_m9_si_scls          => this%hvars(ih_m9_si_scls)%r82d, &
                hio_m10_si_scls         => this%hvars(ih_m10_si_scls)%r82d, &
                hio_m10_si_cacls        => this%hvars(ih_m10_si_cacls)%r82d, &
+               hio_m12_si_scls         => this%hvars(ih_m12_si_scls)%r82d, &
 
                hio_m1_sec_si_scls      => this%hvars(ih_m1_sec_si_scls)%r82d, &
                hio_m2_sec_si_scls      => this%hvars(ih_m2_sec_si_scls)%r82d, &
@@ -2470,8 +2488,10 @@ end subroutine flush_hvars
                hio_agesince_anthrodist_si_age     => this%hvars(ih_agesince_anthrodist_si_age)%r82d, &
                hio_secondaryforest_area_si_age    => this%hvars(ih_secondaryforest_area_si_age)%r82d, &
                hio_area_burnt_si_age              => this%hvars(ih_area_burnt_si_age)%r82d, &
+               hio_rx_area_burnt_si_age           => this%hvars(ih_rx_area_burnt_si_age)%r82d, &
                ! hio_fire_rate_of_spread_front_si_age  => this%hvars(ih_fire_rate_of_spread_front_si_age)%r82d, &
                hio_fire_intensity_si_age          => this%hvars(ih_fire_intensity_si_age)%r82d, &
+               hio_rxfire_intensity_si_age        => this%hvars(ih_rxfire_intensity_si_age)%r82d, &
                hio_fire_sum_fuel_si_age           => this%hvars(ih_fire_sum_fuel_si_age)%r82d, &
                hio_burnt_frac_litter_si_fuel      => this%hvars(ih_burnt_frac_litter_si_fuel)%r82d, &
                hio_fuel_amount_si_fuel            => this%hvars(ih_fuel_amount_si_fuel)%r82d, &
@@ -2631,6 +2651,9 @@ end subroutine flush_hvars
       ! Nesterov index (unitless)
       hio_nesterov_fire_danger_si(io_si) = sites(s)%acc_NI
 
+      ! Prescribed fire burn window
+      hio_rx_burn_window_si(io_si) = hio_rx_burn_window_si(io_si) + sites(s)%rx_flag
+
       ! number of ignitions [#/km2/day -> #/m2/s]
       hio_fire_nignitions_si(io_si) = sites(s)%NF_successful / m2_per_km2 /  &
          sec_per_day
@@ -2768,14 +2791,21 @@ end subroutine flush_hvars
 
          ! fractional area burnt [frac/day] -> [frac/sec]
          hio_area_burnt_si_age(io_si,cpatch%age_class) = hio_area_burnt_si_age(io_si,cpatch%age_class) + &
-            cpatch%frac_burnt * cpatch%area * AREA_INV / sec_per_day
+              cpatch%frac_burnt * cpatch%area * AREA_INV / sec_per_day
+
+         hio_rx_area_burnt_si_age(io_si,cpatch%age_class) = hio_rx_area_burnt_si_age(io_si,cpatch%age_class) + &
+              cpatch%rxfire_frac_burnt * cpatch%area * AREA_INV / sec_per_day
 
          ! hio_fire_rate_of_spread_front_si_age(io_si, cpatch%age_class) = hio_fire_rate_of_spread_si_age(io_si, cpatch%age_class) + &
          !    cpatch%ros_front * cpatch*frac_burnt * cpatch%area * AREA_INV
 
          ! Fire intensity weighted by burned fraction [kJ/m/s] -> [J/m/s]
          hio_fire_intensity_si_age(io_si, cpatch%age_class) = hio_fire_intensity_si_age(io_si, cpatch%age_class) + &
-            cpatch%FI * cpatch%frac_burnt * cpatch%area * AREA_INV * J_per_kJ
+              cpatch%FI * cpatch%frac_burnt * cpatch%area * AREA_INV * J_per_kJ
+
+         hio_rxfire_intensity_si_age(io_si, cpatch%age_class) = hio_rxfire_intensity_si_age(io_si, cpatch%age_class) + &
+              cpatch%rxfire_FI * cpatch%rxfire_frac_burnt * cpatch%area * AREA_INV * J_per_kJ
+         
 
          ! Fuel sum [kg/m2]
          hio_fire_sum_fuel_si_age(io_si, cpatch%age_class) = hio_fire_sum_fuel_si_age(io_si, cpatch%age_class) +  &
@@ -3706,6 +3736,8 @@ end subroutine flush_hvars
          hio_tfc_ros_si(io_si)              = hio_tfc_ros_si(io_si) + cpatch%TFC_ROS * cpatch%area * AREA_INV
          hio_fire_intensity_si(io_si)       = hio_fire_intensity_si(io_si) + cpatch%FI * cpatch%area * AREA_INV * J_per_kJ
          hio_fire_area_si(io_si)            = hio_fire_area_si(io_si) + cpatch%frac_burnt * cpatch%area * AREA_INV / sec_per_day
+         hio_rxfire_intensity_si(io_si)     = hio_rxfire_intensity_si(io_si) + cpatch%rxfire_FI * cpatch%area * AREA_INV * J_per_kJ
+         hio_rxfire_area_si(io_si)          = hio_rxfire_area_si(io_si) + cpatch%rxfire_frac_burnt * cpatch%area * AREA_INV / sec_per_day
          hio_fire_fuel_bulkd_si(io_si)      = hio_fire_fuel_bulkd_si(io_si) + cpatch%fuel_bulkd * cpatch%area * AREA_INV
          hio_fire_fuel_eff_moist_si(io_si)  = hio_fire_fuel_eff_moist_si(io_si) + cpatch%fuel_eff_moist * cpatch%area * AREA_INV
          hio_fire_fuel_sav_si(io_si)        = hio_fire_fuel_sav_si(io_si) + cpatch%fuel_sav * cpatch%area * AREA_INV / m_per_cm
@@ -3734,7 +3766,10 @@ end subroutine flush_hvars
 
 
          hio_fire_intensity_area_product_si(io_si) = hio_fire_intensity_area_product_si(io_si) + &
-            cpatch%FI * cpatch%frac_burnt * cpatch%area * AREA_INV * J_per_kJ
+              cpatch%FI * cpatch%frac_burnt * cpatch%area * AREA_INV * J_per_kJ
+
+         hio_rxfire_intensity_area_product_si(io_si) = hio_rxfire_intensity_area_product_si(io_si) + &
+              cpatch%rxfire_FI * cpatch%rxfire_frac_burnt * cpatch%area * AREA_INV * J_per_kJ
 
          ! Update Litter Flux Variables
 
@@ -3846,15 +3881,26 @@ end subroutine flush_hvars
             hio_m5_si_scls(io_si,i_scls) = hio_m5_si_scls(io_si,i_scls) + &
                (sites(s)%fmort_rate_canopy(i_scls, i_pft) +              &
                sites(s)%fmort_rate_ustory(i_scls, i_pft)) / m2_per_ha
+
+            hio_m12_si_scpf(io_si,i_scpf) = (sites(s)%rxfmort_rate_canopy(i_scls, i_pft) + &
+                 sites(s)%rxfmort_rate_ustory(i_scls, i_pft)) / m2_per_ha  ! prescribed fire mortality
+            hio_m12_si_scls(io_si,i_scls) = hio_m12_si_scls(io_si,i_scls) + &
+                 (sites(s)%rxfmort_rate_canopy(i_scls, i_pft) +             &
+                 sites(s)%rxfmort_rate_ustory(i_scls, i_pft)) / m2_per_ha  ! prescribed fire mortality
             !
             hio_crownfiremort_si_scpf(io_si,i_scpf) = sites(s)%fmort_rate_crown(i_scls, i_pft) / m2_per_ha
             hio_cambialfiremort_si_scpf(io_si,i_scpf) = sites(s)%fmort_rate_cambial(i_scls, i_pft) / m2_per_ha
+
+            hio_rxcrownfiremort_si_scpf(io_si,i_scpf) = sites(s)%rxfmort_rate_crown(i_scls, i_pft) / m2_per_ha
+            hio_rxcambialfiremort_si_scpf(io_si,i_scpf) = sites(s)%rxfmort_rate_cambial(i_scls, i_pft) / m2_per_ha
+            
             !
             ! fire components of overall canopy and understory mortality
             hio_mortality_canopy_si_scpf(io_si,i_scpf) = hio_mortality_canopy_si_scpf(io_si,i_scpf) + &
-               sites(s)%fmort_rate_canopy(i_scls, i_pft) / m2_per_ha
+               (sites(s)%fmort_rate_canopy(i_scls, i_pft) + sites(s)%rxfmort_rate_canopy(i_scls, i_pft))/ m2_per_ha !add rx fire mort
             hio_mortality_canopy_si_scls(io_si,i_scls) = hio_mortality_canopy_si_scls(io_si,i_scls) + &
-               sites(s)%fmort_rate_canopy(i_scls, i_pft) / m2_per_ha
+                 (sites(s)%fmort_rate_canopy(i_scls, i_pft) + sites(s)%rxfmort_rate_canopy(i_scls, i_pft))/ m2_per_ha
+
 
             ! Shijie: Think about how to add later?
             !if ( cpatch%anthro_disturbance_label .eq. secondaryforest ) then
@@ -3874,9 +3920,9 @@ end subroutine flush_hvars
             ! for scag variables, also treat as happening in the newly-disurbed patch
 
             hio_mortality_canopy_si_scag(io_si,iscag) = hio_mortality_canopy_si_scag(io_si,iscag) + &
-               sites(s)%fmort_rate_canopy(i_scls, i_pft) / m2_per_ha
+               (sites(s)%fmort_rate_canopy(i_scls, i_pft) + sites(s)%rxfmort_rate_canopy(i_scls, i_pft)) / m2_per_ha
             hio_mortality_understory_si_scag(io_si,iscag) = hio_mortality_understory_si_scag(io_si,iscag) + &
-               sites(s)%fmort_rate_ustory(i_scls, i_pft) / m2_per_ha
+               (sites(s)%fmort_rate_ustory(i_scls, i_pft) + sites(s)%rxfmort_rate_ustory(i_scls, i_pft)) / m2_per_ha
 
             ! while in this loop, pass the fusion-induced growth rate flux to history
             hio_growthflux_fusion_si_scpf(io_si,i_scpf) = hio_growthflux_fusion_si_scpf(io_si,i_scpf) + &
@@ -3888,10 +3934,12 @@ end subroutine flush_hvars
       !
       ! carbon flux associated with mortality of trees dying by fire
       hio_canopy_mortality_carbonflux_si(io_si) = hio_canopy_mortality_carbonflux_si(io_si) + &
-           sum(sites(s)%fmort_carbonflux_canopy(:)) / g_per_kg
+           ( sum(sites(s)%fmort_carbonflux_canopy(:)) + &
+            sum(sites(s)%rxfmort_carbonflux_canopy(:)) ) / g_per_kg ! add carbon flux due to rx fire
 
       hio_understory_mortality_carbonflux_si(io_si) = hio_understory_mortality_carbonflux_si(io_si) + &
-           sum(sites(s)%fmort_carbonflux_ustory(:)) / g_per_kg
+           ( sum(sites(s)%fmort_carbonflux_ustory(:)) + &
+           sum(sites(s)%rxfmort_carbonflux_ustory(:)) ) / g_per_kg
       
       ! treat carbon flux from imort the same way
       hio_understory_mortality_carbonflux_si(io_si) = hio_understory_mortality_carbonflux_si(io_si) + &
@@ -3914,6 +3962,7 @@ end subroutine flush_hvars
             i_scpf = (i_pft-1)*nlevsclass + i_scls
             hio_abg_mortality_cflux_si_scpf(io_si,i_scpf) = hio_abg_mortality_cflux_si_scpf(io_si,i_scpf) + &
                  (sites(s)%fmort_abg_flux(i_scls,i_pft) / g_per_kg ) + &
+                 (sites(s)%rxfmort_abg_flux(i_scls,i_pft) / g_per_kg) + &      !add rxfire abg flux
                  sites(s)%imort_abg_flux(i_scls,i_pft)  +  &
                  (sites(s)%term_abg_flux(i_scls,i_pft)  * days_per_sec * ha_per_m2 ) 
          end do
@@ -3936,18 +3985,22 @@ end subroutine flush_hvars
                        (sites(s)%term_nindivs_ustory_damage(icdam, i_scls, i_pft) * days_per_year) + &
                        sites(s)%imort_rate_damage(icdam, i_scls, i_pft) + & 
                        sites(s)%fmort_rate_canopy_damage(icdam, i_scls, i_pft) + &
-                       sites(s)%fmort_rate_ustory_damage(icdam, i_scls, i_pft) ) / m2_per_ha
+                       sites(s)%fmort_rate_ustory_damage(icdam, i_scls, i_pft) + &
+                       sites(s)%rxfmort_rate_ustory_damage(icdam, i_scls, i_pft) + &   ! add rx fire mort
+                       sites(s)%rxfmort_rate_canopy_damage(icdam, i_scls, i_pft) ) / m2_per_ha
 
                   this%hvars(ih_mortality_canopy_si_cdpf)%r82d(io_si,icdpf) = &
                        this%hvars(ih_mortality_canopy_si_cdpf)%r82d(io_si,icdpf) + &
                        ( sites(s)%term_nindivs_canopy_damage(icdam,i_scls,i_pft) * days_per_year + &
-                       sites(s)%fmort_rate_canopy_damage(icdam, i_scls, i_pft) )/ m2_per_ha
+                       sites(s)%fmort_rate_canopy_damage(icdam, i_scls, i_pft) + &
+                       sites(s)%rxfmort_rate_canopy_damage(icdam, i_scls, i_pft) )/ m2_per_ha !add rx fire mort
 
                   this%hvars(ih_mortality_understory_si_cdpf)%r82d(io_si,icdpf) = &
                        this%hvars(ih_mortality_understory_si_cdpf)%r82d(io_si,icdpf) + &
                        ( sites(s)%term_nindivs_ustory_damage(icdam, i_scls,i_pft) * days_per_year + &
                        sites(s)%imort_rate_damage(icdam, i_scls, i_pft) + &
-                       sites(s)%fmort_rate_ustory_damage(icdam, i_scls, i_pft) )/ m2_per_ha
+                       sites(s)%fmort_rate_ustory_damage(icdam, i_scls, i_pft) + &
+                       sites(s)%rxfmort_rate_ustory_damage(icdam, i_scls, i_pft) ) / m2_per_ha !add rx fire mort
 
                end do
             end do
@@ -3966,6 +4019,13 @@ end subroutine flush_hvars
       sites(s)%fmort_rate_crown(:,:) = 0._r8
       sites(s)%growthflux_fusion(:,:) = 0._r8
       sites(s)%fmort_abg_flux(:,:) = 0._r8
+      sites(s)%rxfmort_rate_canopy(:,:) = 0._r8
+      sites(s)%rxfmort_rate_ustory(:,:) = 0._r8
+      sites(s)%rxfmort_carbonflux_canopy(:) = 0._r8
+      sites(s)%rxfmort_carbonflux_ustory(:) = 0._r8
+      sites(s)%rxfmort_rate_cambial(:,:) = 0._r8
+      sites(s)%rxfmort_rate_crown(:,:) = 0._r8
+      sites(s)%rxfmort_abg_flux(:,:) = 0._r8
       sites(s)%imort_abg_flux(:,:) = 0._r8
       sites(s)%term_abg_flux(:,:) = 0._r8
 
@@ -3979,6 +4039,10 @@ end subroutine flush_hvars
       sites(s)%fmort_rate_ustory_damage(:,:,:) = 0._r8
       sites(s)%fmort_cflux_canopy_damage(:,:) = 0._r8
       sites(s)%fmort_cflux_ustory_damage(:,:) = 0._r8
+      sites(s)%rxfmort_rate_canopy_damage(:,:,:) = 0._r8
+      sites(s)%rxfmort_rate_ustory_damage(:,:,:) = 0._r8
+      sites(s)%rxfmort_cflux_canopy_damage(:,:) = 0._r8
+      sites(s)%rxfmort_cflux_ustory_damage(:,:) = 0._r8
       sites(s)%crownarea_canopy_damage = 0._r8
       sites(s)%crownarea_ustory_damage = 0._r8
       
@@ -4008,7 +4072,9 @@ end subroutine flush_hvars
                hio_m7_si_scpf(io_si,i_scpf) + &
                hio_m8_si_scpf(io_si,i_scpf) + &
                hio_m9_si_scpf(io_si,i_scpf) + &
-               hio_m10_si_scpf(io_si,i_scpf)
+               hio_m10_si_scpf(io_si,i_scpf)+ &
+               hio_m12_si_scpf(io_si,i_scpf)
+
             
             if(hlm_use_tree_damage .eq. itrue) then
                hio_mortality_si_pft(io_si, i_pft) = hio_mortality_si_pft(io_si,i_pft) + &
@@ -4385,10 +4451,12 @@ end subroutine flush_hvars
       ! add site level mortality counting to crownarea diagnostic
       hio_canopy_mortality_crownarea_si(io_si) = hio_canopy_mortality_crownarea_si(io_si) + &
            sites(s)%fmort_crownarea_canopy + &
+           sites(s)%rxfmort_crownarea_canopy + & !add rx fire effect
            sites(s)%term_crownarea_canopy * days_per_year
 
       hio_understory_mortality_crownarea_si(io_si) = hio_understory_mortality_crownarea_si(io_si) + &
            sites(s)%fmort_crownarea_ustory + &
+           sites(s)%rxfmort_crownarea_ustory + &  ! add rx fire effect
            sites(s)%term_crownarea_ustory * days_per_year + &
            sites(s)%imort_crownarea
       
@@ -5745,6 +5813,12 @@ end subroutine update_history_hifrq
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_nesterov_fire_danger_si)
 
+    call this%set_history_var(vname='FATES_RX_BURN_WINDOW', units='',          &
+         long='prescribed fire burn window', use_default='active',             &
+         avgflag='A', vtype=site_r8, hlms='CLM:ALM',                           &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rx_burn_window_si)
+
     call this%set_history_var(vname='FATES_IGNITIONS',                         &
          units='m-2 s-1',                                                      &
          long='number of successful fire ignitions per m2 land area per second',  &
@@ -5783,6 +5857,20 @@ end subroutine update_history_hifrq
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_fire_intensity_si)
 
+    call this%set_history_var(vname='FATES_RXFIRE_INTENSITY',                  &
+         units='J m-1 s-1',                                                    &
+         long='spitfire surface fireline intensity of prescried fire in J per m per second', &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rxfire_intensity_si)
+
+    call this%set_history_var(vname='FATES_RXFIRE_INTENSITY_BURNFRAC',         &
+         units='J m-1 s-1',                                                    &
+         long='product of prescribed fire intensity and burned fraction -- to be devided by FATES_RXFIRE_BURNFRAC to get area-weighted mean intensity', &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rxfire_intensity_area_product_si)
+    
     call this%set_history_var(vname='FATES_FIRE_INTENSITY_BURNFRAC',           &
          units='J m-1 s-1',                                                    &
          long='product of surface fire intensity and burned area fraction -- divide by FATES_BURNFRAC to get area-weighted mean intensity', &
@@ -5795,6 +5883,12 @@ end subroutine update_history_hifrq
          avgflag='A', vtype=site_r8, hlms='CLM:ALM',                           &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_fire_area_si)
+
+    call this%set_history_var(vname='FATES_RXFIRE_BURNFRAC', units='s-1',      &
+         long='burned area fraction per second by prescribed fire',            &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rxfire_area_si)
 
     call this%set_history_var(vname='FATES_FUEL_MEF', units='m3 m-3',          &
          long='fuel moisture of extinction (volumetric)',                      &
@@ -5861,6 +5955,19 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_age_r8, hlms='CLM:ALM', &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index = ih_fire_intensity_si_age)
+
+    call this%set_history_var(vname='FATES_RXFIRE_BURNFRAC_AP', units='s-1',   &
+         long='spitfire fraction area burnt due to prescribed fire by patch age', &
+         use_default='active', avgflag='A', vtype=site_age_r8, hlms='CLM:ALM', &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index= ih_rx_area_burnt_si_age)
+
+    call this%set_history_var(vname='FATES_RXFIRE_INTENSITY_BURNFRAC_AP',      &
+         units='J m-1 s-1',                                                    &
+         long='product of prescribed fire intensity and burned fraction, resolved by patch age, to be devided by FATES_RXFIRE_BURNFRAC_AP to get area-weighted mean intensity)', &
+         use_default='active', avgflag='A', vtype=site_age_r8, hlms='CLM:ALM', &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_rxfire_intensity_si_age)
 
     call this%set_history_var(vname='FATES_FUEL_AMOUNT_AP', units='kg m-2',    &
          long='spitfire ground fuel (kg carbon per m2) related to FATES_ROS (omits 1000hr fuels) within each patch age bin (divide by FATES_PATCHAREA_AP to get fuel per unit area of that-age patch)', &
@@ -7189,6 +7296,27 @@ end subroutine update_history_hifrq
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
           initialize=initialize_variables, index = ih_cambialfiremort_si_scpf)
 
+    call this%set_history_var(vname='FATES_MORTALITY_RXFIRE_SZPF',             &
+          units = 'm-2 yr-1',                                                  &
+          long='prescribed fire mortality by pft/size in number of plants per m2 per year', &
+	  use_default='inactive', avgflag='A', vtype=site_size_pft_r8,         &
+          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
+          initialize=initialize_variables, index = ih_m12_si_scpf)
+
+    call this%set_history_var(vname='FATES_MORTALITY_RXCROWNSCORCH_SZPF',      &
+         units = 'm-2 yr-1',                                                   &
+         long='fire mortality from crown scorch due to prescribed fire by pft/size in number of plants per m2 per year', &
+         use_default='inactive', avgflag='A', vtype=site_size_pft_r8,          &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar,                                  &
+         initialize=initialize_variables, index = ih_rxcrownfiremort_si_scpf)
+
+     call this%set_history_var(vname='FATES_MORTALITY_RXCAMBIALBURN_SZPF',      &
+         units = 'm-2 yr-1',                                                   &
+         long='fire mortality from cambial burn due to prescribed fire by pft/size in number of plants per m2 per year', &
+         use_default='inactive', avgflag='A', vtype=site_size_pft_r8,          &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar,                                  &
+         initialize=initialize_variables, index = ih_rxcambialfiremort_si_scpf)
+
     call this%set_history_var(vname='FATES_MORTALITY_TERMINATION_SZPF',        &
           units = 'm-2 yr-1',                                                  &
           long='termination mortality by pft/size in number pf plants per m2 per year', &
@@ -7610,6 +7738,13 @@ end subroutine update_history_hifrq
           use_default='active', avgflag='A', vtype=site_size_r8,               &
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
           initialize=initialize_variables, index = ih_m5_si_scls)
+
+    call this%set_history_var(vname='FATES_MORTALITY_RXFIRE_SZ',               &
+          units = 'm-2 yr-1',                                                  &
+          long='prescribed fire mortality by size in number of plants per m2 per year',   &
+          use_default='active', avgflag='A', vtype=site_size_r8,               &
+          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
+          initialize=initialize_variables, index = ih_m12_si_scls)
 
     call this%set_history_var(vname='FATES_MORTALITY_TERMINATION_SZ',          &
           units = 'm-2 yr-1',                                                  &

@@ -206,6 +206,11 @@ module FatesPatchMod
     integer               :: fire                    ! is there a fire? [1=yes; 0=no]
     real(r8)              :: fd                      ! fire duration [min]
 
+    ! rx fire
+    integer               :: rxfire                  ! is there a prescribed fire? [1=yes; 0=no]; both fire and rxfire can be 1
+    real(r8)              :: rxfire_fi               ! average fire intensity of prescribed fire flaming front
+    real(r8)              :: rxfire_frac_burnt       ! fraction burnt by prescribed fire, it's user defined at patch level per fire event
+
     ! fire effects      
     real(r8)              :: scorch_ht(maxpft)       ! scorch height [m] 
     real(r8)              :: frac_burnt              ! fraction burnt [0-1/day]  
@@ -386,7 +391,10 @@ module FatesPatchMod
       this%scorch_ht(:)                 = nan 
       this%frac_burnt                   = nan
       this%tfc_ros                      = nan    
-      this%burnt_frac_litter(:)         = nan    
+      this%burnt_frac_litter(:)         = nan
+      this%rxfire                       = fates_unset_int
+      this%rxfire_fi                    = nan
+      this%rxfire_frac_burnt            = nan
   
     end subroutine NanValues
 
@@ -462,6 +470,8 @@ module FatesPatchMod
       this%frac_burnt                        = 0.0_r8  
       this%tfc_ros                           = 0.0_r8
       this%burnt_frac_litter(:)              = 0.0_r8
+      this%rxfire_fi                         = 0.0_r8
+      this%rxfire_frac_burnt                 = 0.0_r8
 
     end subroutine ZeroValues
 

@@ -728,6 +728,9 @@ variables:
 	double fates_fire_fuel_energy ;
 		fates_fire_fuel_energy:units = "kJ/kg" ;
 		fates_fire_fuel_energy:long_name = "spitfire parameter, heat content of fuel" ;
+        double fates_fire_lh_mod ;
+	        fates_fire_lh_mod:units = "NA" ;
+		fates_fire_lh_mod:long_name = "spitfire parameter, case selection for lethal heating duration calculation: case 1 using fraction litter burned (Peterson & Ryan 1986); case 2 using equation 18 in Mercer & Weber 2001" ;
 	double fates_fire_max_durat ;
 		fates_fire_max_durat:units = "minutes" ;
 		fates_fire_max_durat:long_name = "spitfire parameter, fire maximum duration, Equation 14 Thonicke et al 2010" ;
@@ -875,6 +878,39 @@ variables:
 	double fates_regeneration_model ;
 		fates_regeneration_model:units = "-" ;
 		fates_regeneration_model:long_name = "switch for choosing between FATES\'s: 1) default regeneration scheme , 2) the Tree Recruitment Scheme (Hanbury-Brown et al., 2022), or (3) the Tree Recruitment Scheme without seedling dynamics" ;
+	double fates_rxfire_temp_upthreshold ;
+	       fates_rxfire_temp_upthreshold:units = "degree C";
+	       fates_rxfire_temp_upthreshold:long_name= "maximum temprature threshold for conducting prescribed fire";
+	double fates_rxfire_temp_lwthreshold ;
+               fates_rxfire_temp_lwthreshold:units = "degree C";
+               fates_rxfire_temp_lwthreshold:long_name=	"minimum temprature threshold for conducting prescribed	fire";
+	double fates_rxfire_rh_upthreshold ;
+               fates_rxfire_rh_upthreshold:units = "%";
+               fates_rxfire_rh_upthreshold:long_name= "maximum relative humidity threshold for conducting prescribeb fire";
+	double fates_rxfire_rh_lwthreshold ;
+               fates_rxfire_rh_lwthreshold:units = "%";
+               fates_rxfire_rh_lwthreshold:long_name= "minimum relative humidity threshold for conducting prescribeb fire";
+	double fates_rxfire_wind_upthreshold ;
+               fates_rxfire_wind_upthreshold:units = "m/s";
+               fates_rxfire_wind_upthreshold:long_name= "maximum wind speed threshold for conducting prescribeb fire";
+	double fates_rxfire_wind_lwthreshold ;
+               fates_rxfire_wind_lwthreshold:units = "m/s";
+               fates_rxfire_wind_lwthreshold:long_name= "minimum wind speed threshold for conducting prescribeb fire";
+        double fates_rxfire_AB ;
+               fates_rxfire_AB:units = "m2/(km2*day)";
+               fates_rxfire_AB:long_name= "daily burn capacity of prescribed fire";
+        double fates_rxfire_min_threshold ;
+               fates_rxfire_min_threshold:units = "kJ/m/s or kW/s";
+               fates_rxfire_min_threshold:long_name= "minimum energy threshold for conducting prescribeb fire, meant to control for management outcomes not for fire spreading";
+	double fates_rxfire_max_threshold ;
+	       fates_rxfire_max_threshold:units = "kJ/m/s or kW/s";
+               fates_rxfire_max_threshold:long_name= "maximum energy threshold for conducting prescribeb fire";
+        double fates_rxfire_fuel_min ;
+	       fates_rxfire_fuel_min:units = "kgC/m2";
+               fates_rxfire_fuel_min:long_name= "minimum fuel load at the patch level for prescribed fire to occur or a need of management";
+	double fates_rxfire_fuel_max ;
+               fates_rxfire_fuel_max:units = "kgC/m2";
+               fates_rxfire_fuel_max:long_name= "maximum fuel load above which prescribed fire can be risky";
 	double fates_soil_salinity ;
 		fates_soil_salinity:units = "ppt" ;
 		fates_soil_salinity:long_name = "soil salinity used for model when not coupled to dynamic soil salinity" ;
@@ -1642,6 +1678,8 @@ data:
 
  fates_fire_fuel_energy = 18000 ;
 
+ fates_fire_lh_mod = 1 ;
+
  fates_fire_max_durat = 240 ;
 
  fates_fire_miner_damp = 0.41739 ;
@@ -1739,6 +1777,28 @@ data:
  fates_rad_model = 1 ;
 
  fates_regeneration_model = 1 ;
+
+fates_rxfire_temp_upthreshold = 30 ;
+
+ fates_rxfire_temp_lwthreshold = 5 ;
+
+ fates_rxfire_rh_upthreshold = 55 ;
+
+ fates_rxfire_rh_lwthreshold = 30 ;
+
+ fates_rxfire_wind_upthreshold = 10 ;
+
+ fates_rxfire_wind_lwthreshold = 2 ;
+
+ fates_rxfire_AB = 250000 ;
+
+ fates_rxfire_min_threshold = 50 ;
+
+ fates_rxfire_max_threshold = 5000 ;
+
+ fates_rxfire_fuel_min = 0.5 ;
+
+ fates_rxfire_fuel_max = 1.5 ;
 
  fates_soil_salinity = 0.4 ;
 
