@@ -1852,7 +1852,7 @@ end subroutine create_cohort
      use FatesAllometryMod, only : bfineroot 
      
      !ARGUMENTS
-     type(ed_cohort_type), intent(inout) :: currentCohort
+     type(fates_cohort_type), intent(inout) :: currentCohort
 
 
      !LOCAL VARIABLES
