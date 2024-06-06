@@ -12,6 +12,8 @@
   use FatesInterfaceTypesMod     , only : hlm_masterproc ! 1= master process, 0=not master process
   use EDTypesMod            , only : numWaterMem
   use FatesGlobals          , only : fates_log
+  use FatesGlobals          , only : endrun => fates_endrun
+  use shr_log_mod           , only : errMsg => shr_log_errMsg
   use FatesInterfaceTypesMod, only : hlm_spitfire_mode
   use FatesInterfaceTypesMod, only : hlm_sf_nofire_def
   use FatesInterfaceTypesMod, only : hlm_sf_scalar_lightning_def
@@ -58,6 +60,9 @@
 
   implicit none
   private
+
+  character(len=*), parameter, private :: sourcefile = &
+      __FILE__
 
   public :: fire_model
   public :: fire_danger_index
@@ -765,7 +770,10 @@ contains
     use FatesInterfaceTypesMod, only : hlm_spitfire_mode
     use EDParamsMod,       only : ED_val_nignitions
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
+    use EDParamsMod,       only : lethal_heating_model !how to calculate lethal heating duration
     use FatesConstantsMod, only : years_per_day
+    use FatesConstantsMod, only : tfrz => t_water_freeze_k_1atm
+    use FatesConstantsMod, only : pr_lh, merweb_lh
     use SFParamsMod,       only : SF_val_fdi_alpha,SF_val_fuel_energy, &
          SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
          SF_val_rxfire_AB, SF_val_rxfire_minthreshold, &
@@ -799,6 +807,7 @@ contains
     real(r8) cloud_to_ground_strikes  ! [fraction] depends on hlm_spitfire_mode
     real(r8) anthro_ign_count  ! anthropogenic ignition count/km2/day
     integer :: iofp  ! index of oldest fates patch
+    integer :: c
     real(r8), parameter :: pot_hmn_ign_counts_alpha = 0.0035_r8  ! Potential human ignition counts (alpha in Li et al. 2012) (#/person/month)
     real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
     real(r8), parameter :: m_per_min__to__km_per_hour = 0.06_r8  ! convert wind speed from m/min to km/hr
@@ -1290,6 +1299,7 @@ contains
 
     !Local variables
     real(r8) :: fire_mort
+    real(r8) :: link_fun  ! link function for post-fire grass survival probability, using data from Gao and Schwilk, 2022
     
     !Local variables for resprouting         ! "nrc" = new resprouting cohort
     real(r8) :: nrc_leaf_c                   ! Target leaf carbon pool of nrc [kg]     

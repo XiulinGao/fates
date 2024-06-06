@@ -389,7 +389,7 @@ contains
 
        ! Fires can't burn the whole patch, as this causes /0 errors. 
        if (currentPatch%disturbance_rates(dtype_ifire) > 0.98_r8)then
-          msg = 'very high fire areas'//trim(A2S(currentPatch%disturbance_rates(:)))//trim(N2S((currentPatch%frac_burnt +
+          msg = 'very high fire areas'//trim(A2S(currentPatch%disturbance_rates(:)))//trim(N2S((currentPatch%frac_burnt + &
           currentPatch%rxfire_frac_burnt)))
           call FatesWarn(msg,index=2)
        endif
