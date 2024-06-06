@@ -99,7 +99,7 @@ module FatesAllometryMod
   use EDParamsMod      , only : nlevleaf, dinc_vai
   use EDParamsMod      , only : nclmax
   use EDParamsMod       , only : init_recruit_trim
-  use EDParamMod       , only : store_c_ratio_ag2bg
+  use EDParamsMod       , only : store_c_ratio_ag2bg
   use DamageMainMod    , only : GetCrownReduction
 
   implicit none
@@ -2667,7 +2667,7 @@ subroutine ForceDBH( ipft, crowndamage, canopy_trim, elongf_leaf, elongf_stem, d
                     init_recruit_trim,a_sapw_nr,nrc_sapw_c,nrc_dbsapwdd)
     call bagw_allom(resprout_dbh,pft,resprout_crowndamage,agw_c_nr,nrc_dbagwdd)
     call bbgw_allom(resprout_dbh,pft, bgw_c_nr,nrc_dbbgwdd)
-    call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,ipft,nrc_struct_c,nrc_dbdeaddd)
+    call bdead_allom(agw_c_nr,bgw_c_nr,nrc_sapw_c,pft,nrc_struct_c,nrc_dbdeaddd)
 
     nrc_store_c = (store_c * (1.0_r8 - prt_params%allom_agb_frac(pft) * store_c_ratio_ag2bg)) - (nrc_leaf_c + nrc_sapw_c + nrc_struct_c)
 
