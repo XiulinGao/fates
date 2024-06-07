@@ -488,6 +488,11 @@ contains
     real(r8) :: m_sapw                       ! carbon pool mass reduction for resprout [fraction]
     real(r8) :: m_store                       ! carbon pool mass reduction for resprout [fraction]
     real(r8) :: m_repro                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: nrc_dbldd
+    real(r8) :: nrc_dbagwdd
+    real(r8) :: nrc_dbbgwdd
+    real(r8) :: nrc_dbdeaddd
+    real(r8) :: nrc_dbsapwdd
     integer :: iage                           ! age loop counter for leaf age bins
     integer  :: element_id                    ! parteh compatible global element index
 
@@ -1106,7 +1111,7 @@ contains
 			       !Carbon pools for fnrt and storage are preserved from the doner cohort.
 
                                call target_resprout_carbon_pools(nrc%height,nrc%pft,store_c,nrc_leaf_c,&
-			       nrc_sapw_c,nrc_struct_c,nrc_store_c)
+			       nrc_sapw_c,nrc_struct_c,nrc_store_c,nrc_dbldd,nrc_dbagwdd,nrc_dbsapwdd,nrc_dbbgwdd,nrc_dbdeaddd)
 
 			       !Set the biomass pool sizes for nrc. Mass fluxes associated
                                !with the reduction in above-ground biomass pools were already sent to 
