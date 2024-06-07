@@ -855,7 +855,8 @@ contains
       integer                          :: el                    ! index for element loop
       integer                          :: element_id            ! element index consistent with defs in PRTGeneric
       integer                          :: use_pft_local(numpft) ! determine whether this PFT is used for this patch and site
-      integer                          :: crown_damage          ! crown damage class of the cohort [1 = undamaged, >1 = damaged] 
+      integer                          :: crown_damage          ! crown damage class of the cohort [1 = undamaged, >1 = damaged]
+      integer                          :: resprout              ! resprout flag
       real(r8)                         :: l2fr                  ! leaf to fineroot biomass ratio [kg kg-1]
       real(r8)                         :: canopy_trim           ! fraction of the maximum leaf biomass that we are targeting [0-1]
       real(r8)                         :: cohort_n              ! cohort density
@@ -928,6 +929,7 @@ contains
             l2fr         = prt_params%allom_l2fr(pft)
             canopy_trim  = 1.0_r8
             crown_damage = 1  ! Assume no damage to begin with
+            resprout = 0 ! Cohorts initialized on bare ground are not resprouts
 
             ! retrieve drop fraction of non-leaf tissues for phenology initialization
             fnrt_drop_fraction = prt_params%phen_fnrt_drop_fraction(pft)

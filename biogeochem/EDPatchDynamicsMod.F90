@@ -891,6 +891,7 @@ contains
 
                             nc%n = currentCohort%n * patch_site_areadis/currentPatch%area
 
+
                            
                             levcan = currentCohort%canopy_layer
 
@@ -958,11 +959,11 @@ contains
                                  nc%n * currentCohort%crownfire_mort / hlm_freq_day
 
                             currentSite%rxfmort_rate_cambial(currentCohort%size_class, currentCohort%pft) = &
-                                       currentSite%rxfmort_rate_cambial(currentCohort%size_class, currentCohort%pft) + &
-                                       nc%n * currentCohort%rxcambial_mort / hlm_freq_day
+                                 currentSite%rxfmort_rate_cambial(currentCohort%size_class, currentCohort%pft) + &
+                                 nc%n * currentCohort%rxcambial_mort / hlm_freq_day
                             currentSite%rxfmort_rate_crown(currentCohort%size_class, currentCohort%pft) = &
-                                       currentSite%rxfmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
-                                       nc%n * currentCohort%rxcrownfire_mort / hlm_freq_day
+                                 currentSite%rxfmort_rate_crown(currentCohort%size_class, currentCohort%pft) + &
+                                 nc%n * currentCohort%rxcrownfire_mort / hlm_freq_day
 
                             ! loss of individuals from fire in new patch.
                             nc%n = nc%n * (1.0_r8 - (currentCohort%fire_mort + currentCohort%frac_resprout + currentCohort%rxfire_mort))
