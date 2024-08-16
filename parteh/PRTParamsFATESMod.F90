@@ -241,6 +241,14 @@ contains
     call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
+    name = 'fates_leafn_vert_scaler_coeff1'
+    call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
+         dimension_names=dim_names, lower_bounds=dim_lower_bound)
+
+    name = 'fates_leafn_vert_scaler_coeff2'
+    call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
+         dimension_names=dim_names, lower_bounds=dim_lower_bound)
+    
     name = 'fates_recruit_seed_alloc_mature'
     call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
@@ -535,6 +543,14 @@ contains
     name = 'fates_turnover_fnrt'
     call fates_params%RetrieveParameterAllocate(name=name, &
          data=prt_params%root_long)
+
+    name = 'fates_leafn_vert_scaler_coeff1'
+    call fates_params%RetrieveParameterAllocate(name=name, &
+         data=prt_params%leafn_vert_scaler_coeff1)
+
+    name = 'fates_leafn_vert_scaler_coeff2'
+    call fates_params%RetrieveParameterAllocate(name=name, &
+         data=prt_params%leafn_vert_scaler_coeff2)
 
     name = 'fates_recruit_seed_alloc_mature'
     call fates_params%RetrieveParameterAllocate(name=name, &
@@ -999,6 +1015,8 @@ contains
         write(fates_log(),fmti) 'organ_id = ',prt_params%organ_id
         write(fates_log(),fmt0) 'nitr_store_ratio = ',prt_params%nitr_store_ratio
         write(fates_log(),fmt0) 'phos_store_ratio = ',prt_params%phos_store_ratio
+        write(fates_log(),fmt0) 'leafn_vert_scaler_coeff1 = ',prt_params%leafn_vert_scaler_coeff1
+        write(fates_log(),fmt0) 'leafn_vert_scaler_coeff2 = ',prt_params%leafn_vert_scaler_coeff2
         write(fates_log(),*) '-------------------------------------------------'
 
      end if

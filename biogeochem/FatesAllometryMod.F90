@@ -121,7 +121,7 @@ module FatesAllometryMod
   public :: bdead_allom   ! Generic bdead wrapper
   public :: carea_allom   ! Generic crown area wrapper
   public :: bstore_allom  ! Generic maximum storage carbon wrapper
-  public :: decay_coeff_kn
+  public :: decay_coeff_vcmax !vertical canopy decay rate, scaled on vcmax
   public :: ForceDBH      ! Method to set DBH to sync with structure
                           ! or fineroot biomass
   public :: CheckIntegratedAllometries
@@ -690,7 +690,9 @@ contains
        end if
 
        ! Coefficient for exponential decay of 1/sla with canopy depth:
-       kn = decay_coeff_kn(pft,vcmax25top)
+       kn = decay_coeff_vcmax(vcmax25top, &
+                              prt_params%leafn_vert_scaler_coeff1(pft), &
+                              prt_params%leafn_vert_scaler_coeff2(pft))
 
        ! take PFT-level maximum SLA value, even if under a thick canopy (which has units of m2/gC),
        ! and put into units of m2/kgC
@@ -885,7 +887,9 @@ contains
     slat = g_per_kg * prt_params%slatop(pft)
     sla_max = g_per_kg * prt_params%slamax(pft)
     ! Coefficient for exponential decay of 1/sla with canopy depth:
-     kn = decay_coeff_kn(pft,vcmax25top)
+     kn = decay_coeff_vcmax(vcmax25top, &
+                           prt_params%leafn_vert_scaler_coeff1(pft), &
+                           prt_params%leafn_vert_scaler_coeff2(pft))
 
     if(treelai > 0.0_r8)then 
        ! Leafc_per_unitarea at which sla_max is reached due to exponential sla profile in canopy:
@@ -2410,7 +2414,7 @@ contains
   ! =====================================================================================
 
   
-  real(r8) function decay_coeff_kn(pft,vcmax25top)
+  real(r8) function decay_coeff_vcmax(vcmax25top,slope_param,intercept_param)
     
     ! ---------------------------------------------------------------------------------
     ! This function estimates the decay coefficient used to estimate vertical
@@ -2423,8 +2427,10 @@ contains
     ! ---------------------------------------------------------------------------------
     
     !ARGUMENTS
-    integer, intent(in) :: pft
+
     real(r8),intent(in) :: vcmax25top
+    real(r8),intent(in) :: slope_param      ! multiplies vcmax25top
+    real(r8),intent(in) :: intercept_param  ! adds to vcmax25top
 
     
     !LOCAL VARIABLES
@@ -2434,10 +2440,10 @@ contains
     ! kn = 0.11. Here, we derive kn from vcmax25 as in Lloyd et al 
     ! (2010) Biogeosciences, 7, 1833-1859
     
-    decay_coeff_kn = exp(0.00963_r8 * vcmax25top - 2.43_r8)
+    decay_coeff_vcmax = exp(slope_param * vcmax25top - intercept_param)
     
     return
-  end function decay_coeff_kn
+  end function decay_coeff_vcmax
 
   ! =====================================================================================
 subroutine ForceDBH( ipft, crowndamage, canopy_trim, elongf_leaf, elongf_stem, d, h, bdead, bl )

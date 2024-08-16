@@ -45,7 +45,7 @@ module EDPhysiologyMod
   use FatesAllometryMod   , only : tree_lai
   use FatesAllometryMod   , only : tree_sai
   use FatesAllometryMod   , only : leafc_from_treelai
-  use FatesAllometryMod   , only : decay_coeff_kn
+  use FatesAllometryMod   , only : decay_coeff_vcmax
   use FatesLitterMod      , only : litter_type
   use EDTypesMod          , only : site_massbal_type
   use EDTypesMod          , only : numlevsoil_max
@@ -767,7 +767,9 @@ contains
 
                 ! Calculate sla_levleaf following the sla profile with overlying leaf area
                 ! Scale for leaf nitrogen profile
-                kn = decay_coeff_kn(ipft,currentCohort%vcmax25top)
+                kn = decay_coeff_vcmax(currentCohort%vcmax25top, &
+                     prt_params%leafn_vert_scaler_coeff1(ipft), &
+                     prt_params%leafn_vert_scaler_coeff2(ipft))
                 ! Nscaler value at leaf level z
                 nscaler_levleaf = exp(-kn * cumulative_lai)
                 ! Sla value at leaf level z after nitrogen profile scaling (m2/gC)
@@ -2398,14 +2400,18 @@ contains
             regeneration_model == TRS_no_seedling_dyn .or. & 
             prt_params%allom_dbh_maxheight(pft) < min_max_dbh_for_trees ) then
 
-          litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft), &  
-               max_germination)*years_per_day
+         ! litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft), &  
+         !      max_germination)*years_per_day
 
                  ! Disturbance sensitive germination for shrubs. -ahb
-          if (prt_params%allom_dbh_maxheight(pft) < 20.0_r8 .and. currentPatch%age < 2.0_r8) then
+          ! if (prt_params%allom_dbh_maxheight(pft) < 20.0_r8 .and. currentPatch%age < 2.0_r8) then
+          if (currentPatch%age < 20.0_r8) then
              litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft)* &
                                     EDPftvarcon_inst%disturbance_germ(pft), max_germination)* &
                                     years_per_day
+          else
+             litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft), &
+               max_germination)*years_per_day
 
              !write(fates_log(),*) '100X germination for:', pft
           end if

@@ -60,6 +60,9 @@ module PRTParametersMod
      real(r8), allocatable :: turnover_nitr_retrans(:,:) ! nitrogen re-translocation fraction (pft x organ)
      real(r8), allocatable :: turnover_phos_retrans(:,:) ! phosphorus re-translocation fraction (pft x organ)
                                                          ! Parameters dimensioned by PFT and leaf age
+
+     real(r8), allocatable :: leafn_vert_scaler_coeff1(:)  ! Coefficient one for decrease of leaf N through the canopy
+     real(r8), allocatable :: leafn_vert_scaler_coeff2(:)  ! Coefficient two for decrease of leaf N through the canopy
      
      real(r8), allocatable :: grperc(:)                  ! Growth respiration per unit Carbon gained
                                                          ! One value for whole plant
