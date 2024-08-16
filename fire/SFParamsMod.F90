@@ -54,6 +54,9 @@ module SFParamsMod
    real(r8),protected, public :: SF_val_rxfire_maxthreshold ! maximum fire energy
    real(r8),protected, public :: SF_val_rxfire_fuel_min     ! minimum fuel load at the patch for the need of rx fire management
    real(r8),protected, public :: SF_val_rxfire_fuel_max     ! maximum fuel load, above which might be risky for conducting rx fire
+   real(r8),protected, public :: SF_val_rxfire              ! whether Rx fire is on (1) or off(0)
+   
+   
 
    
    character(len=param_string_length),parameter :: SF_name_fdi_a = "fates_fire_fdi_a"
@@ -88,6 +91,7 @@ module SFParamsMod
    character(len=param_string_length),parameter :: SF_name_rxfire_max_threshold = "fates_rxfire_max_threshold"
    character(len=param_string_length),parameter :: SF_name_rxfire_fuel_min = "fates_rxfire_fuel_min"
    character(len=param_string_length),parameter :: SF_name_rxfire_fuel_max = "fates_rxfire_fuel_max"
+   character(len=param_string_length),parameter :: SF_name_rxfire = "fates_rxfire"
 
    character(len=*), parameter, private :: sourcefile = &
          __FILE__
@@ -206,6 +210,7 @@ contains
     SF_val_rxfire_maxthreshold = nan
     SF_val_rxfire_fuel_min = nan
     SF_val_rxfire_fuel_max = nan
+    SF_val_rxfire = nan
 
   end subroutine SpitFireParamsInit
 
@@ -317,6 +322,9 @@ contains
     call fates_params%RegisterParameter(name=SF_name_rxfire_fuel_max, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
 
+    call fates_params%RegisterParameter(name=SF_name_rxfire, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
   end subroutine SpitFireRegisterScalars
 
  !-----------------------------------------------------------------------
@@ -395,6 +403,9 @@ contains
 
     call fates_params%RetrieveParameter(name=SF_name_rxfire_fuel_max, &
          data=SF_val_rxfire_fuel_max)
+
+    call fates_params%RetrieveParameter(name=SF_name_rxfire, &
+         data=SF_val_rxfire)
 
 
   end subroutine SpitFireReceiveScalars

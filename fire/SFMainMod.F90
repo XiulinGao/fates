@@ -778,7 +778,7 @@ contains
          SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
          SF_val_rxfire_AB, SF_val_rxfire_minthreshold, &
          SF_val_rxfire_maxthreshold, SF_val_rxfire_fuel_min, &
-         SF_val_rxfire_fuel_max
+         SF_val_rxfire_fuel_max, SF_val_rxfire
     
     type(ed_site_type), intent(inout), target :: currentSite
     type(fates_patch_type), pointer :: currentPatch
@@ -1036,7 +1036,8 @@ contains
               currentPatch%FI .gt. SF_val_fire_threshold .and. &
               currentPatch%FI .gt. SF_val_rxfire_maxthreshold)
          
-         if (currentSite%rx_flag .eq. itrue .and. &                   !rx fire condition check 
+         if (SF_val_rxfire .eq. itrue .and. &                         ! is Rx fire turned on? 
+             currentSite%rx_flag .eq. itrue .and. &                   !rx fire weather condition check 
              currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
              currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
             !            if(is_rxfire .or. is_managed_wildfire) then
@@ -1071,7 +1072,7 @@ contains
                currentPatch%frac_burnt = 0.0_r8  !no rx fire no wildfire
             endif
             
-         else           ! not a patch that is suitable for conducting rx fire 
+         else           ! not a patch that is suitable for conducting rx fire or we are not using Rx fire at all
             currentPatch%rxfire            = 0
             currentPatch%rxfire_frac_burnt = 0.0_r8
             currentPatch%rxfire_FI = 0.0_r8
