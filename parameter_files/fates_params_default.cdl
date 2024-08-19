@@ -383,12 +383,26 @@ variables:
 	double fates_leaf_vcmaxse(fates_pft) ;
 		fates_leaf_vcmaxse:units = "J/mol/K" ;
 		fates_leaf_vcmaxse:long_name = "entropy term for vcmax. NOTE: if fates_leaf_photo_tempsens_model=2 then these values are NOT USED" ;
+	double fates_leafn_vert_scaler_coeff1(fates_pft) ;
+                fates_leafn_vert_scaler_coeff1:units = "unitless" ;
+                fates_leafn_vert_scaler_coeff1:long_name = "Coefficient one for decrease in leaf nitrogen through the canopy, from Lloyd et al. 2010." ;
+        double fates_leafn_vert_scaler_coeff2(fates_pft) ;
+                fates_leafn_vert_scaler_coeff2:units = "unitless" ;
+                fates_leafn_vert_scaler_coeff2:long_name = "Coefficient two for decrease in leaf nitrogen through the canopy, from Lloyd et al. 2010." ;
 	double fates_maintresp_leaf_atkin2017_baserate(fates_pft) ;
 		fates_maintresp_leaf_atkin2017_baserate:units = "umol CO2/m^2/s" ;
 		fates_maintresp_leaf_atkin2017_baserate:long_name = "Leaf maintenance respiration base rate parameter (r0) per Atkin et al 2017" ;
 	double fates_maintresp_leaf_ryan1991_baserate(fates_pft) ;
 		fates_maintresp_leaf_ryan1991_baserate:units = "gC/gN/s" ;
 		fates_maintresp_leaf_ryan1991_baserate:long_name = "Leaf maintenance respiration base rate per Ryan et al 1991" ;
+        double fates_maintresp_leaf_vert_scaler_coeff1(fates_pft) ;
+                fates_maintresp_leaf_vert_scaler_coeff1:units = "unitless" ;
+                fates_maintresp_leaf_vert_scaler_coeff1:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and re\
+spiration through the canopy, match with fates_leafn_vert_scaler_coeff1." ;
+        double fates_maintresp_leaf_vert_scaler_coeff2(fates_pft) ;
+                fates_maintresp_leaf_vert_scaler_coeff2:units = "unitless" ;
+                fates_maintresp_leaf_vert_scaler_coeff2:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and re\
+spiration through the canopy, match with fates_leafn_vert_scaler_coeff2." ;
 	double fates_maintresp_reduction_curvature(fates_pft) ;
 		fates_maintresp_reduction_curvature:units = "unitless (0-1)" ;
 		fates_maintresp_reduction_curvature:long_name = "curvature of MR reduction as f(carbon storage), 1=linear, 0=very curved" ;
@@ -1355,6 +1369,12 @@ data:
  fates_leaf_vcmaxse = 485, 485, 485, 485, 485, 485, 485, 485, 485, 485, 485, 
     485 ;
 
+ fates_leafn_vert_scaler_coeff1 = 0.00963, 0.00963, 0.00963, 0.00963, 
+    0.00963, 0.00963, 0.00963, 0.00963, 0.00963, 0.00963, 0.00963, 0.00963 ;
+
+ fates_leafn_vert_scaler_coeff2 = 2.43, 2.43, 2.43, 2.43, 2.43, 2.43, 2.43, 
+    2.43, 2.43, 2.43, 2.43, 2.43 ;
+
  fates_maintresp_leaf_atkin2017_baserate = 1.756, 1.4995, 1.4995, 1.756, 
     1.756, 1.756, 2.0749, 2.0749, 2.0749, 2.1956, 2.1956, 2.1956 ;
 
@@ -1362,6 +1382,13 @@ data:
     2.525e-06, 2.525e-06, 2.525e-06, 2.525e-06, 2.525e-06, 2.525e-06, 
     2.525e-06, 2.525e-06, 2.525e-06 ;
 
+ fates_maintresp_leaf_vert_scaler_coeff1 = 0.00963, 0.00963, 0.00963, 
+    0.00963, 0.00963, 0.00963, 0.00963, 0.00963, 0.00963, 0.00963, 0.00963, 
+    0.00963 ;
+
+ fates_maintresp_leaf_vert_scaler_coeff2 = 2.43, 2.43, 2.43, 2.43, 2.43, 
+    2.43, 2.43, 2.43, 2.43, 2.43, 2.43, 2.43 ;
+    
  fates_maintresp_reduction_curvature = 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 
     0.01, 0.01, 0.01, 0.01, 0.01, 0.01 ;
 
