@@ -397,12 +397,10 @@ variables:
 		fates_maintresp_leaf_ryan1991_baserate:long_name = "Leaf maintenance respiration base rate per Ryan et al 1991" ;
         double fates_maintresp_leaf_vert_scaler_coeff1(fates_pft) ;
                 fates_maintresp_leaf_vert_scaler_coeff1:units = "unitless" ;
-                fates_maintresp_leaf_vert_scaler_coeff1:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and re\
-spiration through the canopy, match with fates_leafn_vert_scaler_coeff1." ;
+                fates_maintresp_leaf_vert_scaler_coeff1:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and respiration through the canopy, match with fates_leafn_vert_scaler_coeff1." ;
         double fates_maintresp_leaf_vert_scaler_coeff2(fates_pft) ;
                 fates_maintresp_leaf_vert_scaler_coeff2:units = "unitless" ;
-                fates_maintresp_leaf_vert_scaler_coeff2:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and re\
-spiration through the canopy, match with fates_leafn_vert_scaler_coeff2." ;
+                fates_maintresp_leaf_vert_scaler_coeff2:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and respiration through the canopy, match with fates_leafn_vert_scaler_coeff2." ;
 	double fates_maintresp_reduction_curvature(fates_pft) ;
 		fates_maintresp_reduction_curvature:units = "unitless (0-1)" ;
 		fates_maintresp_reduction_curvature:long_name = "curvature of MR reduction as f(carbon storage), 1=linear, 0=very curved" ;
