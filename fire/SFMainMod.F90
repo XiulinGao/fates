@@ -1145,7 +1145,7 @@ contains
          
          if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.5_r8)then
             currentPatch%rxfire_frac_burnt = currentPatch%area / total_burnable_area * &
-            min(0.99_r8, (SF_val_rxfire_AB / bc_in%site_area)) !we cap fractional burning capacity in case site area is too small if that can be true?
+            min(0.99_r8, (SF_val_rxfire_AB / bc_in%site_area) !we cap fractional burning capacity in case site area is too small if that can be true?
          else
             currentPatch%rxfire == 0 !update rxfire tag when fraction burnable area is less then 50% of grid area, so we do not apply rx fire  
             currentPatch%rxfire_frac_burnt = 0.0_r8  
