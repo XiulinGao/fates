@@ -1039,16 +1039,15 @@ contains
               currentPatch%FI .gt. SF_val_rxfire_maxthreshold)
          is_wildfire = (managed_wildfire .or. true_wildfire)
          
-         if (SF_val_rxfire .eq. itrue .and. &                         ! is Rx fire turned on? 
+         if (SF_val_rxfire .eq. 1.0_r8 .and. &                         ! is Rx fire turned on? 
              currentSite%rx_flag .eq. itrue .and. &                   !rx fire weather condition check 
              currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
              currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
-            !            if(is_rxfire .or. is_managed_wildfire) then
-            if(is_rxfire) then
-               currentPatch%fire = 0
-               currentPatch%rxfire = 1
-               currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
-               currentPatch%FD         = 0.0_r8      ! zero wildfire duration
+               if(is_rxfire) then
+                  currentPatch%fire = 0
+                  currentPatch%rxfire = 1
+                  currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
+                  currentPatch%FD         = 0.0_r8      ! zero wildfire duration
          
       
             !else if (is_managed_wildfire) then
@@ -1060,22 +1059,21 @@ contains
                !currentPatch%rxfire_frac_burnt = 0.0_r8
                !currentPatch%rxfire_FI         = 0.0_r8
 
-            else if (is_wildfire) then  !either managed wildfire or wildfire that out of control
-               currentPatch%fire = 1               
-               currentSite%NF_successful = currentSite%NF_successful + &
-                    currentSite%NF * currentSite%FDI * currentPatch%area / area
-               currentPatch%rxfire = 0
-               currentPatch%rxfire_frac_burnt = 0.0_r8
-               currentPatch%rxfire_FI = 0.0_r8
-            else  !no fire at all
-               currentPatch%rxfire = 0
-               currentPatch%rxfire_frac_burnt = 0.0_r8
-               currentPatch%rxfire_FI = 0.0_r8
-               currentPatch%fire = 0
-               currentPatch%FD = 0.0_r8
-               currentPatch%frac_burnt = 0.0_r8  !no rx fire no wildfire
-            endif
-            
+               else if (is_wildfire) then  !either managed wildfire or wildfire that out of control
+                  currentPatch%fire = 1               
+                  currentSite%NF_successful = currentSite%NF_successful + &
+                  currentSite%NF * currentSite%FDI * currentPatch%area / area
+                  currentPatch%rxfire = 0
+                  currentPatch%rxfire_frac_burnt = 0.0_r8
+                  currentPatch%rxfire_FI = 0.0_r8
+               else  !no fire at all
+                  currentPatch%rxfire = 0
+                  currentPatch%rxfire_frac_burnt = 0.0_r8
+                  currentPatch%rxfire_FI = 0.0_r8
+                  currentPatch%fire = 0
+                  currentPatch%FD = 0.0_r8
+                  currentPatch%frac_burnt = 0.0_r8  !no rx fire no wildfire
+               endif
          else           ! not a patch that is suitable for conducting rx fire or we are not using Rx fire at all
             currentPatch%rxfire            = 0
             currentPatch%rxfire_frac_burnt = 0.0_r8
@@ -1093,7 +1091,7 @@ contains
          endif !end rx fire condition check
           
        endif ! NF ignitions check
-       endif ! nocomp_pft_label check
+      endif ! nocomp_pft_label check
        
        currentPatch => currentPatch%younger
 
@@ -1144,7 +1142,7 @@ contains
    do while(associated(currentPatch))
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
-         if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.5_r8)then
+         if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.0_r8)then
             currentPatch%rxfire_frac_burnt = currentPatch%area / total_burnable_area * &
             min(0.99_r8, (SF_val_rxfire_AB / bc_in%site_area)) !we cap fractional burning capacity in case site area is too small if that can be true?
          else
