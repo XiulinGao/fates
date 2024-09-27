@@ -1113,7 +1113,7 @@ contains
 
    use SFParamsMod,        only : SF_val_rxfire_AB  !user defined prescribed fire area in m2 per day to reflect burning capacity
 
-   type(ed_site_type), intent(in), target :: currentSite
+   type(ed_site_type), intent(inout), target :: currentSite
    type(bc_in_type), intent(in) :: bc_in
 
    type(fates_patch_type), pointer  :: currentPatch
