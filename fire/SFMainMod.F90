@@ -1111,7 +1111,9 @@ contains
    !and patch area to total burnable area fraction
 
 
-   use SFParamsMod,        only : SF_val_rxfire_AB  !user defined prescribed fire area in m2 per day to reflect burning capacity
+   use FatesInterfaceTypesMod, only : hlm_current_month
+   use FatesInterfaceTypesMod, only : hlm_current_year
+   use SFParamsMod,            only : SF_val_rxfire_AB  !user defined prescribed fire area in m2 per day to reflect burning capacity
 
    type(ed_site_type), intent(inout), target :: currentSite
    type(bc_in_type), intent(in) :: bc_in
@@ -1123,6 +1125,7 @@ contains
    real(r8) :: site_frac_burnable !fraction site area that can apply prescribed fire
 
    real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
+   real(r8), parameter :: rx_freq = 5.0_r8 ! Rx fire return interval 
 
    currentPatch => currentSite%oldest_patch;
    !calculate total fractional area that can be burned by prescribed fire at site level
@@ -1144,9 +1147,15 @@ contains
    do while(associated(currentPatch))
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
-         if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.5_r8)then
+         if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.5_r8)then!.and. &
+         !currentSite%rx_burnfrac_accum .lt. 1.0_r8)then
             currentPatch%rxfire_frac_burnt = currentPatch%area / total_burnable_area * &
-            min(1.0_r8, (SF_val_rxfire_AB / (bc_in%site_area * km2_to_m2 ))) !we cap fractional burning capacity in case grid cell is too small if that can be true?
+            SF_val_rxfire_AB  ! in km2 / (km2* day)
+            !currentSite%rx_burnfrac_accum = currentSite%rx_burnfrac_accum + currentPath%area * currentPatch%rxfire_frac_burnt
+            !if(currentSite%rx_burnfrac_accum .eq. 1.0_r8)then
+              ! currentSite%lst_rx_year = hlm_current_year
+              ! currentSite%lst_rx_month = hlm_current_month
+
          else
             currentPatch%rxfire = 0 !update rxfire tag when fraction burnable area is less then 50% of grid area, so we do not apply rx fire  
             currentPatch%rxfire_frac_burnt = 0.0_r8  
