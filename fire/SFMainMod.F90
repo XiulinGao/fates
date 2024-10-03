@@ -1163,7 +1163,7 @@ contains
          currentSite%rx_burn_accum .lt. AREA)then
             currentPatch%rxfire_frac_burnt = currentPatch%area / total_burnable_area * &
             SF_val_rxfire_AB  ! in km2 / (km2* day)
-            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPath%area * currentPatch%rxfire_frac_burnt
+            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
             if(currentSite%rx_burn_accum .ge. AREA)then
                currentSite%lst_rx_year = hlm_current_year
                !currentSite%lst_rx_month = hlm_current_month
