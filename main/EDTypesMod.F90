@@ -321,6 +321,9 @@ module EDTypesMod
      real(r8) ::  NF                                           ! daily ignitions in km2
      real(r8) ::  NF_successful                                ! daily ignitions in km2 that actually lead to fire
      integer  ::  rx_flag                                      ! dainly burn window flag
+     real(r8) ::  rx_burn_accum                                ! cumulative burnt fraction by Rx fire at site
+     integer  ::  lst_rx_year                                  ! year of last Rx fire
+     integer  ::  next_rx_year                                 ! year of next Rx fire
 
      ! PLANT HYDRAULICS
      type(ed_site_hydr_type), pointer :: si_hydr
