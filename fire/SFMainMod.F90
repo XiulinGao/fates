@@ -1121,9 +1121,8 @@ contains
    type(fates_patch_type), pointer  :: currentPatch
 
 
-   real(r8) :: total_burnable_area !total patch area that can apply prescribed fire 
-   real(r8) :: site_frac_burnable !fraction site area that can apply prescribed fire
-   real(r8) :: accum_burnfrac     ! cumulative burned frac by rx fire at site 
+   ! local variables
+   real(r8) :: site_frac_burnable !fraction site area that can apply prescribed fire 
 
    real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
    integer,  parameter :: rx_freq = 5 ! Rx fire return interval 
@@ -1138,20 +1137,22 @@ contains
       endif
    endif
    
+   ! zero current site total burnable area before loop through patches
+   currentSite%total_burnable_area = 0.0_r8
 
    currentPatch => currentSite%oldest_patch;
-   !calculate total fractional area that can be burned by prescribed fire at site level
+   !calculate total area that can be burned by prescribed fire at site level
    do while(associated(currentPatch))
-
+      
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
          if(currentPatch%rxfire == 1)then
-            total_burnable_area = total_burnable_area + currentPatch%area
+            currentSite%total_burnable_area = currentSite%total_burnable_area + currentPatch%area
          endif
       endif
       currentPatch => currentPatch%younger;  
    enddo !end patch loop
 
-   site_frac_burnable = total_burnable_area / AREA
+   site_frac_burnable = currentSite%total_burnable_area / AREA
    
    
    currentPatch => currentSite%oldest_patch;
