@@ -1143,7 +1143,7 @@ contains
    currentPatch => currentSite%oldest_patch;
    !calculate total area that can be burned by prescribed fire at site level
    do while(associated(currentPatch))
-      
+
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
          if(currentPatch%rxfire == 1)then
             currentSite%total_burnable_area = currentSite%total_burnable_area + currentPatch%area
@@ -1162,7 +1162,7 @@ contains
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
          if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.1_r8 .and. &
          currentSite%rx_burn_accum .lt. AREA)then
-            currentPatch%rxfire_frac_burnt = currentPatch%area / total_burnable_area * &
+            currentPatch%rxfire_frac_burnt = currentPatch%area / currentSite%total_burnable_area * &
             SF_val_rxfire_AB  ! in km2 / (km2* day)
             currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
             if(currentSite%rx_burn_accum .ge. AREA)then
