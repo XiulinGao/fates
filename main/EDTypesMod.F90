@@ -324,7 +324,7 @@ module EDTypesMod
      real(r8) ::  rx_burn_accum                                ! cumulative burnt fraction by Rx fire at site
      integer  ::  lst_rx_year                                  ! year of last Rx fire
      integer  ::  next_rx_year                                 ! year of next Rx fire
-     real(r8) :: total_burnable_area                           ! total site area that can potentially apply Rx fire to
+    ! real(r8) :: total_burnable_area                           ! total site area that can potentially apply Rx fire to
 
      ! PLANT HYDRAULICS
      type(ed_site_hydr_type), pointer :: si_hydr
