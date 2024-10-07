@@ -1114,7 +1114,7 @@ contains
 
    !use FatesInterfaceTypesMod, only : hlm_current_month
    use FatesInterfaceTypesMod, only : hlm_current_year
-   use SFParamsMod,            only : SF_val_rxfire_AB  !user defined prescribed fire area in m2 per day to reflect burning capacity
+   use SFParamsMod,            only : SF_val_rxfire_AB, SF_val_rxfire !user defined prescribed fire area in m2 per day to reflect burning capacity
 
    type(ed_site_type), intent(inout), target :: currentSite
    type(bc_in_type), intent(in) :: bc_in
@@ -1124,10 +1124,9 @@ contains
    !when Rx fire is not turned on skip
    if(SF_val_rxfire .ne. 1.0_r8 ) return
 
-
    ! local variables
-   real(r8) :: total_burnable_area ! total area that can apply prescribed fire 
-   real(r8) :: site_frac_burnable !fraction site area that can apply prescribed fire 
+   real(r8) :: total_burnable_area    ! total area that can apply prescribed fire 
+   real(r8) :: site_frac_burnable     !fraction site area that can apply prescribed fire 
 
    real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
    integer,  parameter :: rx_freq = 10 ! Rx fire return interval 
