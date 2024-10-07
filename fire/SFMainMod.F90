@@ -1121,8 +1121,6 @@ contains
 
    type(fates_patch_type), pointer  :: currentPatch
 
-   !when Rx fire is not turned on skip
-   if(SF_val_rxfire .ne. 1.0_r8 ) return
 
    ! local variables
    real(r8) :: total_burnable_area    ! total area that can apply prescribed fire 
@@ -1134,6 +1132,9 @@ contains
    ! zero current site total burnable area and fraction before loop through patches
    total_burnable_area = 0._r8
    site_frac_burnable = 0._r8
+
+   !when Rx fire is not turned on skip
+   if(SF_val_rxfire .ne. 1.0_r8 ) return
 
    currentPatch => currentSite%oldest_patch;
    !calculate total area that can be burned by prescribed fire at site level
