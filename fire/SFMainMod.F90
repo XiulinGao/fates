@@ -1126,8 +1126,8 @@ contains
    real(r8) :: total_burnable_area    ! total area that can apply prescribed fire 
    real(r8) :: site_frac_burnable     !fraction site area that can apply prescribed fire 
 
-   real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
-   integer,  parameter :: rx_freq = 10 ! Rx fire return interval 
+   !real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
+   !integer,  parameter :: rx_freq = 10 ! Rx fire return interval 
 
    ! zero current site total burnable area and fraction before loop through patches
    total_burnable_area = 0._r8
@@ -1156,16 +1156,16 @@ contains
    do while(associated(currentPatch))
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
-         if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.1_r8 .and. &
-         currentSite%rx_burn_accum .lt. AREA)then
+         if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.1_r8)then ! .and. &
+!         currentSite%rx_burn_accum .lt. AREA)then
             currentPatch%rxfire_frac_burnt = currentPatch%area / total_burnable_area * &
             SF_val_rxfire_AB  ! in km2 / (km2* day)
-            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
-            if(currentSite%rx_burn_accum .ge. AREA)then
+!            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
+ !           if(currentSite%rx_burn_accum .ge. AREA)then
                !currentSite%lst_rx_year = hlm_current_year
                !currentSite%lst_rx_month = hlm_current_month
-               currentSite%next_rx_year = hlm_current_year + rx_freq
-            endif
+  !             currentSite%next_rx_year = hlm_current_year + rx_freq
+   !         endif
          else
             currentPatch%rxfire = 0 !update rxfire tag when fraction burnable area is less then 50% of grid area, so we do not apply rx fire  
             currentPatch%rxfire_frac_burnt = 0.0_r8  
@@ -1176,11 +1176,11 @@ contains
    enddo !end patch loop
 
    !flush cumulative burnt area once it's time for the next cycle of Rx fire
-   if(currentSite%rx_burn_accum .ge. AREA)then
-      if(hlm_current_year .eq. currentSite%next_rx_year)then
-         currentSite%rx_burn_accum = 0.0_r8
-      endif
-   endif
+   !if(currentSite%rx_burn_accum .ge. AREA)then
+   !   if(hlm_current_year .eq. currentSite%next_rx_year)then
+    !     currentSite%rx_burn_accum = 0.0_r8
+    !  endif
+   !endif
 
 end subroutine rxfire_area
 
