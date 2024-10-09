@@ -77,6 +77,7 @@ module EDParamsMod
                                                                       ! (3) for the Tree Recruitment Scheme without seedling dynamics
    integer,protected, public  :: lethal_heating_model                 ! (1) deafult calculation using fraction litter burned (Peterson & Ryan 1986)
                                                                       ! (2) lethal heating duration is calculated using fire intensity (Eq. 18 in Mercer & Weber 2001 "Fire Plumes")
+   integer,protected, public :: rxfire_switch                         ! flag, 1=use management fire 0=no management fire
    
    logical,protected, public :: active_crown_fire        ! flag, 1=active crown fire 0=no active crown fire
    character(len=param_string_length),parameter :: fates_name_active_crown_fire = "fates_fire_active_crown_fire"
@@ -193,6 +194,7 @@ integer, parameter, public :: maxpft = 16      ! maximum number of PFTs allowed
    character(len=param_string_length),parameter,public :: ED_name_stomatal_model= "fates_leaf_stomatal_model"
    character(len=param_string_length),parameter,public :: ED_name_regeneration_model= "fates_regeneration_model"
    character(len=param_string_length),parameter,public :: ED_name_lethal_heating_model= "fates_fire_lh_mod"
+   character(len=param_string_length),parameter,public :: fates_name_rxfire_switch= "fates_rxfire_switch"
    
 
    character(len=param_string_length),parameter,public :: name_theta_cj_c3 = "fates_leaf_theta_cj_c3"
@@ -373,6 +375,7 @@ contains
     maxpatch_primary                      = -9
     maxpatch_secondary                    = -9
     max_cohort_per_patch                  = -9
+    rxfire_switch                         = -9
     hydr_kmax_rsurf1                      = nan
     hydr_kmax_rsurf2                      = nan
     hydr_psi0                             = nan
@@ -621,6 +624,9 @@ contains
 
     call fates_params%RegisterParameter(name=fates_name_active_crown_fire, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=fates_name_rxfire_switch, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
     
     call fates_params%RegisterParameter(name=fates_name_cg_strikes, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
@@ -837,6 +843,10 @@ contains
           data=tmpreal)
     active_crown_fire = (abs(tmpreal-1.0_r8)<nearzero)
 
+    call fates_params%RetrieveParameter(name=fates_name_rxfire_switch, &
+         data=tmpreal)
+     rxfire_switch = nint(tmpreal)
+
     call fates_params%RetrieveParameter(name=fates_name_cg_strikes, &
           data=cg_strikes)
 
@@ -916,7 +926,7 @@ contains
         write(fates_log(),fmt0) 'ED_val_patch_fusion_tol = ',ED_val_patch_fusion_tol
         write(fates_log(),fmt0) 'ED_val_canopy_closure_thresh = ',ED_val_canopy_closure_thresh
         write(fates_log(),fmt0) 'regeneration_model = ',regeneration_model
-        write(fates_log(),fmt0) 'lethal_heating_model = ',lethal_heating_model
+        write(fates_log(),fmti) 'lethal_heating_model = ',lethal_heating_model
         write(fates_log(),fmt0) 'stomatal_model = ',stomatal_model
         write(fates_log(),fmt0) 'stomatal_assim_model = ',stomatal_assim_model            
         write(fates_log(),fmt0) 'hydro_kmax_rsurf1 = ',hydr_kmax_rsurf1
@@ -938,6 +948,7 @@ contains
         write(fates_log(),fmt0) 'q10_froz = ',q10_froz
         write(fates_log(),fmt0) 'cg_strikes = ',cg_strikes
         write(fates_log(),'(a,L2)') 'active_crown_fire = ',active_crown_fire
+        write(fates_log(),fmti) 'rxfire_switch = ',rxfire_switch
         write(fates_log(),fmt0) 'damage_event_code = ',damage_event_code
         write(fates_log(),fmt0) 'damage_canopy_layer_code = ', damage_canopy_layer_code
         write(fates_log(),*) '------------------------------------------------------'

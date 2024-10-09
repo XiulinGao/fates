@@ -196,7 +196,8 @@ contains
   subroutine  rxfire_burn_window ( currentSite, bc_in)
   !*****************************************************************
 
-    use SFParamsMod, only  : SF_val_rxfire_tpup, SF_val_rxfire_tplw, SF_val_rxfire_rhup, &
+   use EDParamsMod, only  : rxfire_switch
+   use SFParamsMod, only  : SF_val_rxfire_tpup, SF_val_rxfire_tplw, SF_val_rxfire_rhup, &
                              SF_val_rxfire_rhlw, SF_val_rxfire_wdup, SF_val_rxfire_wdlw
     use FatesConstantsMod , only : tfrz => t_water_freeze_k_1atm
     use FatesConstantsMod , only : sec_per_day
@@ -215,6 +216,8 @@ contains
     real(r8) :: wd_check   !wind speed check
     
     integer  :: iofp       ! index of oldest the fates patch
+
+    if(rxfire_switch .eq. ifalse) return !skip when management fire is off
      
 
     currentPatch => currentSite%oldest_patch
@@ -774,6 +777,7 @@ contains
     use EDParamsMod,       only : ED_val_nignitions
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
     use EDParamsMod,       only : lethal_heating_model !how to calculate lethal heating duration
+    use EDParamsMod,       only : rxfire_switch ! 1=management fire is on 0=managenent fire is off
     use FatesConstantsMod, only : years_per_day
     use FatesConstantsMod, only : tfrz => t_water_freeze_k_1atm
     use FatesConstantsMod, only : pr_lh, merweb_lh
@@ -781,7 +785,7 @@ contains
          SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
          SF_val_rxfire_minthreshold, &
          SF_val_rxfire_maxthreshold, SF_val_rxfire_fuel_min, &
-         SF_val_rxfire_fuel_max, SF_val_rxfire
+         SF_val_rxfire_fuel_max
     
     type(ed_site_type), intent(inout), target :: currentSite
     type(fates_patch_type), pointer :: currentPatch
@@ -1039,8 +1043,7 @@ contains
               currentPatch%FI .gt. SF_val_rxfire_maxthreshold)
          is_wildfire = (managed_wildfire .or. true_wildfire)
          
-         if (SF_val_rxfire .eq. 1.0_r8 .and. &                         ! is Rx fire turned on? 
-             currentSite%rx_flag .eq. itrue .and. &                   !rx fire weather condition check 
+         if (currentSite%rx_flag .eq. itrue .and. &                   !rx fire weather condition check 
              currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
              currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
                if(is_rxfire) then
@@ -1114,7 +1117,7 @@ contains
 
    !use FatesInterfaceTypesMod, only : hlm_current_month
    use FatesInterfaceTypesMod, only : hlm_current_year
-   use SFParamsMod,            only : SF_val_rxfire_AB, SF_val_rxfire !user defined prescribed fire area in m2 per day to reflect burning capacity
+   use SFParamsMod,            only : SF_val_rxfire_AB !user defined prescribed fire area in m2 per day to reflect burning capacity
 
    type(ed_site_type), intent(inout), target :: currentSite
    type(bc_in_type), intent(in) :: bc_in
@@ -1133,8 +1136,6 @@ contains
    total_burnable_area = 0._r8
    site_frac_burnable = 0._r8
 
-   !when Rx fire is not turned on skip
-   if(SF_val_rxfire .ne. 1.0_r8 ) return
 
    currentPatch => currentSite%oldest_patch;
    !calculate total area that can be burned by prescribed fire at site level
@@ -1169,7 +1170,7 @@ contains
          else
             currentPatch%rxfire = 0 !update rxfire tag when fraction burnable area is less then 50% of grid area, so we do not apply rx fire  
             currentPatch%rxfire_frac_burnt = 0.0_r8  
-            !currentPatch%rxfire_FI = 0.0_r8
+            currentPatch%rxfire_FI = 0.0_r8
          endif
       endif
       currentPatch => currentPatch%younger;
