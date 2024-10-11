@@ -84,7 +84,7 @@ module EDParamsMod
                                                                       ! (3) for the Tree Recruitment Scheme without seedling dynamics
    
    
-   integer,protected, public :: active_crown_fire        ! flag, 1=active crown fire 0=no active crown fire
+   integer,protected, public :: crown_fire_switch        ! flag, 1=active crown fire 0=no active crown fire
 
 
    real(r8), protected, public :: cg_strikes             ! fraction of cloud to ground lightning strikes (0-1)
@@ -169,7 +169,7 @@ module EDParamsMod
    character(len=param_string_length),parameter,public :: ED_name_stomatal_model= "fates_leaf_stomatal_model"
    character(len=param_string_length),parameter,public :: ED_name_dayl_switch= "fates_daylength_factor_switch"
    character(len=param_string_length),parameter,public :: ED_name_regeneration_model= "fates_regeneration_model"
-   character(len=param_string_length),parameter :: fates_name_active_crown_fire = "fates_active_crown_fire"
+   character(len=param_string_length),parameter :: fates_name_crown_fire_switch = "fates_crown_fire_switch"
 
    character(len=param_string_length),parameter,public :: name_theta_cj_c3 = "fates_leaf_theta_cj_c3"
    character(len=param_string_length),parameter,public :: name_theta_cj_c4 = "fates_leaf_theta_cj_c4"
@@ -345,7 +345,7 @@ contains
     regeneration_model                    = -9
     stomatal_assim_model                  = -9
     max_cohort_per_patch                  = -9
-    active_crown_fire                     = -9
+    crown_fire_switch                     = -9
     hydr_kmax_rsurf1                      = nan
     hydr_kmax_rsurf2                      = nan
     hydr_psi0                             = nan
@@ -590,7 +590,7 @@ contains
     call fates_params%RegisterParameter(name=ED_name_history_height_bin_edges, dimension_shape=dimension_shape_1d, &
          dimension_names=dim_names_height)
 
-    call fates_params%RegisterParameter(name=fates_name_active_crown_fire, dimension_shape=dimension_shape_scalar, &
+    call fates_params%RegisterParameter(name=fates_name_crown_fire_switch, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
     
     call fates_params%RegisterParameter(name=fates_name_cg_strikes, dimension_shape=dimension_shape_scalar, &
@@ -803,9 +803,9 @@ contains
     call fates_params%RetrieveParameter(name=name_dev_arbitrary, &
          data=dev_arbitrary)
 
-    call fates_params%RetrieveParameter(name=fates_name_active_crown_fire, & 
+    call fates_params%RetrieveParameter(name=fates_name_crown_fire_switch, & 
           data=tmpreal)
-    active_crown_fire = nint(tmpreal)
+    crown_fire_switch = nint(tmpreal)
 
     call fates_params%RetrieveParameter(name=fates_name_cg_strikes, &
           data=cg_strikes)
@@ -913,7 +913,7 @@ contains
         write(fates_log(),fmt0) 'q10_mr = ',q10_mr
         write(fates_log(),fmt0) 'q10_froz = ',q10_froz
         write(fates_log(),fmt0) 'cg_strikes = ',cg_strikes
-        write(fates_log(),fmti) 'active_crown_fire = ',active_crown_fire
+        write(fates_log(),fmti) 'crown_fire_switch = ',crown_fire_switch
         write(fates_log(),fmt0) 'damage_event_code = ',damage_event_code
         write(fates_log(),fmt0) 'damage_canopy_layer_code = ', damage_canopy_layer_code
         write(fates_log(),*) '------------------------------------------------------'

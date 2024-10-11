@@ -418,7 +418,7 @@ contains
         passive_crown_FI                     = 0.0_r8
         currentPatch%canopy_bulk_density     = 0.0_r8
 
-       ! if(active_crown_fire .eq. ifalse) return
+       ! if(crown_fire_switch .eq. ifalse) return
  
  !       if (currentPatch%active_crown_fire == 1) then
  
@@ -1101,7 +1101,7 @@ contains
 
 use SFParamsMod, only  : SF_val_miner_total, SF_val_part_dens, SF_val_miner_damp, &
 SF_val_fuel_energy, SF_val_drying_ratio
-use EDParamsMod,    only : active_crown_fire
+use EDParamsMod,    only : crown_fire_switch
 
 
 type(ed_site_type), intent(in), target :: currentSite
@@ -1180,7 +1180,7 @@ real(r8),parameter :: km2_to_m2 = 1000000.0_r8           ! area conversion for s
 integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
 
 
-if(active_crown_fire .eq. ifalse) return
+if(crown_fire_switch .eq. ifalse) return
 
 
 currentPatch => currentSite%oldest_patch
@@ -1221,7 +1221,6 @@ fuel_bd          = total_fuel/fuel_depth           !fuel bulk density (kg/m3)
 
 fuel_sav         = SAV_1hr *(fuel_1hr/total_fuel) + SAV_10hr*(fuel_10hr/total_fuel) + & 
  SAV_100hr*(fuel_100hr/total_fuel) + SAV_live*(fuel_live/total_fuel)
-
 fuel_eff_moist = fuel_moist1hr *(fuel_1hr/total_fuel) + fuel_moist10hr*(fuel_10hr/total_fuel) + & 
 fuel_moist100hr*(fuel_100hr/total_fuel) + fuel_moistlive*(fuel_live/total_fuel)
 
