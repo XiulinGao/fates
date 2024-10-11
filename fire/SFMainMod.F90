@@ -370,6 +370,7 @@ contains
      ! passive_crown_FI is minimum fire intensity to ignite canopy crown fuel
  
      use SFParamsMod,    only : SF_VAL_CWD_FRAC
+     use EDParamsMod,    only : active_crown_fire
  
      type(ed_site_type), intent(in), target :: currentSite
  
@@ -406,6 +407,7 @@ contains
  
      !returns the live crown fuel characteristics within each patch.
      ! passive_crown_FI is the required minimum fire intensity to ignite canopy crown fuel
+
  
      currentPatch => currentSite%oldest_patch
  
@@ -417,6 +419,8 @@ contains
         canopy_fuel_load                     = 0.0_r8
         passive_crown_FI                     = 0.0_r8
         currentPatch%canopy_bulk_density     = 0.0_r8
+
+       ! if(active_crown_fire .eq. ifalse) return
  
  !       if (currentPatch%active_crown_fire == 1) then
  
@@ -1176,6 +1180,9 @@ real(r8),parameter :: critical_mass_flow_rate = 0.05_r8  ! critical mass flow ra
 real(r8),parameter :: km2_to_m2 = 1000000.0_r8           ! area conversion for square km to square m
 
 integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
+
+
+if(active_crown_fire .eq. ifalse) return
 
 
 currentPatch => currentSite%oldest_patch
