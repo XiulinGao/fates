@@ -370,7 +370,7 @@ contains
      ! passive_crown_FI is minimum fire intensity to ignite canopy crown fuel
  
      use SFParamsMod,    only : SF_VAL_CWD_FRAC
-     use EDParamsMod,    only : active_crown_fire
+    
  
      type(ed_site_type), intent(in), target :: currentSite
  
@@ -1104,6 +1104,7 @@ contains
 
 use SFParamsMod, only  : SF_val_miner_total, SF_val_part_dens, SF_val_miner_damp, &
 SF_val_fuel_energy, SF_val_drying_ratio
+use EDParamsMod,    only : active_crown_fire
 
 
 type(ed_site_type), intent(in), target :: currentSite
