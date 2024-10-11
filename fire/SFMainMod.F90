@@ -180,8 +180,6 @@ contains
     type(litter_type), pointer    :: litt_c
 
     real(r8) alpha_FMC(nfsc)     ! Relative fuel moisture adjusted per drying ratio
-    real(r8) fuel_moisture(nfsc) ! Scaled moisture content of small litter fuels. 
-    real(r8) MEF(nfsc)           ! Moisture extinction factor of fuels     integer n 
     real(r8) fuel_moisture(nfsc) ! Scaled moisture content of small litter fuels
     real(r8) MEF(nfsc)           ! Moisture extinction factor of fuels, integer n
 
@@ -916,7 +914,6 @@ contains
     real(r8) ROS !m/s
     real(r8) W   !kgBiomass/m2
     real(r8) :: tree_fraction_patch        ! patch level. no units
-    real(r8) lb               !length to breadth ratio of fire ellipse (unitless)
     real(r8) df               !distance fire has travelled forward in m
     real(r8) db               !distance fire has travelled backward in m
     real(r8) AB               !daily area burnt in m2 per km2
@@ -1214,10 +1211,10 @@ SAV_10hr  = sav_10hr_ft * sqft_cubicft_to_sqm_cubicm
 SAV_100hr = sav_100hr_ft * sqft_cubicft_to_sqm_cubicm
 SAV_live  = sav_live_ft * sqft_cubicft_to_sqm_cubicm
 
-fuel_moist1hr    = exp(-1.0_r8 * ((SAV_1hr/SF_val_drying_ratio) * currentSite%acc_NI))
-fuel_moist10hr   = exp(-1.0_r8 * ((SAV_10hr/SF_val_drying_ratio) * currentSite%acc_NI))
-fuel_moist100hr  = exp(-1.0_r8 * ((SAV_100hr/SF_val_drying_ratio) * currentSite%acc_NI))
-fuel_moistlive   = exp(-1.0_r8 * ((SAV_live/SF_val_drying_ratio) * currentSite%acc_NI))
+fuel_moist1hr    = exp(-1.0_r8 * ((SAV_1hr/SF_val_drying_ratio) * currentSite%fireWeather%fire_weather_index))
+fuel_moist10hr   = exp(-1.0_r8 * ((SAV_10hr/SF_val_drying_ratio) * currentSite%fireWeather%fire_weather_index))
+fuel_moist100hr  = exp(-1.0_r8 * ((SAV_100hr/SF_val_drying_ratio) * currentSite%fireWeather%fire_weather_index))
+fuel_moistlive   = exp(-1.0_r8 * ((SAV_live/SF_val_drying_ratio) * currentSite%fireWeather%fire_weather_index))
 
 fuel_depth       = fuel_depth_ft *0.3048           !convert to meters
 fuel_bd          = total_fuel/fuel_depth           !fuel bulk density (kg/m3)
