@@ -417,6 +417,7 @@ contains
         canopy_fuel_load                     = 0.0_r8
         passive_crown_FI                     = 0.0_r8
         currentPatch%canopy_bulk_density     = 0.0_r8
+        max_height                           = 0.0_r8
 
        ! if(crown_fire_switch .eq. ifalse) return
  
