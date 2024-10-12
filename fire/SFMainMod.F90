@@ -368,6 +368,7 @@ contains
      ! passive_crown_FI is minimum fire intensity to ignite canopy crown fuel
  
      use SFParamsMod,    only : SF_VAL_CWD_FRAC
+     use FatesInterfaceTypesMod, only : hlm_model_day
     
  
      type(ed_site_type), intent(in), target :: currentSite
@@ -396,7 +397,7 @@ contains
  
      integer  ::  ih                      ! counter
  
-     real, dimension(0:70):: biom_matrix   ! matrix to track biomass from bottom to 70m
+     real, dimension(70):: biom_matrix   ! matrix to track biomass from bottom to 70m
      real(r8),parameter :: min_density_canopy_fuel = 0.011_r8 !min canopy fuel density (kg/m3) sufficient to
                                                               !propogate fire vertically through canopy
                                                               !Scott and Reinhardt 2001 RMRS-RP-29
@@ -418,6 +419,8 @@ contains
         passive_crown_FI                     = 0.0_r8
         currentPatch%canopy_bulk_density     = 0.0_r8
         max_height                           = 0.0_r8
+
+       if (hlm_model_day .lt. 30) return  !skip the first 30 days of simulation for crown fire check
 
        ! if(crown_fire_switch .eq. ifalse) return
  
