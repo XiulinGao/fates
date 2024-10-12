@@ -368,7 +368,7 @@ contains
      ! passive_crown_FI is minimum fire intensity to ignite canopy crown fuel
  
      use SFParamsMod,    only : SF_VAL_CWD_FRAC
-     use FatesInterfaceTypesMod, only : hlm_model_day
+    !use FatesInterfaceTypesMod, only : hlm_model_day
     
  
      type(ed_site_type), intent(in), target :: currentSite
@@ -420,7 +420,7 @@ contains
         currentPatch%canopy_bulk_density     = 0.0_r8
         max_height                           = 0.0_r8
 
-       if (hlm_model_day .lt. 30) return  !skip the first 30 days of simulation for crown fire check
+       !if (hlm_model_day .lt. 30) return  !skip the first 30 days of simulation for crown fire check
 
        ! if(crown_fire_switch .eq. ifalse) return
  
@@ -444,6 +444,7 @@ contains
  
                  call CrownDepth(currentCohort%height,currentCohort%pft,crown_depth)
                  height_cbb   = currentCohort%height - crown_depth
+                 if(height_cbb .lt. 1.0_r8) return
  
                  !find patch max height for stand canopy fuel
                  if (currentCohort%height > max_height) then
@@ -779,9 +780,14 @@ contains
 
           ! calculate torching index based on wind speed and crown fuels 
           ! ROS for crown torch initation (m/min), Eq 18 Scott & Reinhardt 2001 
-          ROS_torch = (1.0 / 54.683 * wind_reduce)* &
+          if(heat_per_area <= 0._r8 .or. ir <= 0._r8 .or. xi <= 0._r8) then
+            ROS_torch = 0._r8
+          else
+            ROS_torch = (1.0 / 54.683 * wind_reduce)* &
                       ((((60.0*passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/heat_per_area*ir*xi)-1.0) &
                        / (c*beta_ratio)**(-1*e))**1/b
+          endif
+
        endif
        ! Equation 10 in Thonicke et al. 2010
        ! backward ROS from Can FBP System (1992) in m/min
