@@ -444,7 +444,8 @@ contains
  
                  call CrownDepth(currentCohort%height,currentCohort%pft,crown_depth)
                  height_cbb   = currentCohort%height - crown_depth
-                 if(height_cbb .lt. 1.0_r8) return
+                 if(height_cbb .lt. 1.0_r8) then
+                  height_cbb = (1.0_r8 - height_cbb) + height_cbb
  
                  !find patch max height for stand canopy fuel
                  if (currentCohort%height > max_height) then
@@ -1310,7 +1311,11 @@ currentPatch%active_crown_fire_flg = 0  ! only passive crown fire with partial c
 
 ! phi_slope is not used yet. consider adding with later development
 ! calculate open wind speed critical to sustain active crown fire Eq 20 Scott & Reinhardt
-CI_temp = ((164.8_r8 * eps * q_ig)/(ir * currentPatch%canopy_bulk_density)) - 1.0_r8
+if(currentPatch%canopy_bulk_density .le. 0._r8) then
+   CI_temp = 0._r8
+else
+   CI_temp = ((164.8_r8 * eps * q_ig)/(ir * currentPatch%canopy_bulk_density)) - 1.0_r8
+endif
 
 wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8
 
