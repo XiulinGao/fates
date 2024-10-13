@@ -771,12 +771,12 @@ contains
 
           ! calculate heat release per unit area (HPA)(kJ/m2), Eq 2 Scott & Reinhardt 2001
           ! and residence time (min), Eq 3 Scott & Reinhardt 2001
-          time_r = 12.595 / currentPatch%fuel_sav 
+          time_r = 12.595_r8 / currentPatch%fuel_sav 
           heat_per_area = ir * time_r          
           ! calculate torching index based on wind speed and crown fuels 
           ! ROS for crown torch initation (m/min), Eq 18 Scott & Reinhardt 2001 
-          ROS_torch = (1.0 / 54.683 * wind_reduce)* &
-                      ((((60.0*passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/heat_per_area*ir*xi)-1.0) &
+          ROS_torch = (1.0_r8 / 54.683_r8 * wind_reduce)* &
+                      ((((60.0_r8 * passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/heat_per_area*ir*xi)-1.0_r8) &
                        / (c*beta_ratio)**(-1*e))**1/b
        endif
        ! Equation 10 in Thonicke et al. 2010
@@ -1098,7 +1098,7 @@ contains
 !currentCohort%fraction_crown_burned is the proportion of crown affected by fire
    use SFParamsMod, only  : SF_val_miner_total, SF_val_part_dens, SF_val_miner_damp, & 
    SF_val_fuel_energy, SF_val_drying_ratio
-   type(ed_site_type), intent(inout), target :: currentSite
+   type(ed_site_type), intent(in), target :: currentSite
    type(fates_patch_type) , pointer :: currentPatch
    type(fates_cohort_type), pointer :: currentCohort
 ! ARGUMENTS
@@ -1161,8 +1161,8 @@ contains
    real(r8),parameter :: sav_10hr_ft  = 109.0_r8            ! FM 10 10-hr SAV (ft2/ft3)             
    real(r8),parameter :: sav_100hr_ft = 30.0_r8             ! FM 10 100-hr SAV (ft2/ft3)
    real(r8),parameter :: sav_live_ft  = 1650.0_r8           ! FM 10 live SAV (ft2/ft3)
-   real(r8),parameter :: tonnes_acre_to_kg_m2 = 0.2241701   ! convert tons/acre to kg/m2
-   real(r8),parameter :: sqft_cubicft_to_sqm_cubicm = 0.03280844 !convert ft2/ft3 to m2/m3
+   real(r8),parameter :: tonnes_acre_to_kg_m2 = 0.2241701_r8   ! convert tons/acre to kg/m2
+   real(r8),parameter :: sqft_cubicft_to_sqm_cubicm = 0.03280844_r8 !convert ft2/ft3 to m2/m3
    real(r8),parameter :: canopy_ignite_energy = 18000_r8    ! heat yield for canopy fuels (kJ/kg)
    real(r8),parameter :: critical_mass_flow_rate = 0.05_r8  ! critical mass flow rate (kg/m2/sec)for crown fire
    real(r8),parameter :: km2_to_m2 = 1000000.0_r8           ! area conversion for square km to square m
@@ -1192,7 +1192,7 @@ contains
             fuel_moist10hr   = exp(-1.0_r8 * ((SAV_10hr/SF_val_drying_ratio) * currentSite%acc_NI))
             fuel_moist100hr  = exp(-1.0_r8 * ((SAV_100hr/SF_val_drying_ratio) * currentSite%acc_NI))
             fuel_moistlive   = exp(-1.0_r8 * ((SAV_live/SF_val_drying_ratio) * currentSite%acc_NI))
-            fuel_depth       = fuel_depth_ft *0.3048           !convert to meters
+            fuel_depth       = fuel_depth_ft *0.3048_r8           !convert to meters
             fuel_bd          = total_fuel/fuel_depth           !fuel bulk density (kg/m3)
             fuel_sav         = SAV_1hr *(fuel_1hr/total_fuel) + SAV_10hr*(fuel_10hr/total_fuel) + & 
             SAV_100hr*(fuel_100hr/total_fuel) + SAV_live*(fuel_live/total_fuel)
@@ -1299,7 +1299,7 @@ contains
             endif ! lb
       !final fireline intensity (kJ/m/sec or kW/m), Eq 22 Scott & Reinhardt 2001
             FI_final = ((heat_per_area + (canopy_fuel_load*canopy_ignite_energy*canopy_frac_burnt))&
-            *currentPatch%ROS_front)/60.0    
+            *currentPatch%ROS_front)/60.0_r8    
       ! update patch FI to adjust according to potential canopy fuel consumed (passive and active)
             currentPatch%FI = FI_final
          endif !check if passive crown fire?
