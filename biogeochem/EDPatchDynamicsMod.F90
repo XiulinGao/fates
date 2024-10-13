@@ -2505,7 +2505,7 @@ contains
     rp%scorch_ht(:)         = (dp%scorch_ht(:)*dp%area + rp%scorch_ht(:)*rp%area) * inv_sum_area
     rp%frac_burnt           = (dp%frac_burnt*dp%area + rp%frac_burnt*rp%area) * inv_sum_area
     rp%canopy_bulk_density  = (dp%canopy_bulk_density*dp%area + rp%canopy_bulk_density*rp%area) * inv_sum_area
-    rp%canopy_fuel_load     = (dp%canopy_fuel_load*dp%area + rp%canopy_fuel_load%area) * inv_sum_area
+    rp%canopy_fuel_load     = (dp%canopy_fuel_load*dp%area + rp%canopy_fuel_load*rp%area) * inv_sum_area
     rp%burnt_frac_litter(:) = (dp%burnt_frac_litter(:)*dp%area + rp%burnt_frac_litter(:)*rp%area) * inv_sum_area
     rp%btran_ft(:)          = (dp%btran_ft(:)*dp%area + rp%btran_ft(:)*rp%area) * inv_sum_area
     rp%zstar                = (dp%zstar*dp%area + rp%zstar*rp%area) * inv_sum_area
