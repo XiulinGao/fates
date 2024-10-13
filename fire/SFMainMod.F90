@@ -368,7 +368,7 @@ contains
      ! passive_crown_FI is minimum fire intensity to ignite canopy crown fuel
  
      use SFParamsMod,    only : SF_VAL_CWD_FRAC
-    !use FatesInterfaceTypesMod, only : hlm_model_day
+     use FatesInterfaceTypesMod, only : hlm_model_day
     
  
      type(ed_site_type), intent(in), target :: currentSite
@@ -402,7 +402,8 @@ contains
                                                               !propogate fire vertically through canopy
                                                               !Scott and Reinhardt 2001 RMRS-RP-29
      real(r8),parameter :: foliar_moist_content = 1.0_r8      !foliar moisture content default 100% Scott & Reinhardt 2001
- 
+   
+     if (hlm_model_day .lt. 30) return  !skip the first 30 days of simulation for crown fire check
  
      !returns the live crown fuel characteristics within each patch.
      ! passive_crown_FI is the required minimum fire intensity to ignite canopy crown fuel
@@ -420,7 +421,7 @@ contains
         currentPatch%canopy_bulk_density     = 0.0_r8
         max_height                           = 0.0_r8
 
-       !if (hlm_model_day .lt. 30) return  !skip the first 30 days of simulation for crown fire check
+       
 
        ! if(crown_fire_switch .eq. ifalse) return
  
@@ -533,6 +534,7 @@ contains
     ! currentSite%wind is daily wind converted to m/min for Spitfire units 
 
     use FatesConstantsMod, only : sec_per_min
+   
 
     type(ed_site_type) , intent(inout), target :: currentSite
     type(bc_in_type)   , intent(in)            :: bc_in
@@ -783,7 +785,7 @@ contains
 
           ! calculate torching index based on wind speed and crown fuels 
           ! ROS for crown torch initation (m/min), Eq 18 Scott & Reinhardt 2001 
-          if(heat_per_area <= 0._r8 .or. ir <= 0._r8 .or. xi <= 0._r8 .or. beta_ratio <= 0._r8) then
+          if(heat_per_area <= 0._r8  .or. xi <= 0._r8 .or. beta_ratio <= 0._r8) then
             ROS_torch = 0._r8
           else
             ROS_torch = (1.0 / 54.683 * wind_reduce)* &
@@ -1115,6 +1117,7 @@ contains
 use SFParamsMod, only  : SF_val_miner_total, SF_val_part_dens, SF_val_miner_damp, &
 SF_val_fuel_energy, SF_val_drying_ratio
 use EDParamsMod,    only : crown_fire_switch
+use FatesInterfaceTypesMod, only : hlm_model_day
 
 
 type(ed_site_type), intent(in), target :: currentSite
@@ -1193,7 +1196,7 @@ real(r8),parameter :: km2_to_m2 = 1000000.0_r8           ! area conversion for s
 integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
 
 
-if(crown_fire_switch .eq. ifalse) return
+if(crown_fire_switch .eq. ifalse .or. hlm_current_day .lt. 30) return
 
 
 currentPatch => currentSite%oldest_patch
