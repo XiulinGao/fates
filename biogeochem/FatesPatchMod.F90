@@ -206,6 +206,7 @@ module FatesPatchMod
     real(r8)              :: fi                      ! average fire intensity of flaming front [kJ/m/s] or [kW/m]
     integer               :: fire                    ! is there a fire? [1=yes; 0=no]
     real(r8)              :: fd                      ! fire duration [min]
+    integer               :: active_crown_fire_flg
 
     ! fire effects      
     real(r8)              :: scorch_ht(maxpft)       ! scorch height [m] 
@@ -377,12 +378,14 @@ module FatesPatchMod
       this%fuel_mef                     = nan 
       this%fuel_eff_moist               = nan 
       this%litter_moisture(:)           = nan
+      this%canopy_bulk_density          = nan
       this%ros_front                    = nan
       this%ros_back                     = nan   
       this%effect_wspeed                = nan    
       this%tau_l                        = nan
       this%fi                           = nan 
       this%fire                         = fates_unset_int
+      this%active_crown_fire_flg        = fates_unset_int
       this%fd                           = nan 
       this%scorch_ht(:)                 = nan 
       this%frac_burnt                   = nan
@@ -453,6 +456,7 @@ module FatesPatchMod
       this%fuel_mef                          = 0.0_r8
       this%fuel_eff_moist                    = 0.0_r8
       this%litter_moisture(:)                = 0.0_r8
+      this%canopy_bulk_density               = 0.0_r8
       this%ros_front                         = 0.0_r8
       this%ros_back                          = 0.0_r8
       this%effect_wspeed                     = 0.0_r8
