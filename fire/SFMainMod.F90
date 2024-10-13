@@ -101,8 +101,8 @@ contains
        currentPatch%frac_burnt = 0.0_r8
        currentPatch%fire       = 0
        currentPatch%FI         = 0.0_r8
-      currentPatch%FD         = 0.0_r8
-      currentPatch%active_crown_fire_flg = 0
+       currentPatch%FD         = 0.0_r8
+       currentPatch%active_crown_fire_flg = 0
        currentPatch => currentPatch%older
     enddo
 
@@ -115,7 +115,7 @@ contains
        call wind_effect(currentSite, bc_in) 
        call characteristics_of_fuel(currentSite)
        call characteristics_of_crown(currentSite, canopy_fuel_load, passive_crown_FI)
-       call rate_of_spread(currentSite)
+       call rate_of_spread(currentSite, ROS_torch, passive_crown_FI, heat_per_area)
        call ground_fuel_consumption(currentSite)
        call area_burnt_intensity(currentSite, bc_in, lb)
        call active_crown_fire (currentSite,passive_crown_FI,canopy_fuel_load,ROS_torch,heat_per_area,lb)
