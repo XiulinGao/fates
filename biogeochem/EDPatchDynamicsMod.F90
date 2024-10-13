@@ -2496,11 +2496,16 @@ contains
     rp%fuel_frac(:)         = (dp%fuel_frac(:)*dp%area + rp%fuel_frac(:)*rp%area) * inv_sum_area
     rp%tfc_ros              = (dp%tfc_ros*dp%area + rp%tfc_ros*rp%area) * inv_sum_area
     rp%fi                   = (dp%fi*dp%area + rp%fi*rp%area) * inv_sum_area
+    rp%passive_crown_fi     = (dp%passive_crown_fi*dp%area + rp%passive_crown_fi*rp%area) * inv_sum_area
     rp%fd                   = (dp%fd*dp%area + rp%fd*rp%area) * inv_sum_area
     rp%ros_back             = (dp%ros_back*dp%area + rp%ros_back*rp%area) * inv_sum_area
+    rp%ros_torch            = (dp%ros_torch*dp%area + rp%ros_torch*rp%area) * inv_sum_area
+    rp%lb                   = (dp%lb*dp%area + rp%lb*rp%area) * inv_sum_area
+    rp%heat_per_area        = (dp%heat_per_area*dp%area + rp%heat_per_area*rp%area) * inv_sum_area
     rp%scorch_ht(:)         = (dp%scorch_ht(:)*dp%area + rp%scorch_ht(:)*rp%area) * inv_sum_area
     rp%frac_burnt           = (dp%frac_burnt*dp%area + rp%frac_burnt*rp%area) * inv_sum_area
     rp%canopy_bulk_density  = (dp%canopy_bulk_density*dp%area + rp%canopy_bulk_density*rp%area) * inv_sum_area
+    rp%canopy_fuel_load     = (dp%canopy_fuel_load*dp%area + rp%canopy_fuel_load%area) * inv_sum_area
     rp%burnt_frac_litter(:) = (dp%burnt_frac_litter(:)*dp%area + rp%burnt_frac_litter(:)*rp%area) * inv_sum_area
     rp%btran_ft(:)          = (dp%btran_ft(:)*dp%area + rp%btran_ft(:)*rp%area) * inv_sum_area
     rp%zstar                = (dp%zstar*dp%area + rp%zstar*rp%area) * inv_sum_area

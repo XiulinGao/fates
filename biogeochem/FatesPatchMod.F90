@@ -197,15 +197,20 @@ module FatesPatchMod
                                                        ! (incl. live grasses. omits 1000hr fuels)
     real(r8)              :: litter_moisture(nfsc)   ! moisture of litter [m3/m3]
     real(r8)              :: canopy_bulk_density 
+    real(r8)              :: canopy_fuel_load 
 
     ! fire spread
     real(r8)              :: ros_front               ! rate of forward  spread of fire [m/min]
     real(r8)              :: ros_back                ! rate of backward spread of fire [m/min]
+    real(r8)              :: ros_torch               ! ROS for crown torch initation (m/min)
     real(r8)              :: effect_wspeed           ! windspeed modified by fraction of relative grass and tree cover [m/min]
     real(r8)              :: tau_l                   ! duration of lethal heating [min]
     real(r8)              :: fi                      ! average fire intensity of flaming front [kJ/m/s] or [kW/m]
     integer               :: fire                    ! is there a fire? [1=yes; 0=no]
     real(r8)              :: fd                      ! fire duration [min]
+    real(r8)              :: lb                      ! length to breadth ratio of fire ellipse (unitless)
+    real(r8)              :: heat_per_area           ! heat release per unit area (kJ/m2) for surface fuel
+    real(r8)              :: passive_crown_fi        ! fire intensity for ignition of passive canopy fuel (kW/m)
     integer               :: active_crown_fire_flg
 
     ! fire effects      
@@ -379,10 +384,15 @@ module FatesPatchMod
       this%fuel_eff_moist               = nan 
       this%litter_moisture(:)           = nan
       this%canopy_bulk_density          = nan
+      this%canopy_fuel_load             = nan
       this%ros_front                    = nan
-      this%ros_back                     = nan   
+      this%ros_back                     = nan  
+      this%ros_torch                    = nan 
       this%effect_wspeed                = nan    
       this%tau_l                        = nan
+      this%lb                           = nan
+      this%heat_per_area                = nan
+      this%passive_crown_fi             = nan
       this%fi                           = nan 
       this%fire                         = fates_unset_int
       this%active_crown_fire_flg        = fates_unset_int
@@ -457,8 +467,13 @@ module FatesPatchMod
       this%fuel_eff_moist                    = 0.0_r8
       this%litter_moisture(:)                = 0.0_r8
       this%canopy_bulk_density               = 0.0_r8
+      this%canopy_fuel_load                  = 0.0_r8
       this%ros_front                         = 0.0_r8
       this%ros_back                          = 0.0_r8
+      this%ros_torch                         = 0.0_r8
+      this%heat_per_area                     = 0.0_r8
+      this%lb                                = 0.0_r8
+      this%passive_crown_fi                  = 0.0_r8
       this%effect_wspeed                     = 0.0_r8
       this%tau_l                             = 0.0_r8
       this%fi                                = 0.0_r8
