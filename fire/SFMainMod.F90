@@ -444,6 +444,10 @@ contains
  
                  call CrownDepth(currentCohort%height,currentCohort%pft,crown_depth)
                  height_cbb   = currentCohort%height - crown_depth
+
+                 if(int(height_cbb) < 1) then
+                  height_cbb = height_cbb + 1 - height_cbb
+                 endif
  
                  !find patch max height for stand canopy fuel
                  if (currentCohort%height > max_height) then
