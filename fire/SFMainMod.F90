@@ -1196,7 +1196,7 @@ real(r8),parameter :: km2_to_m2 = 1000000.0_r8           ! area conversion for s
 integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
 
 
-if(crown_fire_switch .eq. ifalse .or. hlm_current_day .lt. 30) return
+if(crown_fire_switch .eq. ifalse .or. hlm_model_day .lt. 30) return
 
 
 currentPatch => currentSite%oldest_patch
