@@ -447,7 +447,7 @@ contains
                  if(height_cbb .lt. 1.0_r8) then
                   height_cbb = (1.0_r8 - height_cbb) + height_cbb
                  endif
-                 
+
  
                  !find patch max height for stand canopy fuel
                  if (currentCohort%height > max_height) then
@@ -783,7 +783,7 @@ contains
 
           ! calculate torching index based on wind speed and crown fuels 
           ! ROS for crown torch initation (m/min), Eq 18 Scott & Reinhardt 2001 
-          if(heat_per_area <= 0._r8 .or. ir <= 0._r8 .or. xi <= 0._r8) then
+          if(heat_per_area <= 0._r8 .or. ir <= 0._r8 .or. xi <= 0._r8 .or. beta_ratio <= 0._r8) then
             ROS_torch = 0._r8
           else
             ROS_torch = (1.0 / 54.683 * wind_reduce)* &
