@@ -446,6 +446,8 @@ contains
                  height_cbb   = currentCohort%height - crown_depth
                  if(height_cbb .lt. 1.0_r8) then
                   height_cbb = (1.0_r8 - height_cbb) + height_cbb
+                 endif
+                 
  
                  !find patch max height for stand canopy fuel
                  if (currentCohort%height > max_height) then
