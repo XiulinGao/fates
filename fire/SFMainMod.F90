@@ -1098,7 +1098,7 @@ contains
 !currentCohort%fraction_crown_burned is the proportion of crown affected by fire
    use SFParamsMod, only  : SF_val_miner_total, SF_val_part_dens, SF_val_miner_damp, & 
    SF_val_fuel_energy, SF_val_drying_ratio
-   type(ed_site_type), intent(in), target :: currentSite
+   type(ed_site_type), intent(inout), target :: currentSite
    type(fates_patch_type) , pointer :: currentPatch
    type(fates_cohort_type), pointer :: currentCohort
 ! ARGUMENTS
