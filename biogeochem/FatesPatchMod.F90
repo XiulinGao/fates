@@ -196,6 +196,7 @@ module FatesPatchMod
     real(r8)              :: fuel_eff_moist          ! effective avearage fuel moisture content of the ground fuel 
                                                        ! (incl. live grasses. omits 1000hr fuels)
     real(r8)              :: litter_moisture(nfsc)   ! moisture of litter [m3/m3]
+    real(r8)              :: canopy_bulk_density 
 
     ! fire spread
     real(r8)              :: ros_front               ! rate of forward  spread of fire [m/min]
