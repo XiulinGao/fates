@@ -445,9 +445,9 @@ contains
                  call CrownDepth(currentCohort%height,currentCohort%pft,crown_depth)
                  height_cbb   = currentCohort%height - crown_depth
 
-                 if(int(height_cbb) .eq. 0) then
-                  height_cbb = height_cbb + 1.0_r8 - height_cbb
-                 endif
+                 !if(int(height_cbb) .eq. 0) then
+                 ! height_cbb = height_cbb + 1.0_r8 - height_cbb
+                 !endif
  
                  !find patch max height for stand canopy fuel
                  if (currentCohort%height > max_height) then
@@ -472,6 +472,9 @@ contains
                  !sort crown fuel into bins from bottom to top of crown
                  !accumulate across cohorts to find density within canopy 1m sections
                  do ih = int(height_cbb), int(currentCohort%height)
+                    !if (ih .eq. 0) then
+                     !ih = 1
+                    !endif
                     biom_matrix(ih) = biom_matrix(ih) + crown_fuel_per_m
                  end do
  
@@ -489,7 +492,7 @@ contains
  
            !loop from 1m to 70m to find bin with total density = 0.011 kg/m3
            !min canopy fuel density to propogate fire vertically in canopy across patch
-           do ih=1,70
+           do ih=0,70
               if (biom_matrix(ih) > min_density_canopy_fuel) then
                  height_base_canopy = float(ih)
                  exit
@@ -497,7 +500,11 @@ contains
            end do
  
            !canopy_bulk_density (kg/m3) for Patch
-           currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
+           if(max_height .gt. height_base_canopy)then
+            currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
+           else
+            currentPatch%canopy_bulk_density = 0.0_r8
+           endif
  
            ! Note: crown_ignition_energy to be calculated based on PFT foliar moisture content from FATES-Hydro
            ! or create foliar moisture % based on BTRAN
