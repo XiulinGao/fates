@@ -402,7 +402,7 @@ contains
  
      integer  ::  ih                      ! counter
  
-     real, dimension(70):: biom_matrix   ! matrix to track biomass from bottom to 70m
+     real, dimension(0:70):: biom_matrix   ! matrix to track biomass from bottom to 70m
      real(r8),parameter :: min_density_canopy_fuel = 0.011_r8 !min canopy fuel density (kg/m3) sufficient to
                                                               !propogate fire vertically through canopy
                                                               !Scott and Reinhardt 2001 RMRS-RP-29
@@ -445,8 +445,8 @@ contains
                  call CrownDepth(currentCohort%height,currentCohort%pft,crown_depth)
                  height_cbb   = currentCohort%height - crown_depth
 
-                 if(int(height_cbb) < 1) then
-                  height_cbb = height_cbb + 1 - height_cbb
+                 if(int(height_cbb) .eq. 0) then
+                  height_cbb = height_cbb + 1.0_r8 - height_cbb
                  endif
  
                  !find patch max height for stand canopy fuel
@@ -779,9 +779,15 @@ contains
           currentPatch%heat_per_area = ir * time_r          
           ! calculate torching index based on wind speed and crown fuels 
           ! ROS for crown torch initation (m/min), Eq 18 Scott & Reinhardt 2001 
-          currentPatch%ROS_torch = (1.0_r8 / 54.683_r8 * wind_reduce)* &
+          if((currentPatch%heat_per_area <= 0._r8) .or. (ir <= 0._r8) .or. (xi <= 0._r8) .or. &
+          (((c*beta_ratio)**(-1*e))<= 0._r8) .or.b <= 0._r8) then
+            currentPatch%ROS_torch = 0.0_r8
+          else
+            currentPatch%ROS_torch = (1.0_r8 / 54.683_r8 * wind_reduce)* &
                       ((((60.0_r8 * currentPatch%passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/currentPatch%heat_per_area*ir*xi)-1.0_r8) &
-                       / (c*beta_ratio)**(-1*e))**1/b
+                       / (c*beta_ratio)**(-1*e))**(1/b)
+          endif
+
        endif
        ! Equation 10 in Thonicke et al. 2010
        ! backward ROS from Can FBP System (1992) in m/min
