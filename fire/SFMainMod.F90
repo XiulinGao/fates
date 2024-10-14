@@ -1269,13 +1269,22 @@ contains
                currentPatch%active_crown_fire_flg = 0  ! only passive crown fire with partial crown burnt
       ! phi_slope is not used yet. consider adding with later development
       ! calculate open wind speed critical to sustain active crown fire Eq 20 Scott & Reinhardt
-               CI_temp = ((164.8_r8 * eps * q_ig)/(ir * currentPatch%canopy_bulk_density)) - 1.0_r8
-               wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8
+               if(ir <= 0._r8 .or. currentPatch%canopy_bulk_density <= 0._r8) then
+                  CI_temp = 0._r8
+                  wind_active_min = 0._r8
+               else
+                  CI_temp = ((164.8_r8 * eps * q_ig)/(ir * currentPatch%canopy_bulk_density)) - 1.0_r8
+                  wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8
+               endif
       ! use open wind speed "wind_active_min" for ROS surface fire where ROS_SA=ROS_active_min
                ROS_SA =  (ir * xi * (1.0_r8 + wind_active_min)) / (fuel_bd * eps * q_ig) 
       ! canopy fraction burnt, Eq 28 Scott & Reinhardt Appendix A
-               canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_active_min) &
+               if((ROS_SA - ROS_active_min) <= 0._r8) then
+                  canopy_frac_burnt = 0._r8
+               else
+                  canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_active_min) &
                /(ROS_SA - ROS_active_min))))
+               endif
       !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
                ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
             endif !check intensity & ROS for active crown fire thresholds
