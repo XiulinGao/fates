@@ -533,6 +533,14 @@ contains
            ! 0.01 = C, empirical constant Van Wagner 1977 Eq 4 for 6m canopy base height, 100% FMC, FI 2500kW/m
            ! passive_crown_FI = min fire intensity to ignite canopy fuel (kW/m or kJ/m/s)
            currentPatch%passive_crown_FI = (0.01_r8 * height_base_canopy * crown_ignite_energy)**1.5_r8
+
+           if(write_SF == itrue)then
+            if ( hlm_masterproc == itrue ) write(fates_log(),*) 'canopy fuel characteristics', currentPatch%canopy_fuel_load, &
+            currentPatch%canopy_bulk_density,currentPatch%passive_crown_FI
+           endif
+
+            
+         endif
  
  !      endif  !active crown fire?
  
@@ -811,6 +819,15 @@ contains
                       ((((60.0_r8 * currentPatch%passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/currentPatch%heat_per_area*ir*xi)-1.0_r8) &
                        / (c*beta_ratio)**(-1*e))**(1/b)
           endif
+
+
+          if (debug) then
+            if ( hlm_masterproc == itrue .and.debug) write(fates_log(),*) 'SF - currentPatch%ROS_torch ', &
+                                                                           currentPatch%ROS_torch
+            if ( hlm_masterproc == itrue .and.debug) write(fates_log(),*) 'SF - currentPatch%heat_per_area ',&
+                                                                           currentPatch%heat_per_area
+            if ( hlm_masterproc == itrue .and.debug) write(fates_log(),*) 'SF - time_r ',time_r
+         endif
 
        endif
        ! Equation 10 in Thonicke et al. 2010
@@ -1338,6 +1355,10 @@ contains
                currentPatch%frac_burnt = (min(0.99_r8, AB / km2_to_m2))
                if(write_SF == itrue)then
                   if ( hlm_masterproc == itrue ) write(fates_log(),*) 'frac_burnt',currentPatch%frac_burnt
+                  if ( hlm_masterproc == itrue ) write(fates_log(),*) 'ROS_active',ROS_active
+                  if ( hlm_masterproc == itrue ) write(fates_log(),*) 'ROS_active_min',ROS_active_min
+                  if ( hlm_masterproc == itrue ) write(fates_log(),*) 'ROS_SA',ROS_SA
+
                endif
             else  
                currentPatch%frac_burnt = 0.0_r8
@@ -1345,6 +1366,11 @@ contains
       !final fireline intensity (kJ/m/sec or kW/m), Eq 22 Scott & Reinhardt 2001
             FI_final = ((currentPatch%heat_per_area + (currentPatch%canopy_fuel_load*canopy_ignite_energy*canopy_frac_burnt))* &
             currentPatch%ROS_front)/60.0_r8    
+
+            if(write_SF == itrue)then
+               if ( hlm_masterproc == itrue ) write(fates_log(),*) 'FI_final',FI_final
+            endif
+
       ! update patch FI to adjust according to potential canopy fuel consumed (passive and active)
             currentPatch%FI = FI_final
          endif !check if passive crown fire?
