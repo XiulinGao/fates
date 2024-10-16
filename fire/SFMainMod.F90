@@ -539,8 +539,6 @@ contains
             currentPatch%canopy_bulk_density,currentPatch%passive_crown_FI
            endif
 
-            
-         endif
  
  !      endif  !active crown fire?
  
