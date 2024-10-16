@@ -402,7 +402,7 @@ contains
  
      integer  ::  ih                      ! counter
  
-     real(r8), dimension(0:), allocatable :: biom_matrix   ! matrix to track biomass from bottom to 70m
+     real(r8), dimension(:), allocatable :: biom_matrix   ! matrix to track biomass from bottom to 70m
      real(r8),parameter :: min_density_canopy_fuel = 0.011_r8 !min canopy fuel density (kg/m3) sufficient to
                                                               !propogate fire vertically through canopy
                                                               !Scott and Reinhardt 2001 RMRS-RP-29
