@@ -477,8 +477,6 @@ contains
                  do ih = int(height_cbb), int(currentCohort%height)
                     biom_matrix(ih) = biom_matrix(ih) + crown_fuel_per_m
                  end do
-
-                 deallocate(biom_matrix)
  
                  !accumulate available canopy fuel for patch (kg biomass)
                  ! use this in CFB (crown fraction burn) calculation and FI final
@@ -504,6 +502,8 @@ contains
            !canopy_bulk_density (kg/m3) for Patch
       
            currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
+
+           deallocate(biom_matrix)
            
       
  
