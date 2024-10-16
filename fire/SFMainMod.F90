@@ -472,9 +472,6 @@ contains
                  !sort crown fuel into bins from bottom to top of crown
                  !accumulate across cohorts to find density within canopy 1m sections
                  do ih = int(height_cbb), int(currentCohort%height)
-                    !if (ih .eq. 0) then
-                     !ih = 1
-                    !endif
                     biom_matrix(ih) = biom_matrix(ih) + crown_fuel_per_m
                  end do
  
@@ -500,11 +497,10 @@ contains
            end do
  
            !canopy_bulk_density (kg/m3) for Patch
-           if(max_height .gt. height_base_canopy)then
-            currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
-           else
-            currentPatch%canopy_bulk_density = 0.0_r8
-           endif
+      
+           currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
+           
+      
  
            ! Note: crown_ignition_energy to be calculated based on PFT foliar moisture content from FATES-Hydro
            ! or create foliar moisture % based on BTRAN
@@ -782,7 +778,12 @@ contains
 
           ! calculate heat release per unit area (HPA)(kJ/m2), Eq 2 Scott & Reinhardt 2001
           ! and residence time (min), Eq 3 Scott & Reinhardt 2001
-          time_r = 12.595_r8 / currentPatch%fuel_sav 
+          if(currentPatch%fuel_sav .le. 0.0_r8)then
+            time_r = 0.0_r8
+          else
+            time_r = 12.595_r8 / currentPatch%fuel_sav 
+          endif
+
           currentPatch%heat_per_area = ir * time_r          
           ! calculate torching index based on wind speed and crown fuels 
           ! ROS for crown torch initation (m/min), Eq 18 Scott & Reinhardt 2001 
@@ -790,7 +791,7 @@ contains
           (((c*beta_ratio)**(-1*e))<= 0._r8) .or.b <= 0._r8) then
             currentPatch%ROS_torch = 0.0_r8
           else
-            currentPatch%ROS_torch = (1.0_r8 / 54.683_r8 * wind_reduce)* &
+            currentPatch%ROS_torch = (1.0_r8 / (54.683_r8 * wind_reduce))* &
                       ((((60.0_r8 * currentPatch%passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/currentPatch%heat_per_area*ir*xi)-1.0_r8) &
                        / (c*beta_ratio)**(-1*e))**(1/b)
           endif
@@ -1264,9 +1265,9 @@ contains
    ! actual ROS (m/min) for FM 10 fuels for open windspeed, Eq 8 Scott & Reinhardt 2001
             ROS_active = 3.34_r8*((ir*xi*(1.0_r8+phi_wind)) / (fuel_bd * eps * q_ig))
    ! critical min rate of spread (m/min) for active crowning
-            ROS_active_min = (critical_mass_flow_rate / fuel_bd) * 60.0_r8 
+            ROS_active_min = (critical_mass_flow_rate / fuel_bd) * 60.0_r8 ! should this bulk density be the actual patch bulk density?
    ! check threshold intensity and rate of spread
-            if (currentPatch%FI >= currentPatch%passive_crown_FI .and. ROS_active >= ROS_active_min) then
+            if (currentPatch%FI > currentPatch%passive_crown_FI .and. ROS_active > ROS_active_min) then !XLG: remove equal sign for both condition checks
                currentPatch%active_crown_fire_flg = 1  ! active crown fire ignited
    !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
    !with active crown fire CFB (canopy fraction burned) = 100%
@@ -1284,13 +1285,18 @@ contains
                   wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8
                endif
       ! use open wind speed "wind_active_min" for ROS surface fire where ROS_SA=ROS_active_min
-               ROS_SA =  (ir * xi * (1.0_r8 + wind_active_min)) / (fuel_bd * eps * q_ig) 
+               if(q_ig .le. 0.0_r8)then
+                  ROS_SA = 0.0_r8
+               else
+                  ROS_SA =  (ir * xi * (1.0_r8 + wind_active_min)) / (fuel_bd * eps * q_ig) 
+               endif
       ! canopy fraction burnt, Eq 28 Scott & Reinhardt Appendix A
-               if((ROS_SA - ROS_active_min) <= 0._r8) then
+               if((ROS_SA - ROS_active_min) <= 0._r8 .or. &
+               (currentPatch%ROS_front - ROS_active_min) <= 0._r8) then
                   canopy_frac_burnt = 0._r8
                else
-                  canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_active_min) &
-               /(ROS_SA - ROS_active_min))))
+                  canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_active_min) / &
+                  (ROS_SA - ROS_active_min))))
                endif
       !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
                ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
@@ -1326,8 +1332,8 @@ contains
                currentPatch%frac_burnt = 0.0_r8
             endif ! lb
       !final fireline intensity (kJ/m/sec or kW/m), Eq 22 Scott & Reinhardt 2001
-            FI_final = ((currentPatch%heat_per_area + (currentPatch%canopy_fuel_load*canopy_ignite_energy*canopy_frac_burnt))&
-            *currentPatch%ROS_front)/60.0_r8    
+            FI_final = ((currentPatch%heat_per_area + (currentPatch%canopy_fuel_load*canopy_ignite_energy*canopy_frac_burnt))* &
+            currentPatch%ROS_front)/60.0_r8    
       ! update patch FI to adjust according to potential canopy fuel consumed (passive and active)
             currentPatch%FI = FI_final
          endif !check if passive crown fire?
