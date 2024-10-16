@@ -425,10 +425,29 @@ contains
         currentPatch%canopy_bulk_density     = 0.0_r8
  
  !       if (currentPatch%active_crown_fire == 1) then
- 
+
+
+         ! find the max cohort height to set the upper bounds of biom_matrix
            currentCohort=>currentPatch%tallest
            do while(associated(currentCohort))
+            if ( int(prt_params%woody(currentCohort%pft)) == itrue) then !trees
+
+               !find patch max height for stand canopy fuel
+               if (currentCohort%height > max_height) then
+                  max_height = currentCohort%height
+               endif
+           endif !trees only
  
+           currentCohort => currentCohort%shorter;
+         enddo !end cohort loop
+
+         !allocate biom_matrix
+         allocate(biom_matrix(0:int(max_height)))
+
+       !loop across cohorts to calculate canopy fuel load by 1m height bin
+        currentCohort=>currentPatch%tallest
+           do while(associated(currentCohort))
+
               !zero cohort level variables
               tree_sapw_struct_c                   = 0.0_r8
               leaf_c                               = 0.0_r8
@@ -449,14 +468,7 @@ contains
                  ! height_cbb = height_cbb + 1.0_r8 - height_cbb
                  !endif
  
-                 !find patch max height for stand canopy fuel
-                 if (currentCohort%height > max_height) then
-                    max_height = currentCohort%height
-                 endif
-
-                 !allocate biom_matrix
-                 allocate(biom_matrix(int(height_cbb):int(currentCohort%height)))
- 
+               
                  leaf_c   = currentCohort%prt%GetState(leaf_organ, carbon12_element)
                  sapw_c   = currentCohort%prt%GetState(sapw_organ, carbon12_element)
                  struct_c = currentCohort%prt%GetState(struct_organ, carbon12_element)
@@ -505,7 +517,6 @@ contains
 
            deallocate(biom_matrix)
            
-      
  
            ! Note: crown_ignition_energy to be calculated based on PFT foliar moisture content from FATES-Hydro
            ! or create foliar moisture % based on BTRAN
