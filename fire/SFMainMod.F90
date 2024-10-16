@@ -402,7 +402,7 @@ contains
  
      integer  ::  ih                      ! counter
  
-     real(r8), dimension(:), allocatable :: biom_matrix   ! matrix to track biomass from bottom to 70m
+     real(r8), dimension(:), allocatable :: biom_matrix   ! matrix to track biomass from bottom to top
      real(r8),parameter :: min_density_canopy_fuel = 0.011_r8 !min canopy fuel density (kg/m3) sufficient to
                                                               !propogate fire vertically through canopy
                                                               !Scott and Reinhardt 2001 RMRS-RP-29
@@ -453,6 +453,9 @@ contains
                  if (currentCohort%height > max_height) then
                     max_height = currentCohort%height
                  endif
+
+                 !allocate biom_matrix
+                 allocate(biom_matrix(int(height_cbb):int(currentCohort%height)))
  
                  leaf_c   = currentCohort%prt%GetState(leaf_organ, carbon12_element)
                  sapw_c   = currentCohort%prt%GetState(sapw_organ, carbon12_element)
@@ -474,6 +477,8 @@ contains
                  do ih = int(height_cbb), int(currentCohort%height)
                     biom_matrix(ih) = biom_matrix(ih) + crown_fuel_per_m
                  end do
+
+                 deallocate(biom_matrix)
  
                  !accumulate available canopy fuel for patch (kg biomass)
                  ! use this in CFB (crown fraction burn) calculation and FI final
