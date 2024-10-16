@@ -491,7 +491,7 @@ contains
            !min canopy fuel density to propogate fire vertically in canopy across patch
            do ih=0,70
               if (biom_matrix(ih) > min_density_canopy_fuel) then
-                 height_base_canopy = float(ih)
+                 height_base_canopy = dble(ih)
                  exit
               end if
            end do
