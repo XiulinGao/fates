@@ -506,7 +506,8 @@ contains
            !min canopy fuel density to propogate fire vertically in canopy across patch
            do ih=0,70
               if (biom_matrix(ih) > min_density_canopy_fuel) then
-                 height_base_canopy = dble(ih)
+                 height_base_canopy = dble(ih) + 1.0_r8 !since int()in L489 always round down so the array starting from 0
+                                                        ! when 0m is actually 1m, so we add 1m to get the actual close HBC 
                  exit
               end if
            end do
@@ -1228,6 +1229,7 @@ contains
    real(r8),parameter :: canopy_ignite_energy = 18000_r8    ! heat yield for canopy fuels (kJ/kg)
    real(r8),parameter :: critical_mass_flow_rate = 0.05_r8  ! critical mass flow rate (kg/m2/sec)for crown fire
    real(r8),parameter :: km2_to_m2 = 1000000.0_r8           ! area conversion for square km to square m
+   real(r8),parameter :: km_per_hr_to_m_per_min = 16.6667_r8 ! convert km/hour to m/min for wind speed
    integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
 
    currentPatch => currentSite%oldest_patch
