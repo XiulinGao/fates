@@ -232,6 +232,7 @@ module FatesPatchMod
       procedure :: InitRunningMeans
       procedure :: InitLitter
       procedure :: Create
+      procedure :: UpdateTreeGrassArea
       procedure :: FreeMemory
       procedure :: Dump
       procedure :: CheckVars
@@ -622,6 +623,40 @@ module FatesPatchMod
       this%NCL_p          = 1
 
     end subroutine Create
+
+
+
+    !===========================================================================
+
+    subroutine UpdateTreeGrassArea(this)
+      !
+      ! DESCRIPTION:
+      ! calculate and update the total tree area and grass area (by canopy) on patch
+      !
+      ! ARGUMENTS:
+      class(fates_patch_type), intent(inout) :: this ! patch object 
+      ! LOCALS:
+      type(fates_cohort_Type), pointer :: currentCohort ! cohort object
+      real(r8)                         :: tree_area     ! treed area of patch [m2]
+      real(r8)                         :: grass_area    ! grass area of patch [m2]
+      if (this%nocomp_pft_label /= nocomp_bareground) then 
+        tree_area = 0.0_r8
+        grass_area = 0.0_r8
+        
+        currentCohort => this%tallest
+        do while(associated(currentCohort))
+          if (prt_params%woody(currentCohort%pft) == itrue) then
+            tree_area = tree_area + currentCohort%c_area
+          else
+            grass_area = grass_area + currentCohort%c_area
+          end if
+          currentCohort => currentCohort%shorter
+        end do
+        
+        this%total_tree_area = min(tree_area, this%area)
+        this%total_grass_area = min(grass_area, this%area)
+      end if 
+    end subroutine UpdateTreeGrassArea
 
     !===========================================================================
 
