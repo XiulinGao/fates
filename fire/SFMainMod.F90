@@ -1160,7 +1160,7 @@ contains
    type(fates_patch_type) , pointer :: currentPatch
    type(fates_cohort_type), pointer :: currentCohort
 ! ARGUMENTS
-  ! real(r8), intent(in)  :: ROS_torch           ! open wind speed for crown torch initation (m/min)
+  ! real(r8), intent(in)  :: ROS_torch           ! open wind speed for crown torch initation (km/hour)
   ! real(r8), intent(in)  :: canopy_fuel_load    ! available canopy fuel load in patch (kg biomass)
   ! real(r8), intent(in)  :: lb                  !length to breadth ratio of fire ellipse (unitless)
   ! real(r8), intent(in)  :: heat_per_area       ! heat release per unit area (kJ/m2) for surface fuel
@@ -1201,7 +1201,7 @@ contains
    real(r8) ROS_active           ! actual rate of spread (m/min) using FM 10 fuels
    real(r8) ROS_active_min       ! minimum rate of spread to ignite active crown fire
    real(r8) CI_temp              ! temporary variable to calculate wind_active_min
-   real(r8) wind_active_min      ! open windspeed to sustain active crown fire where ROS_SA = ROS_active_min
+   real(r8) wind_active_min      ! open windspeed to sustain active crown fire where ROS_SA = ROS_active_min, in km/hour
    real(r8) ROS_SA               ! rate of spread for surface fire with wind_active_min
    real(r8) phi_wind_sa          ! unitless, for calculating wind factor for ROS_SA
    real(r8) canopy_frac_burnt    ! fraction of canopy fuels consumed (0, surface fire to 1,active crown fire) 
@@ -1328,11 +1328,11 @@ contains
                endif
       ! use open wind speed "wind_active_min" for ROS surface fire where ROS_SA=ROS_active_min
                wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8 !in km/hr
-               wind_active_min = wind_active_min * km_per_hr_to_m_per_min ! convert to m/min
+               wind_active_min = wind_active_min * km_per_hr_to_m_per_min*0.4_r8 ! convert to m/min and multiply by 0.4 to get midflame wind
                phi_wind_sa     = c * ((3.281_r8*wind_active_min)**b)*(beta_ratio**(-e))
                ROS_SA =  (ir * xi * (1.0_r8 + phi_wind_sa)) / (fuel_bd * eps * q_ig) 
       ! use open wind speed (the Torching Index, in km/hour) when ROS surface = ROS initiation to calculare ROS initiation
-               phi_wind_init = c * ((3.281_r8*currentPatch%ROS_torch)**b)*(beta_ratio**(-e))
+               phi_wind_init = c * ((3.281_r8*currentPatch%ROS_torch*0.4_r8)**b)*(beta_ratio**(-e))
                ROS_init = (ir * xi * (1.0_r8 + phi_wind_init)) / (fuel_bd * eps * q_ig)
 
       ! canopy fraction burnt, Eq 28 Scott & Reinhardt Appendix A
