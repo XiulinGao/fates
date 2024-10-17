@@ -1126,8 +1126,10 @@ contains
 
 
    ! local variables
-   real(r8) :: total_burnable_area    ! total area that can apply prescribed fire 
-   real(r8) :: site_frac_burnable     !fraction site area that can apply prescribed fire 
+   real(r8) :: total_burnable_area    ! total area that can apply prescribed fire (m2)
+   !real(r8) :: site_frac_burnable     ! fraction site area that can apply prescribed fire 
+   real(r8) :: prescribed_burnt_area  ! max. daily burning capacity in absolute area (m2) at site level
+   real(r8) :: patch_burnt_area       ! temporal variable for calculating burnt fraction for patch (m2)
 
    !real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
    !integer,  parameter :: rx_freq = 10 ! Rx fire return interval 
@@ -1149,7 +1151,9 @@ contains
       currentPatch => currentPatch%younger;  
    enddo !end patch loop
 
-   site_frac_burnable = total_burnable_area / AREA
+   !site_frac_burnable = total_burnable_area / AREA
+   prescribed_burnt_area = AREA * SF_val_rxfire_AB
+
    
    
    currentPatch => currentSite%oldest_patch;
@@ -1157,10 +1161,10 @@ contains
    do while(associated(currentPatch))
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
-         if(currentPatch%rxfire == 1 .and. site_frac_burnable .gt. 0.1_r8)then ! .and. &
+         if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. prescribed area)then ! .and. &
 !         currentSite%rx_burn_accum .lt. AREA)then
-            currentPatch%rxfire_frac_burnt = currentPatch%area / total_burnable_area * &
-            SF_val_rxfire_AB  ! in km2 / (km2* day)
+            patch_burnt_area = (currentPatch%area / total_burnable_area)* prescribed_burnt_area
+            currentPatch%rxfire_frac_burnt = patch_burnt_area / currentPatch%area
 !            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
  !           if(currentSite%rx_burn_accum .ge. AREA)then
                !currentSite%lst_rx_year = hlm_current_year
