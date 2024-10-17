@@ -5,6 +5,9 @@ module FatesPatchMod
   use FatesConstantsMod,   only : fates_unset_int
   use FatesConstantsMod,   only : primaryforest, secondaryforest
   use FatesConstantsMod,   only : TRS_regeneration
+  use FatesConstantsMod,   only : itrue, ifalse
+  use PRTParametersMod,    only : prt_params
+  use FatesConstantsMod,   only : nocomp_bareground
   use FatesGlobals,        only : fates_log
   use FatesGlobals,        only : endrun => fates_endrun
   use FatesUtilsMod,       only : check_hlm_list
@@ -95,6 +98,7 @@ module FatesPatchMod
                                                               !   used to determine attenuation of parameters during photosynthesis
     real(r8) :: total_canopy_area                           ! area that is covered by vegetation [m2]
     real(r8) :: total_tree_area                             ! area that is covered by woody vegetation [m2]
+    real(r8) :: total_grass_area                            ! area that is covered by non-woody vegetation [m2]
     real(r8) :: zstar                                       ! height of smallest canopy tree, only meaningful in "strict PPA" mode [m]
     real(r8) :: elai_profile(nclmax,maxpft,nlevleaf)        ! exposed leaf area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
     real(r8) :: esai_profile(nclmax,maxpft,nlevleaf)        ! exposed stem area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
@@ -312,6 +316,7 @@ module FatesPatchMod
       this%canopy_layer_tlai(:)         = nan               
       this%total_canopy_area            = nan
       this%total_tree_area              = nan 
+      this%total_grass_area             = nan
       this%zstar                        = nan 
       this%elai_profile(:,:,:)          = nan 
       this%esai_profile(:,:,:)          = nan   
@@ -420,6 +425,7 @@ module FatesPatchMod
       ! LEAF ORGANIZATION
       this%canopy_layer_tlai(:)              = 0.0_r8
       this%total_tree_area                   = 0.0_r8  
+      this%total_grass_area                  = 0.0_r8
       this%zstar                             = 0.0_r8
       this%elai_profile(:,:,:)               = 0.0_r8
       this%c_stomata                         = 0.0_r8 
