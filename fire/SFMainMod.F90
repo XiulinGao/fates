@@ -1163,7 +1163,7 @@ contains
    do while(associated(currentPatch))
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
-         if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. prescribed_bunrt_area)then ! .and. &
+         if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. prescribed_burnt_area)then ! .and. &
 !         currentSite%rx_burn_accum .lt. AREA)then
             patch_burnt_area = (currentPatch%area / total_burnable_area)* prescribed_burnt_area
             currentPatch%rxfire_frac_burnt = patch_burnt_area / currentPatch%area
