@@ -681,10 +681,13 @@ contains
     real(r8) a_beta               ! dummy variable for product of a* beta_ratio for react_v_opt equation
     real(r8) a,b,c,e              ! function of fuel sav
     real(r8) time_r               ! residence time (min)
+    !real(r8) wind_torch           ! open wind speed at which surface fire intensity = critical intensity initiating crown fire (km/hour)
 
     logical, parameter :: debug_windspeed = .false. !for debugging
     real(r8),parameter :: q_dry = 581.0_r8          !heat of pre-ignition of dry fuels (kJ/kg) 
     real(r8),parameter :: wind_reduce = 0.2_r8         !wind reduction factor (%)
+    real(r8),parameter :: km_per_hr_to_m_per_min = 16.6667_r8
+
 
     currentPatch=>currentSite%oldest_patch;  
 
@@ -809,13 +812,17 @@ contains
           currentPatch%heat_per_area = ir * time_r          
           ! calculate torching index based on wind speed and crown fuels 
           ! ROS for crown torch initation (m/min), Eq 18 Scott & Reinhardt 2001 
+          ! XLG: TI is not rate of spread, it is the open wind speed (in km/hr) at which surface
+          ! fire line intensity = critical fire line intensity for initiating crown fire
           if((currentPatch%heat_per_area <= 0._r8) .or. (ir <= 0._r8) .or. (xi <= 0._r8) .or. &
           (((c*beta_ratio)**(-1*e))<= 0._r8) .or.b <= 0._r8) then
+            !wind_torch = 0.0_r8
             currentPatch%ROS_torch = 0.0_r8
           else
             currentPatch%ROS_torch = (1.0_r8 / (54.683_r8 * wind_reduce))* &
-                      ((((60.0_r8 * currentPatch%passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/currentPatch%heat_per_area*ir*xi)-1.0_r8) &
-                       / (c*beta_ratio)**(-1*e))**(1/b)
+            ((((60.0_r8 * currentPatch%passive_crown_FI*currentPatch%fuel_bulkd*eps*q_ig)/currentPatch%heat_per_area*ir*xi)-1.0_r8) &
+             / (c*beta_ratio)**(-1*e))**(1/b)
+            currentPatch%ROS_torch = currentPatch%ROS_torch * km_per_hr_to_m_per_min !convert to m/min
           endif
 
 
@@ -1152,7 +1159,7 @@ contains
    type(fates_patch_type) , pointer :: currentPatch
    type(fates_cohort_type), pointer :: currentCohort
 ! ARGUMENTS
-  ! real(r8), intent(in)  :: ROS_torch           ! ROS for crown torch initation (m/min)
+  ! real(r8), intent(in)  :: ROS_torch           ! open wind speed for crown torch initation (m/min)
   ! real(r8), intent(in)  :: canopy_fuel_load    ! available canopy fuel load in patch (kg biomass)
   ! real(r8), intent(in)  :: lb                  !length to breadth ratio of fire ellipse (unitless)
   ! real(r8), intent(in)  :: heat_per_area       ! heat release per unit area (kJ/m2) for surface fuel
@@ -1195,9 +1202,13 @@ contains
    real(r8) CI_temp              ! temporary variable to calculate wind_active_min
    real(r8) wind_active_min      ! open windspeed to sustain active crown fire where ROS_SA = ROS_active_min
    real(r8) ROS_SA               ! rate of spread for surface fire with wind_active_min
+   real(r8) phi_wind_sa          ! unitless, for calculating wind factor for ROS_SA
    real(r8) canopy_frac_burnt    ! fraction of canopy fuels consumed (0, surface fire to 1,active crown fire) 
    real(r8) ROS_final            ! final rate of spread for combined surface and canopy spread (m/min)
    real(r8) FI_final             ! final fireline intensity (kW/m or kJ/m/sec) with canopy consumption 
+   real(r8) ROS_init             ! rate of spread (m/min) for surface fire at the torching index open wind speed
+   real(r8) phi_wind_init        ! unitless, for calculating wind factor for ROS_init
+
   
    real(r8),parameter :: q_dry = 581.0_r8                 !heat of pre-ignition of dry fuels (kJ/kg)
 ! fuel loading, MEF, and depth from Anderson 1982 Aids to determining fuel models for fire behavior
@@ -1293,12 +1304,12 @@ contains
    ! ir = reaction intenisty in kJ/m2/min
    ! sum_fuel as kgBiomass/m2 for ir calculation
             ir = reaction_v_opt*(net_fuel)*SF_val_fuel_energy*moist_damp*SF_val_miner_damp  
-   ! actual ROS (m/min) for FM 10 fuels for open windspeed, Eq 8 Scott & Reinhardt 2001
+   ! average crown fire ROS (m/min) using FM 10 fuels characteristics and 40% open windspeed, Eq 8 Scott & Reinhardt 2001
             ROS_active = 3.34_r8*((ir*xi*(1.0_r8+phi_wind)) / (fuel_bd * eps * q_ig))
    ! critical min rate of spread (m/min) for active crowning
-            ROS_active_min = (critical_mass_flow_rate / fuel_bd) * 60.0_r8 ! should this bulk density be the actual patch bulk density?
+            ROS_active_min = (critical_mass_flow_rate / currentPatch%canopy_bulk_density) * 60.0_r8 ! XLG: should this bulk density be the actual patch bulk density?
    ! check threshold intensity and rate of spread
-            if (currentPatch%FI > currentPatch%passive_crown_FI .and. ROS_active > ROS_active_min) then !XLG: remove equal sign for both condition checks
+            if (currentPatch%FI > currentPatch%passive_crown_FI .and. ROS_active > ROS_active_min) then !XLG: remove equal sign for both condition checks;
                currentPatch%active_crown_fire_flg = 1  ! active crown fire ignited
    !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
    !with active crown fire CFB (canopy fraction burned) = 100%
@@ -1313,16 +1324,19 @@ contains
                else
                   CI_temp = ((164.8_r8 * eps * q_ig)/(ir * currentPatch%canopy_bulk_density)) - 1.0_r8
                endif
-
-               wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8
       ! use open wind speed "wind_active_min" for ROS surface fire where ROS_SA=ROS_active_min
-          
-               ROS_SA =  (ir * xi * (1.0_r8 + wind_active_min)) / (fuel_bd * eps * q_ig) 
+               wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8 !in km/hr
+               wind_active_min = wind_active_min * km_per_hr_to_m_per_min ! convert to m/min
+               phi_wind_sa     = c * ((3.281_r8*wind_active_min)**b)*(beta_ratio**(-e))
+               ROS_SA =  (ir * xi * (1.0_r8 + phi_wind_sa)) / (fuel_bd * eps * q_ig) 
+      ! use open wind speed (the Torching Index, in km/hour) when ROS surface = ROS initiation to calculare ROS initiation
+               phi_wind_init = c * ((3.281_r8*currentPatch%ROS_torch)**b)*(beta_ratio**(-e))
+               ROS_init = (ir * xi * (1.0_r8 + phi_wind_init)) / (fuel_bd * eps * q_ig)
 
       ! canopy fraction burnt, Eq 28 Scott & Reinhardt Appendix A
       
-               canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_active_min) / &
-               (ROS_SA - ROS_active_min))))
+               canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_init) / &   !replace ROS_active_min with ROS initiation!
+               (ROS_SA - ROS_init))))
            
       !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
                ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
