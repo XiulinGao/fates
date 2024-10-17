@@ -1136,7 +1136,9 @@ contains
 
    ! zero current site total burnable area and fraction before loop through patches
    total_burnable_area = 0._r8
-   site_frac_burnable = 0._r8
+   !site_frac_burnable = 0._r8
+   prescribed_burnt_area = 0._r8
+   patch_burnt_area = 0._r8
 
 
    currentPatch => currentSite%oldest_patch;
@@ -1152,7 +1154,7 @@ contains
    enddo !end patch loop
 
    !site_frac_burnable = total_burnable_area / AREA
-   prescribed_burnt_area = AREA * SF_val_rxfire_AB
+   prescribed_burnt_area = SF_val_rxfire_AB * AREA
 
    
    
@@ -1161,7 +1163,7 @@ contains
    do while(associated(currentPatch))
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
-         if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. prescribed area)then ! .and. &
+         if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. prescribed_bunrt_area)then ! .and. &
 !         currentSite%rx_burn_accum .lt. AREA)then
             patch_burnt_area = (currentPatch%area / total_burnable_area)* prescribed_burnt_area
             currentPatch%rxfire_frac_burnt = patch_burnt_area / currentPatch%area
