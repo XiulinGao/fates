@@ -1345,8 +1345,8 @@ contains
 
       ! canopy fraction burnt, Eq 28 Scott & Reinhardt Appendix A
       
-               canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_init) / &   !replace ROS_active_min with ROS initiation!
-               (ROS_SA - ROS_init))))
+               canopy_frac_burnt = (min(1.0_r8, max(0._r8,((currentPatch%ROS_front - ROS_init) / &   !replace ROS_active_min with ROS initiation!
+               (ROS_SA - ROS_init)))))
            
       !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
                ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
