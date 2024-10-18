@@ -420,6 +420,7 @@ contains
         !zero Patch level variables
         height_base_canopy                   = 0.0_r8
         max_height                           = 0.0_r8
+        crown_ignite_energy                  = 0.0_r8  
         currentPatch%canopy_fuel_load        = 0.0_r8
         currentPatch%passive_crown_FI        = 0.0_r8
         currentPatch%canopy_bulk_density     = 0.0_r8
@@ -457,6 +458,8 @@ contains
               crown_fuel_c                         = 0.0_r8
               crown_fuel_biomass                   = 0.0_r8
               crown_fuel_per_m                     = 0.0_r8
+              height_cbb                           = 0.0_r8
+              crown_depth                          = 0.0_r8
  
               ! Calculate crown 1hr fuel biomass (leaf, twig sapwood, twig structural biomass)
               if ( int(prt_params%woody(currentCohort%pft)) == itrue) then !trees
@@ -476,7 +479,7 @@ contains
                  tree_sapw_struct_c =  currentCohort%n * &
                          (prt_params%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c))
  
-                 twig_sapw_struct_c =  tree_sapw_struct_c * SF_VAL_CWD_frac(1)   !only 1hr fuel
+                 twig_sapw_struct_c =  tree_sapw_struct_c * SF_VAL_CWD_frac(1)   !only 1hr fuel 
  
                  crown_fuel_c = (currentCohort%n * leaf_c) + twig_sapw_struct_c  !crown fuel (kgC)
  
@@ -507,14 +510,19 @@ contains
            do ih=0,70
               if (biom_matrix(ih) > min_density_canopy_fuel) then
                  height_base_canopy = dble(ih) + 1.0_r8 !since int()in L489 always round down so the array starting from 0
-                                                        ! when 0m is actually 1m, so we add 1m to get the actual close HBC 
+                                                        ! when 0m is actually 1m, so we add 1m to get the actual HBC 
                  exit
               end if
            end do
  
            !canopy_bulk_density (kg/m3) for Patch
+           !XLG: I think calculation of canopy bulk density is wrong, since biom_matrix is already in kg/m3, this will result in kg/m4
+           ! CBD should be canopy_fuel_load/(patch area * (max_height - height_base_canopy))
       
-           currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
+           !currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
+           currentPatch%canopy_bulk_density = currentPatch%canopy_fuel_load / (currentPatch%area * &
+           (max_height - height_base_canopy))
+
 
            deallocate(biom_matrix)
            
@@ -1248,12 +1256,34 @@ contains
    real(r8),parameter :: km_per_hr_to_m_per_min = 16.6667_r8 ! convert km/hour to m/min for wind speed
    integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
 
+
+   !initialize variables
+   beta_ratio = 0.0_r8; q_ig = 0.0_r8; eps = 0.0_r8;   a = 0.0_r8;   b = 0.0_r8;   c = 0.0_r8;   e = 0.0_r8
+   phi_wind = 0.0_r8;   xi = 0.0_r8;   reaction_v_max = 0.0_r8;  reaction_v_opt = 0.0_r8; mw_weight = 0.0_r8
+   moist_damp = 0.0_r8;   ir = 0.0_r8; a_beta = 0.0_r8; total_fuel = 0.0_r8; net_fuel = 0.0_r8; fuel_depth = 0.0_r8
+   fuel_bd = 0.0_r8; fuel_sav = 0.0_r8; fuel_eff_moist = 0.0_r8; fuel_moist1hr = 0.0_r8; fuel_moist10hr = 0.0_r8
+   fuel_moist100hr = 0.0_r8; fuel_moistlive = 0.0_r8; fuel_1hr = 0.0_r8; fuel_10hr = 0.0_r8; fuel_100hr = 0.0_r8
+   fuel_live = 0.0_r8; SAV_1hr = 0.0_r8; SAV_10hr = 0.0_r8; SAV_100hr = 0.0_r8; SAV_live = 0.0_r8
+   midflame_wind = 0.0_r8; db = 0.0_r8; df = 0.0_r8; AB = 0.0_r8; size_of_fire = 0.0_r8;
+   beta_ratio_cp = 0.0_r8; beta_cp = 0.0_r8; beta_op_cp = 0.0_r8; ir_cp = 0.0_r8
+   xi_cp = 0.0_r8; eps_cp = 0.0_r8; q_ig_cp = 0.0_r8; reaction_v_opt_cp = 0.0_r8; reaction_v_max_cp = 0.0_r8
+   moist_damp_cp = 0.0_r8; mw_weight_cp = 0.0_r8; a_beta_cp = 0.0_r8; a_cp = 0.0_r8; b_cp = 0.0_r8
+   c_cp = 0.0_r8; e_cp = 0.0_r8
+
    currentPatch => currentSite%oldest_patch
    !! check to see if active_crown_fire is enabled
    do while(associated(currentPatch))
       if (currentPatch%fire == 1) then
+        
          passive_canopy_fuel_flg = 0         !does patch have canopy fuels for vertical spread?
          ROS_active = 0.0_r8
+         ROS_active_min = 0.0_r8
+         ROS_SA = 0.0_r8
+         ROS_init = 0.0_r8
+         canopy_frac_burnt = 0.0_r8
+         FI_final = 0.0_r8
+         ROS_final = 0.0_r8
+
    ! check initiation of passive crown fire
          if (currentPatch%FI >= currentPatch%passive_crown_FI) then
             passive_canopy_fuel_flg = 1      !enough passive canopy fuels for vertical spread
@@ -1363,7 +1393,7 @@ contains
 
    ! check threshold intensity and rate of spread
             !XLG: this FI check is redundant, removed
-            if (ROS_active > ROS_active_min) then !XLG: remove equal sign for both condition checks;
+            if (ROS_active >= ROS_active_min) then 
                currentPatch%active_crown_fire_flg = 1  ! active crown fire ignited
    !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
    !with active crown fire CFB (canopy fraction burned) = 100%
