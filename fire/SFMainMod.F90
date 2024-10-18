@@ -1215,6 +1215,17 @@ contains
    real(r8)                        :: grass_fraction ! site-level grass fraction [0-1]
    real(r8)                        :: bare_fraction  ! site-level bare ground fraction [0-1]
 
+   !local variables to calculate ROS related variables given current patch fuel characteristics
+   real(r8) beta_cp beta_op_cp
+   real(r8) ir_cp
+   real(r8) xi_cp,eps_cp
+   real(r8) q_ig_cp
+   real(r8) reaction_v_opt_cp,reaction_v_max_cp
+   real(r8) moist_damp_cp,mw_weight_cp
+   real(r8) beta_ratio_cp
+   real(r8) a_beta_cp
+   real(r8) a_cp,b_cp,c_cp,e_cp
+
   
    real(r8),parameter :: q_dry = 581.0_r8                 !heat of pre-ignition of dry fuels (kJ/kg)
 ! fuel loading, MEF, and depth from Anderson 1982 Aids to determining fuel models for fire behavior
@@ -1315,40 +1326,62 @@ contains
             ROS_active = 3.34_r8*((ir*xi*(1.0_r8+phi_wind)) / (fuel_bd * eps * q_ig))
    ! critical min rate of spread (m/min) for active crowning
             ROS_active_min = (critical_mass_flow_rate / currentPatch%canopy_bulk_density) * 60.0_r8 ! XLG: should this bulk density be the actual patch bulk density?
+            beta_cp = currentPatch%fuel_bulkd / SF_val_part_dens
+            beta_op_cp = 0.200395_r8 *(currentPatch%fuel_sav**(-0.8189_r8))
+            beta_ratio_cp = beta_cp/beta_op_cp
+            q_ig_cp = q_dry +2594.0_r8 * currentPatch%fuel_eff_moist 
+            eps_cp = exp(-4.528_r8 / currentPatch%fuel_sav)
+            b_cp = 0.15988_r8 * (currentPatch%fuel_sav**0.54_r8)
+            c_cp = 7.47_r8 * (exp(-0.8711_r8 * (currentPatch%fuel_sav**0.55_r8)))
+            e_cp = 0.715_r8 * (exp(-0.01094_r8 * currentPatch%fuel_sav))
+
+            if(ir <= 0._r8 .or. currentPatch%canopy_bulk_density <= 0._r8) then
+               CI_temp = 0._r8
+            else
+               CI_temp = ((164.8_r8 * eps * q_ig)/(ir * currentPatch%canopy_bulk_density)) - 1.0_r8
+            endif
+
+            wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8 !in km/hr
+            wind_active_min = wind_active_min * km_per_hr_to_m_per_min ! convert to m/min 
+                                                                          ! XLG: we have to convert this open wind speed to effective wind speed for ROS surface 
+            call CalculateTreeGrassAreaSite(currentSite, tree_fraction, grass_fraction, bare_fraction) 
+            wind_active_min_effect = wind_active_min * (tree_fraction*0.4_r8+(grass_fraction+bare_fraction)*0.6_r8)
+            phi_wind_sa     = c_cp * ((3.281_r8*wind_active_min_effect)**b_cp)*(beta_ratio_cp**(-e_cp))
+            xi_cp = (exp((0.792_r8 + 3.7597_r8 * (currentPatch%fuel_sav**0.5_r8)) * (beta_cp+0.1_r8))) / &
+            (192_r8+7.9095_r8 * currentPatch%fuel_sav)
+            a_cp = 8.9033_r8 * (currentPatch%fuel_sav**(-0.7913_r8))  
+            a_beta_cp = exp(a_cp*(1.0_r8-beta_ratio_cp))
+            reaction_v_max_cp  = 1.0_r8 / (0.0591_r8 + 2.926_r8* (currentPatch%fuel_sav**(-1.5_r8)))
+            reaction_v_opt_cp = reaction_v_max_cp*(beta_ratio_cp**a_cp)*a_beta_cp
+            mw_weight_cp = currentPatch%fuel_eff_moist/currentPatch%fuel_mef
+            moist_damp_cp = max(0.0_r8,(1.0_r8 - (2.59_r8 * mw_weight_cp) + (5.11_r8 * (mw_weight_cp**2.0_r8)) - &
+            (3.52_r8*(mw_weight_cp**3.0_r8))))
+            ir_cp = reaction_v_opt_cp*(currentPatch%sum_fuel/0.45_r8)*SF_val_fuel_energy*moist_damp_cp*SF_val_miner_damp
+
+            ROS_SA =  (ir_cp * xi_cp * (1.0_r8 + phi_wind_sa)) / (currentPatch%fuel_bulkd * eps_cp * q_ig_cp)
+            ROS_init = (60.0_r8 * currentPatch%passive_crown_FI) / currentPatch%heat_per_area
+
    ! check threshold intensity and rate of spread
-            if (currentPatch%FI > currentPatch%passive_crown_FI .and. ROS_active > ROS_active_min) then !XLG: remove equal sign for both condition checks;
+            !XLG: this FI check is redundant, removed
+            if (ROS_active > ROS_active_min) then !XLG: remove equal sign for both condition checks;
                currentPatch%active_crown_fire_flg = 1  ! active crown fire ignited
    !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
    !with active crown fire CFB (canopy fraction burned) = 100%
                canopy_frac_burnt = 1.0_r8
                ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
-            else 
+            else if(ROS_active <= ROS_active_min .and. currentPatch%ROS_front >= ROS_init .and. &
+               currentPatch%ROS_front <= ROS_SA) then
                currentPatch%active_crown_fire_flg = 0  ! only passive crown fire with partial crown burnt
-      ! phi_slope is not used yet. consider adding with later development
-      ! calculate open wind speed critical to sustain active crown fire Eq 20 Scott & Reinhardt
-               if(ir <= 0._r8 .or. currentPatch%canopy_bulk_density <= 0._r8) then
-                  CI_temp = 0._r8
-               else
-                  CI_temp = ((164.8_r8 * eps * q_ig)/(ir * currentPatch%canopy_bulk_density)) - 1.0_r8
-               endif
-      ! use open wind speed "wind_active_min" for ROS surface fire where ROS_SA=ROS_active_min
-               wind_active_min = 0.0457_r8*(CI_temp/0.001612_r8)**0.7_r8 !in km/hr
-               wind_active_min = wind_active_min * km_per_hr_to_m_per_min ! convert to m/min 
-                                                                          ! XLG: we have to convert this open wind speed to effective wind speed for ROS surface 
-               call CalculateTreeGrassAreaSite(currentSite, tree_fraction, grass_fraction, bare_fraction) 
-               wind_active_min_effect = wind_active_min * (tree_fraction*0.4_r8+(grass_fraction+bare_fraction)*0.6_r8)
-               phi_wind_sa     = c * ((3.281_r8*wind_active_min_effect)**b)*(beta_ratio**(-e))
-               ROS_SA =  (ir * xi * (1.0_r8 + phi_wind_sa)) / (fuel_bd * eps * q_ig) 
-      ! use Eq. 12 in Scott & Reinhardt to calculare ROS initiation
-               !phi_wind_init = c * ((3.281_r8*currentPatch%ROS_torch*0.4_r8)**b)*(beta_ratio**(-e))
-               ROS_init = (60.0_r8 * currentPatch%passive_crown_FI) / currentPatch%heat_per_area
 
       ! canopy fraction burnt, Eq 28 Scott & Reinhardt Appendix A
       
-               canopy_frac_burnt = (min(1.0_r8, max(0._r8,((currentPatch%ROS_front - ROS_init) / &   !replace ROS_active_min with ROS initiation!
-               (ROS_SA - ROS_init)))))
+               canopy_frac_burnt = (min(1.0_r8, ((currentPatch%ROS_front - ROS_init) / &   !replace ROS_active_min with ROS initiation!
+               (ROS_SA - ROS_init))))
            
       !ROS_final = ROS_surface+CFB(ROS_active - ROS_surface), Eq 21 Scott & Reinhardt 2001
+               ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
+            else
+               canopy_frac_burnt = 0.0_r8
                ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
             endif !check intensity & ROS for active crown fire thresholds
       ! recalculate area burned with new ROS_front value from ROS_final
