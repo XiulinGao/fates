@@ -228,6 +228,14 @@ contains
 
     iofp = currentPatch%patchno
 
+    temp_in_C = 0.0_r8
+    rh = 0.0_r8
+    wind = 0.0_r8
+    t_check = 0.0_r8
+    rh_check = 0.0_r8
+    wd_check = 0.0_r8
+    currentSite%rx_flag = 0
+
     temp_in_C = currentPatch%tveg24%GetMean() - tfrz
  !   rainfall  = bc_in%precip24_pa(iofp)*sec_per_day
     rh        = bc_in%relhumid24_pa(iofp)
