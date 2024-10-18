@@ -1216,7 +1216,7 @@ contains
    real(r8)                        :: bare_fraction  ! site-level bare ground fraction [0-1]
 
    !local variables to calculate ROS related variables given current patch fuel characteristics
-   real(r8) beta_cp beta_op_cp
+   real(r8) beta_cp,beta_op_cp
    real(r8) ir_cp
    real(r8) xi_cp,eps_cp
    real(r8) q_ig_cp
