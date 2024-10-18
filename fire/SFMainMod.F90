@@ -442,8 +442,10 @@ contains
            currentCohort => currentCohort%shorter;
          enddo !end cohort loop
 
-         !allocate biom_matrix
+         !allocate and initialize biom_matrix
          allocate(biom_matrix(0:int(max_height)))
+         biom_matrix(:) = 0.0_r8
+
 
        !loop across cohorts to calculate canopy fuel load by 1m height bin
         currentCohort=>currentPatch%tallest
@@ -460,6 +462,7 @@ contains
               crown_fuel_per_m                     = 0.0_r8
               height_cbb                           = 0.0_r8
               crown_depth                          = 0.0_r8
+              crown_ignite_energy                  = 0.0_r8
  
               ! Calculate crown 1hr fuel biomass (leaf, twig sapwood, twig structural biomass)
               if ( int(prt_params%woody(currentCohort%pft)) == itrue) then !trees
@@ -710,8 +713,10 @@ contains
     ! ---initialise parameters to zero.--- 
        beta_ratio = 0.0_r8; q_ig = 0.0_r8; eps = 0.0_r8;   a = 0.0_r8;   b = 0.0_r8;   c = 0.0_r8;   e = 0.0_r8
        phi_wind = 0.0_r8;   xi = 0.0_r8;   reaction_v_max = 0.0_r8;  reaction_v_opt = 0.0_r8; mw_weight = 0.0_r8
-       moist_damp = 0.0_r8;   ir = 0.0_r8; a_beta = 0.0_r8;     
+       moist_damp = 0.0_r8;   ir = 0.0_r8; a_beta = 0.0_r8; time_r = 0.0_r8
+
        currentPatch%ROS_front = 0.0_r8
+       currentPatch%ROS_torch = 0.0_r8 
 
        ! ----start spreading---
 
@@ -824,7 +829,7 @@ contains
           ! XLG: TI is not rate of spread, it is the open wind speed (in km/hr) at which surface
           ! fire line intensity = critical fire line intensity for initiating crown fire
           if((currentPatch%heat_per_area <= 0._r8) .or. (ir <= 0._r8) .or. (xi <= 0._r8) .or. &
-          (((c*beta_ratio)**(-1*e))<= 0._r8) .or.b <= 0._r8) then
+          (((c*beta_ratio)**(-1*e))<= 0._r8) .or. b <= 0._r8) then
             !wind_torch = 0.0_r8
             currentPatch%ROS_torch = 0.0_r8
           else
@@ -847,6 +852,7 @@ contains
        ! Equation 10 in Thonicke et al. 2010
        ! backward ROS from Can FBP System (1992) in m/min
        ! backward ROS wind not changed by vegetation 
+       currentPatch%ROS_back = 0.0_r8
        currentPatch%ROS_back = currentPatch%ROS_front*exp(-0.012_r8*currentSite%wind) 
 
        end if ! nocomp_pft_label check
@@ -1222,6 +1228,7 @@ contains
    real(r8)                        :: tree_fraction  ! site-level tree fraction [0-1]
    real(r8)                        :: grass_fraction ! site-level grass fraction [0-1]
    real(r8)                        :: bare_fraction  ! site-level bare ground fraction [0-1]
+   integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
 
    !local variables to calculate ROS related variables given current patch fuel characteristics
    real(r8) beta_cp,beta_op_cp
@@ -1254,7 +1261,7 @@ contains
    real(r8),parameter :: critical_mass_flow_rate = 0.05_r8  ! critical mass flow rate (kg/m2/sec)for crown fire
    real(r8),parameter :: km2_to_m2 = 1000000.0_r8           ! area conversion for square km to square m
    real(r8),parameter :: km_per_hr_to_m_per_min = 16.6667_r8 ! convert km/hour to m/min for wind speed
-   integer  :: passive_canopy_fuel_flg                    ! flag if canopy fuel true for vertical spread
+   
 
 
    !initialize variables
@@ -1283,6 +1290,10 @@ contains
          canopy_frac_burnt = 0.0_r8
          FI_final = 0.0_r8
          ROS_final = 0.0_r8
+         wind_active_min = 0.0_r8
+         wind_active_min_effect = 0.0_r8
+         phi_wind_sa = 0.0_r8
+         CI_temp = 0.0_r8
 
    ! check initiation of passive crown fire
          if (currentPatch%FI >= currentPatch%passive_crown_FI) then
