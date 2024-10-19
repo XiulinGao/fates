@@ -523,8 +523,12 @@ contains
            ! CBD should be canopy_fuel_load/(patch area * (max_height - height_base_canopy))
       
            !currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
-           currentPatch%canopy_bulk_density = currentPatch%canopy_fuel_load / (currentPatch%area * &
-           (max_height - height_base_canopy))
+           ! XLG: calculate CBD without excluding fuels below the height base canopy
+           !currentPatch%canopy_bulk_density = currentPatch%canopy_fuel_load / (currentPatch%area * &
+           !(max_height - height_base_canopy))
+           !XLG: calculate CBD excluding fuels below the height base canopy
+           currentPatch%canopy_bulk_density = sum(biom_matrix[int(height_base_canopy):]
+
 
 
            deallocate(biom_matrix)
@@ -1410,8 +1414,8 @@ contains
    !with active crown fire CFB (canopy fraction burned) = 100%
                canopy_frac_burnt = 1.0_r8
                ROS_final = currentPatch%ROS_front + canopy_frac_burnt*(ROS_active-currentPatch%ROS_front)
-            else if(ROS_active <= ROS_active_min .and. currentPatch%ROS_front >= ROS_init .and. &
-               currentPatch%ROS_front <= ROS_SA) then
+            else if(ROS_active < ROS_active_min .and. currentPatch%ROS_front >= ROS_init .and. &
+               currentPatch%ROS_front < ROS_SA) then
                currentPatch%active_crown_fire_flg = 0  ! only passive crown fire with partial crown burnt
 
       ! canopy fraction burnt, Eq 28 Scott & Reinhardt Appendix A
