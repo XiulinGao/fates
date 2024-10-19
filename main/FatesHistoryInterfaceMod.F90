@@ -406,6 +406,9 @@ module FatesHistoryInterfaceMod
   integer :: ih_fire_fuel_sav_si
   integer :: ih_fire_fuel_mef_si
   integer :: ih_sum_fuel_si
+  integer :: ih_sum_canopy_fuel_si
+  integer :: ih_canopy_fuel_bulkd_si
+  integer :: ih_crown_fire_freq_si
   integer :: ih_fragmentation_scaler_sl
 
   integer :: ih_nplant_si_scpf
@@ -2265,6 +2268,9 @@ end subroutine flush_hvars
                hio_fire_fuel_sav_si    => this%hvars(ih_fire_fuel_sav_si)%r81d, &
                hio_fire_fuel_mef_si    => this%hvars(ih_fire_fuel_mef_si)%r81d, &
                hio_sum_fuel_si         => this%hvars(ih_sum_fuel_si)%r81d,  &
+               hio_sum_canopy_fuel_si  => this%hvars(ih_sum_canopy_fuel_si)%r81d, &
+               hio_canopy_fuel_bulkd_si     => this%hvars(ih_canopy_fuel_bulkd_si)%r81d, &
+               hio_crown_fire_freq_si  => this%hvars(ih_crown_fire_freq_si)%r81d, &
                hio_fragmentation_scaler_sl  => this%hvars(ih_fragmentation_scaler_sl)%r82d,  &
                hio_litter_in_si        => this%hvars(ih_litter_in_si)%r81d, &
                hio_litter_out_si       => this%hvars(ih_litter_out_si)%r81d, &
@@ -3690,6 +3696,9 @@ end subroutine flush_hvars
          hio_fire_fuel_sav_si(io_si)        = hio_fire_fuel_sav_si(io_si) + cpatch%fuel_sav * cpatch%area * AREA_INV / m_per_cm
          hio_fire_fuel_mef_si(io_si)        = hio_fire_fuel_mef_si(io_si) + cpatch%fuel_mef * cpatch%area * AREA_INV
          hio_sum_fuel_si(io_si)             = hio_sum_fuel_si(io_si) + cpatch%sum_fuel * cpatch%area * AREA_INV
+         hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%canopy_fuel_load * cpatch%area * AREA_INV
+         hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%canopy_bulk_density * cpatch%area * AREA_INV
+         hio_crown_fire_freq_si(io_si)      = hio_crown_fire_freq_si(io_si) + dble(cpatch%active_crown_fire_flg) * cpatch%area * AREA_INV
 
          do ilyr = 1,sites(s)%nlevsoil
             hio_fragmentation_scaler_sl(io_si,ilyr) = hio_fragmentation_scaler_sl(io_si,ilyr) + cpatch%fragmentation_scaler(ilyr) * cpatch%area * AREA_INV
@@ -5782,6 +5791,24 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index = ih_sum_fuel_si)
+     
+     call this%set_history_var(vname='FATES_CANOPY_FUEL_AMOUNT', units='kg m-2',       &
+         long='total canopy 1h woody plus leaf biomass for crown fire in kg C per m2 land area',   &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_sum_canopy_fuel_si)
+     
+     call this%set_history_var(vname='FATES_CANOPY_FUEL_BULKD', units='kg m-3',       &
+         long='canopy fuel bulk density (only 1hr woody plus leaf biomss) in kg C per m3',   &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_canopy_fuel_bulkd_si)
+
+     call this%set_history_var(vname='FATES_ACTIVE_CROWNFIRE_FREQ', units='1',       &
+         long='acive crown fire frequency scaled by patch to site area ratio',   &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_crown_fire_freq_si)
 
     call this%set_history_var(vname='FATES_FRAGMENTATION_SCALER_SL', units='', &
          long='factor (0-1) by which litter/cwd fragmentation proceeds relative to max rate by soil layer',  &
