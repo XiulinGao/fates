@@ -527,7 +527,7 @@ contains
            !currentPatch%canopy_bulk_density = currentPatch%canopy_fuel_load / (currentPatch%area * &
            !(max_height - height_base_canopy))
            !XLG: calculate CBD excluding fuels below the height base canopy
-           currentPatch%canopy_bulk_density = sum(biom_matrix[int((height_base_canopy-1.0_r8)):]) / &
+           currentPatch%canopy_bulk_density = sum(biom_matrix(int((height_base_canopy-1.0_r8)):)) / &
            (max_height - height_base_canopy)
 
 
