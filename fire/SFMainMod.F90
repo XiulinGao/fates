@@ -522,8 +522,9 @@ contains
            !XLG: I think calculation of canopy bulk density is wrong, since biom_matrix is already in kg/m3, this will result in kg/m4
            ! CBD should be canopy_fuel_load/(patch area * (max_height - height_base_canopy))
       
-           !currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
            ! XLG: calculate CBD without excluding fuels below the height base canopy
+           !currentPatch%canopy_bulk_density = sum(biom_matrix) / (max_height - height_base_canopy)
+           
            !currentPatch%canopy_bulk_density = currentPatch%canopy_fuel_load / (currentPatch%area * &
            !(max_height - height_base_canopy))
            !XLG: calculate CBD excluding fuels below the height base canopy
@@ -1473,7 +1474,11 @@ contains
             endif
 
       ! update patch FI to adjust according to potential canopy fuel consumed (passive and active)
-            currentPatch%FI = FI_final
+      ! XLG: only update FI when canopy is burned 
+            if (canopy_frac_burn .gt. 0.0_r8)then
+               currentPatch%FI = FI_final
+            endif
+
          endif !check if passive crown fire?
       endif !fire?
 currentPatch => currentPatch%younger;
