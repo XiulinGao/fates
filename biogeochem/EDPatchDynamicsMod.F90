@@ -17,6 +17,7 @@ module EDPatchDynamicsMod
   use FatesLitterMod       , only : ndcmpy
   use FatesLitterMod       , only : litter_type
   use FatesConstantsMod    , only : n_dbh_bins 
+  use FatesConstantsMod    , only : m2_per_ha
   use FatesLitterMod       , only : adjust_SF_CWD_frac
   use EDTypesMod           , only : homogenize_seed_pfts
   use EDTypesMod           , only : area
@@ -206,18 +207,24 @@ contains
     real(r8) :: tempsum
     real(r8) :: mean_temp
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
+    real(r8) :: total_basal_area !site total basal area (m2/m2)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
+
+    real(r8), parameter :: min_ba_targ = 28.0_r8   ! min. target basal area after logging 
+    real(r8), parameter :: max_ba_targ = 34.0_r8   ! max. target basal area after logging
 
     !----------------------------------------------------------------------------------------------
     ! Calculate Mortality Rates (these were previously calculated during growth derivatives)
     ! And the same rates in understory plants have already been applied to %dndt
     !----------------------------------------------------------------------------------------------
     
-    ! first calculate the fractino of the site that is primary land
+    ! first calculate the fraction of the site that is primary land
     call get_frac_site_primary(site_in, frac_site_primary)
 
     ! get available biomass for harvest for all patches
     call get_harvestable_carbon(site_in, bc_in%site_area, bc_in%hlm_harvest_catnames, harvestable_forest_c)
+
+    total_basal_area = 0._r8
  
     currentPatch => site_in%oldest_patch
     do while (associated(currentPatch))   
@@ -232,6 +239,7 @@ contains
           currentCohort%dmort  = cmort+hmort+bmort+frmort+smort+asmort+dgmort
           call carea_allom(currentCohort%dbh,currentCohort%n,site_in%spread,currentCohort%pft, &
                currentCohort%crowndamage,currentCohort%c_area)
+          call get_site_basal_area(site_in, total_basal_area)
 
           ! Initialize diagnostic mortality rates
           currentCohort%cmort = cmort
@@ -253,11 +261,21 @@ contains
                 harvestable_forest_c, &
                 harvest_tag)
          
-          currentCohort%lmort_direct     = lmort_direct
-          currentCohort%lmort_collateral = lmort_collateral
-          currentCohort%lmort_infra      = lmort_infra
-          currentCohort%l_degrad         = l_degrad
-
+          if(total_basal_area .ge. min_ba_targ .and. total_basal_area .le. max_ba_targ .or. &
+          total_basal_area .lt. min_ba_targ) then
+            
+            currentCohort%lmort_direct     = 0._r8
+            currentCohort%lmort_collateral = 0._r8
+            currentCohort%lmort_infra      = 0._r8
+            currentCohort%l_degrad         = 0._r8
+            
+          else            
+            currentCohort%lmort_direct     = lmort_direct
+            currentCohort%lmort_collateral = lmort_collateral
+            currentCohort%lmort_infra      = lmort_infra
+            currentCohort%l_degrad         = l_degrad
+          end if
+          
           currentCohort => currentCohort%taller
        end do
 
@@ -2921,5 +2939,41 @@ contains
    end do
 
  end subroutine get_frac_site_primary
+
+
+
+! =====================================================================================
+ 
+ subroutine get_site_basal_area (site_in, total_basal_area)
+   !
+   ! This function returns site level total tree basal area (m2/m2)
+   
+   use EDTypesMod , only : ed_site_type
+
+   ! Arguments
+   type(ed_site_type) , intent(in), target :: site_in
+   real(r8)           , intent(out)        :: total_basal_area
+   ! Local variable
+   type (fates_patch_type),  pointer :: currentPatch
+   type (fates_cohort_type), pointer :: currentCohort
+
+   total_basal_area = 0._r8
+   currentPatch => site_in%oldest_patch;
+   do while (associated(currentPatch)) 
+      if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
+         currentCohort  => currentPatch%tallest;
+         do while(associated(currentCohort)) 
+            if ( prt_params%woody(currentCohort%pft) == itrue) then
+               total_basal_area = total_basal_area + &
+               0.25_r8 * pi_const * ((currentCohort%dbh / 100.0_r8)**2.0_r8) * &
+               currentCohort%n / m2_per_ha
+            end if !end if tree
+            currentCohort => currentCohort%shorter;
+         end do ! end cohort loop
+      end if !nocomp_pft_label check
+      currentPatch=>currentPatch%younger;
+   end do ! end patch loop
+
+ end subroutine get_site_basal_area
 
  end module EDPatchDynamicsMod
