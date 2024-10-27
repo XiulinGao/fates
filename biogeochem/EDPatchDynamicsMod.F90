@@ -212,8 +212,8 @@ contains
     real(r8) :: total_basal_area !site total basal area (m2/m2)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
 
-    real(r8), parameter :: min_ba_targ = 28.0_r8   ! min. target basal area after logging 
-    real(r8), parameter :: max_ba_targ = 34.0_r8   ! max. target basal area after logging
+    real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
+    real(r8), parameter :: max_ba_targ = 0.0034_r8   ! max. target basal area after logging
 
     !----------------------------------------------------------------------------------------------
     ! Calculate Mortality Rates (these were previously calculated during growth derivatives)
@@ -254,7 +254,7 @@ contains
           currentCohort%asmort = asmort
           currentCohort%dgmort = dgmort
           
-          if(total_basal_area .ge. min_ba_targ .and. total_basal_area .le. max_ba_targ .or. &
+          if((total_basal_area .ge. min_ba_targ .and. total_basal_area .le. max_ba_targ) .or. &
           total_basal_area .lt. min_ba_targ) then
 
             currentCohort%lmort_direct     = 0._r8
