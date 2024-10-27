@@ -209,11 +209,11 @@ contains
     real(r8) :: tempsum
     real(r8) :: mean_temp
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
-    real(r8) :: total_basal_area !site total basal area (m2/m2)
+    !real(r8) :: total_basal_area !site total basal area (m2/m2)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
 
     !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
-    real(r8), parameter :: max_ba_targ = 0.0034_r8   ! max. target basal area after logging
+    !real(r8), parameter :: max_ba_targ = 0.0034_r8   ! max. target basal area after logging
 
     !----------------------------------------------------------------------------------------------
     ! Calculate Mortality Rates (these were previously calculated during growth derivatives)
@@ -228,7 +228,7 @@ contains
 
     ! get site basal area given current vegetation structure 
     call get_site_basal_area(site_in, total_basal_area)
-    total_basal_area = 0.0_r8
+    total_basal_area = 0._r8
 
 
     currentPatch => site_in%oldest_patch
@@ -254,10 +254,8 @@ contains
           currentCohort%smort = smort
           currentCohort%asmort = asmort
           currentCohort%dgmort = dgmort
-          
-          if(total_basal_area > max_ba_targ) then
 
-            call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentCohort%canopy_layer, &
+          call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentCohort%canopy_layer, &
                 lmort_direct,lmort_collateral,lmort_infra,l_degrad,&
                 bc_in%hlm_harvest_rates, &
                 bc_in%hlm_harvest_catnames, &
@@ -266,21 +264,13 @@ contains
                 currentPatch%age_since_anthro_disturbance, &
                 frac_site_primary, &
                 harvestable_forest_c, &
+                total_basal_area, &
                 harvest_tag)
 
-                currentCohort%lmort_direct     = lmort_direct
-                currentCohort%lmort_collateral = lmort_collateral
-                currentCohort%lmort_infra      = lmort_infra
-                currentCohort%l_degrad         = l_degrad 
-     
-          else
-
-            currentCohort%lmort_direct     = 0._r8
-            currentCohort%lmort_collateral = 0._r8
-            currentCohort%lmort_infra      = 0._r8
-            currentCohort%l_degrad         = 0._r8 
-
-          end if
+          currentCohort%lmort_direct     = lmort_direct
+          currentCohort%lmort_collateral = lmort_collateral
+          currentCohort%lmort_infra      = lmort_infra
+          currentCohort%l_degrad         = l_degrad
 
           currentCohort => currentCohort%taller
        end do

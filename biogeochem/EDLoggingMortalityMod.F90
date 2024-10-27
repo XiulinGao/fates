@@ -68,7 +68,7 @@ module EDLoggingMortalityMod
    use FatesConstantsMod , only : months_per_year, days_per_sec, years_per_day, g_per_kg
    use FatesConstantsMod , only : hlm_harvest_area_fraction
    use FatesConstantsMod , only : hlm_harvest_carbon
-   use FatesConstantsMod, only : fates_check_param_set
+   use FatesConstantsMod, only : 
 
    implicit none
    private
@@ -201,7 +201,7 @@ contains
                                      hlm_harvest_units, &
                                      patch_anthro_disturbance_label, secondary_age, &
                                      frac_site_primary, harvestable_forest_c, &
-                                     harvest_tag)
+                                     total_basal_area, harvest_tag)
 
       ! Arguments
       integer,  intent(in)  :: pft_i            ! pft index 
@@ -215,6 +215,7 @@ contains
       real(r8), intent(in) :: harvestable_forest_c(:)  ! total harvestable forest carbon 
                                                        ! of all hlm harvest categories
       real(r8), intent(in) :: frac_site_primary
+      real(r8), intent(in) :: total_basal_area  ! site basal area limit for determining whether logging mortality should apply
       real(r8), intent(out) :: lmort_direct     ! direct (harvestable) mortality fraction
       real(r8), intent(out) :: lmort_collateral ! collateral damage mortality fraction
       real(r8), intent(out) :: lmort_infra      ! infrastructure mortality fraction
@@ -234,6 +235,8 @@ contains
       real(r8) :: harvest_rate ! the final harvest rate to apply to this cohort today
       real(r8) :: harvest_rate_scale_cohort  ! scaling factor after considering dbh size
 
+      real(r8), parameter :: max_ba_targ = 0.0034 !target site max. basal area below which logging stops (m2/m2)
+
       ! todo: probably lower the dbhmin default value to 30 cm
       ! todo: change the default logging_event_code to 1 september (-244)
       ! todo: change the default logging_direct_frac to 1.0 for cmip inputs
@@ -241,7 +244,7 @@ contains
       ! todo: eventually set up distinct harvest practices, each with a set of input paramaeters
       ! todo: implement harvested carbon inputs
       
-      if (logging_time) then 
+      if (logging_time .and. total_basal_area > max_ba_targ) then 
 
          ! Pass logging rates to cohort level 
          
@@ -300,7 +303,7 @@ contains
             if (cur_harvest_tag == 0) then
                ! direct logging rates, based on dbh min and max criteria
                if (dbh >= logging_dbhmin .and. .not. &
-                  ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax )) ) then
+                  ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax ))) then
                   ! the logic of the above line is a bit unintuitive but allows turning off the dbhmax comparison entirely.
                   ! since there is an .and. .not. after the first conditional, the dbh:dbhmax comparison needs to be 
                   ! the opposite of what would otherwise be expected...
@@ -315,7 +318,7 @@ contains
             ! infrastructure (roads, skid trails, etc) mortality rates
             if (dbh >= logging_dbhmax_infra) then
                lmort_infra      = 0.0_r8
-            else
+            else 
                lmort_infra      = harvest_rate_scale_cohort * harvest_rate * logging_mechanical_frac
             end if
 
