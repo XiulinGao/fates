@@ -18,6 +18,7 @@ module EDPatchDynamicsMod
   use FatesLitterMod       , only : litter_type
   use FatesConstantsMod    , only : n_dbh_bins 
   use FatesConstantsMod    , only : m2_per_ha
+  use FatesConstantsMod    , only : pi_const
   use FatesLitterMod       , only : adjust_SF_CWD_frac
   use EDTypesMod           , only : homogenize_seed_pfts
   use EDTypesMod           , only : area
