@@ -228,6 +228,7 @@ contains
 
     ! get site basal area given current vegetation structure 
     call get_site_basal_area(site_in, total_basal_area)
+    total_basal_area = 0.0_r8
 
 
     currentPatch => site_in%oldest_patch
