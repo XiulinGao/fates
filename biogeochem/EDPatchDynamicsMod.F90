@@ -212,7 +212,7 @@ contains
     real(r8) :: total_basal_area !site total basal area (m2/m2)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
 
-    real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
+    !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
     real(r8), parameter :: max_ba_targ = 0.0034_r8   ! max. target basal area after logging
 
     !----------------------------------------------------------------------------------------------
@@ -254,16 +254,8 @@ contains
           currentCohort%asmort = asmort
           currentCohort%dgmort = dgmort
           
-          if((total_basal_area .ge. min_ba_targ .and. total_basal_area .le. max_ba_targ) .or. &
-          total_basal_area .lt. min_ba_targ) then
+          if(total_basal_area > max_ba_targ) then
 
-            currentCohort%lmort_direct     = 0._r8
-            currentCohort%lmort_collateral = 0._r8
-            currentCohort%lmort_infra      = 0._r8
-            currentCohort%l_degrad         = 0._r8 
-         
-          else
-            
             call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentCohort%canopy_layer, &
                 lmort_direct,lmort_collateral,lmort_infra,l_degrad,&
                 bc_in%hlm_harvest_rates, &
@@ -278,8 +270,15 @@ contains
                 currentCohort%lmort_direct     = lmort_direct
                 currentCohort%lmort_collateral = lmort_collateral
                 currentCohort%lmort_infra      = lmort_infra
-                currentCohort%l_degrad         = l_degrad   
-               
+                currentCohort%l_degrad         = l_degrad 
+     
+          else
+
+            currentCohort%lmort_direct     = 0._r8
+            currentCohort%lmort_collateral = 0._r8
+            currentCohort%lmort_infra      = 0._r8
+            currentCohort%l_degrad         = 0._r8 
+
           end if
 
           currentCohort => currentCohort%taller
@@ -2964,17 +2963,18 @@ contains
    type (fates_cohort_type), pointer :: currentCohort
 
    total_basal_area = 0._r8
+
    currentPatch => site_in%oldest_patch;
    do while (associated(currentPatch)) 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
-         currentCohort  => currentPatch%tallest;
+         currentCohort  => currentPatch%shortest;
          do while(associated(currentCohort)) 
             if ( prt_params%woody(currentCohort%pft) == itrue) then
                total_basal_area = total_basal_area + &
                0.25_r8 * pi_const * ((currentCohort%dbh / 100.0_r8)**2.0_r8) * &
                currentCohort%n / m2_per_ha
             end if !end if tree
-            currentCohort => currentCohort%shorter;
+            currentCohort => currentCohort%taller;
          end do ! end cohort loop
       end if !nocomp_pft_label check
       currentPatch=>currentPatch%younger;
