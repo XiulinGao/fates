@@ -123,6 +123,7 @@ module EDPatchDynamicsMod
   public :: set_patchno
   private:: fuse_2_patches
   public :: get_frac_site_primary
+  public :: get_site_basal_area
 
   character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -224,8 +225,10 @@ contains
     ! get available biomass for harvest for all patches
     call get_harvestable_carbon(site_in, bc_in%site_area, bc_in%hlm_harvest_catnames, harvestable_forest_c)
 
-    total_basal_area = 0._r8
- 
+    ! get site basal area given current vegetation structure 
+    call get_site_basal_area(site_in, total_basal_area)
+
+
     currentPatch => site_in%oldest_patch
     do while (associated(currentPatch))   
 
@@ -239,7 +242,7 @@ contains
           currentCohort%dmort  = cmort+hmort+bmort+frmort+smort+asmort+dgmort
           call carea_allom(currentCohort%dbh,currentCohort%n,site_in%spread,currentCohort%pft, &
                currentCohort%crowndamage,currentCohort%c_area)
-          call get_site_basal_area(site_in, total_basal_area)
+          
 
           ! Initialize diagnostic mortality rates
           currentCohort%cmort = cmort
@@ -250,7 +253,17 @@ contains
           currentCohort%asmort = asmort
           currentCohort%dgmort = dgmort
           
-          call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentCohort%canopy_layer, &
+          if(total_basal_area .ge. min_ba_targ .and. total_basal_area .le. max_ba_targ .or. &
+          total_basal_area .lt. min_ba_targ) then
+
+            currentCohort%lmort_direct     = 0._r8
+            currentCohort%lmort_collateral = 0._r8
+            currentCohort%lmort_infra      = 0._r8
+            currentCohort%l_degrad         = 0._r8 
+         
+          else
+            
+            call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentCohort%canopy_layer, &
                 lmort_direct,lmort_collateral,lmort_infra,l_degrad,&
                 bc_in%hlm_harvest_rates, &
                 bc_in%hlm_harvest_catnames, &
@@ -260,22 +273,14 @@ contains
                 frac_site_primary, &
                 harvestable_forest_c, &
                 harvest_tag)
-         
-          if(total_basal_area .ge. min_ba_targ .and. total_basal_area .le. max_ba_targ .or. &
-          total_basal_area .lt. min_ba_targ) then
-            
-            currentCohort%lmort_direct     = 0._r8
-            currentCohort%lmort_collateral = 0._r8
-            currentCohort%lmort_infra      = 0._r8
-            currentCohort%l_degrad         = 0._r8
-            
-          else            
-            currentCohort%lmort_direct     = lmort_direct
-            currentCohort%lmort_collateral = lmort_collateral
-            currentCohort%lmort_infra      = lmort_infra
-            currentCohort%l_degrad         = l_degrad
+
+                currentCohort%lmort_direct     = lmort_direct
+                currentCohort%lmort_collateral = lmort_collateral
+                currentCohort%lmort_infra      = lmort_infra
+                currentCohort%l_degrad         = l_degrad   
+               
           end if
-          
+
           currentCohort => currentCohort%taller
        end do
 
