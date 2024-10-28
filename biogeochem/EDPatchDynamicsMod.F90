@@ -209,7 +209,6 @@ contains
     real(r8) :: tempsum
     real(r8) :: mean_temp
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
-    real(r8) :: total_basal_area !site total basal area (m2/m2)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
 
     !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
@@ -228,7 +227,6 @@ contains
 
     ! get site basal area given current vegetation structure 
     call get_site_basal_area(site_in, total_basal_area)
-    total_basal_area = 0._r8
 
 
     currentPatch => site_in%oldest_patch

@@ -244,7 +244,7 @@ contains
       ! todo: eventually set up distinct harvest practices, each with a set of input paramaeters
       ! todo: implement harvested carbon inputs
       
-      if (logging_time) then 
+      if (logging_time .and. total_basal_area > max_ba_targ) then 
 
          ! Pass logging rates to cohort level 
          
@@ -303,8 +303,7 @@ contains
             if (cur_harvest_tag == 0) then
                ! direct logging rates, based on dbh min and max criteria
                if (dbh >= logging_dbhmin .and. .not. &
-                  ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax )) .and. &
-                  total_basal_area > max_ba_targ) then
+                  ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax ))) then
                   ! the logic of the above line is a bit unintuitive but allows turning off the dbhmax comparison entirely.
                   ! since there is an .and. .not. after the first conditional, the dbh:dbhmax comparison needs to be 
                   ! the opposite of what would otherwise be expected...
@@ -317,7 +316,7 @@ contains
             end if
 
             ! infrastructure (roads, skid trails, etc) mortality rates
-            if (dbh >= logging_dbhmax_infra .or. total_basal_area <= max_ba_targ) then
+            if (dbh >= logging_dbhmax_infra) then
                lmort_infra      = 0.0_r8
             else 
                lmort_infra      = harvest_rate_scale_cohort * harvest_rate * logging_mechanical_frac
@@ -325,7 +324,7 @@ contains
 
             ! Collateral damage to smaller plants below the direct logging size threshold
             ! will be applied via "understory_death" via the disturbance algorithm
-            if (canopy_layer .eq. 1 .and. total_basal_area > max_ba_targ) then
+            if (canopy_layer .eq. 1) then
                lmort_collateral = harvest_rate_scale_cohort * harvest_rate * logging_collateral_frac
             else
                lmort_collateral = 0._r8
@@ -334,16 +333,12 @@ contains
          else  ! non-woody plants still killed by infrastructure
             lmort_direct    = 0.0_r8
             lmort_collateral = 0.0_r8
-            if(total_basal_area > max_ba_targ) then
-               lmort_infra      = harvest_rate_scale_cohort * harvest_rate * logging_mechanical_frac
-            else
-               lmort_infra      = 0.0_r8
-            end if
+            lmort_infra      = harvest_rate_scale_cohort * harvest_rate * logging_mechanical_frac
             
          end if
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
-         if (canopy_layer .eq. 1 .and. total_basal_area > max_ba_targ) then
+         if (canopy_layer .eq. 1) then
             l_degrad = harvest_rate_scale_cohort * harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
          else
             l_degrad = 0._r8
