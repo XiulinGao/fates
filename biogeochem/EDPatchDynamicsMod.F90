@@ -268,6 +268,8 @@ contains
                 total_basal_area, &
                 harvest_tag)
 
+         write(fates_log(),*) 'basal area after calling log mort:', total_basal_area
+
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral
           currentCohort%lmort_infra      = lmort_infra
