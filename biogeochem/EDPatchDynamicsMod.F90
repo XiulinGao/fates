@@ -228,7 +228,7 @@ contains
 
     ! get site basal area given current vegetation structure 
     call get_site_basal_area(site_in, total_basal_area)
-
+  
 
     currentPatch => site_in%oldest_patch
     do while (associated(currentPatch))   
@@ -2955,20 +2955,19 @@ contains
    total_basal_area = 0.0_r8
    currentPatch => site_in%oldest_patch;
    do while (associated(currentPatch)) 
-      if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
-         currentCohort  => currentPatch%shortest;
-         do while(associated(currentCohort)) 
-            if ( prt_params%woody(currentCohort%pft) == itrue) then
-               total_basal_area = total_basal_area + &
-               0.25_r8 * pi_const * ((currentCohort%dbh / 100.0_r8)**2.0_r8) * &
-               currentCohort%n / m2_per_ha
-            end if !end if tree
-            currentCohort => currentCohort%taller;
-         end do ! end cohort loop
-      end if !nocomp_pft_label check
-      currentPatch => currentPatch%younger;
+      currentCohort  => currentPatch%shortest;
+      do while(associated(currentCohort)) 
+         if ( prt_params%woody(currentCohort%pft) == itrue) then
+            total_basal_area = total_basal_area + &
+            0.25_r8 * pi_const * ((currentCohort%dbh / 100.0_r8)**2.0_r8) * &
+            currentCohort%n / m2_per_ha
+         end if !end if tree
+         currentCohort => currentCohort%taller;
+      end do ! end cohort loop
+      currentPatch => currentPatch%younger;    
    end do ! end patch loop
 
  end subroutine get_site_basal_area
+
 
  end module EDPatchDynamicsMod
