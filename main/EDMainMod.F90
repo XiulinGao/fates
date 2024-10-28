@@ -373,6 +373,7 @@ contains
                                       ! because it inherited them (such as daily carbon balance)
     real(r8) :: target_leaf_c
     real(r8) :: frac_site_primary
+    real(r8) :: total_basal_area
 
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
