@@ -235,7 +235,7 @@ contains
       real(r8) :: harvest_rate ! the final harvest rate to apply to this cohort today
       real(r8) :: harvest_rate_scale_cohort  ! scaling factor after considering dbh size
 
-      real(r8), parameter :: max_ba_targ = 0.0034 !target site max. basal area below which logging stops (m2/m2)
+      real(r8), parameter :: max_ba_targ = 0.0034_r8 !target site max. basal area below which logging stops (m2/m2)
 
       ! todo: probably lower the dbhmin default value to 30 cm
       ! todo: change the default logging_event_code to 1 september (-244)
