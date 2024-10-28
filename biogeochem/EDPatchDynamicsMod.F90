@@ -2952,8 +2952,7 @@ contains
    type (fates_patch_type),  pointer :: currentPatch
    type (fates_cohort_type), pointer :: currentCohort
 
-   total_basal_area = 0._r8
-
+   total_basal_area = 0.0_r8
    currentPatch => site_in%oldest_patch;
    do while (associated(currentPatch)) 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
@@ -2967,7 +2966,7 @@ contains
             currentCohort => currentCohort%taller;
          end do ! end cohort loop
       end if !nocomp_pft_label check
-      currentPatch=>currentPatch%younger;
+      currentPatch => currentPatch%younger;
    end do ! end patch loop
 
  end subroutine get_site_basal_area
