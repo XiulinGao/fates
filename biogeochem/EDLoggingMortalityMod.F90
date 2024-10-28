@@ -244,7 +244,7 @@ contains
       ! todo: eventually set up distinct harvest practices, each with a set of input paramaeters
       ! todo: implement harvested carbon inputs
       
-      if (logging_time .and. total_basal_area > max_ba_targ) then 
+      if (logging_time .and. (total_basal_area > 0.0034_r8)) then 
 
          ! Pass logging rates to cohort level 
          
