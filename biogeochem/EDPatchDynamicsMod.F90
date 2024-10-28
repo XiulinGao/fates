@@ -229,7 +229,7 @@ contains
     ! get site basal area given current vegetation structure 
     call get_site_basal_area(site_in, total_basal_area)
 
-    write(fates_log(),*) 'current basal area':, total_basal_area
+    write(fates_log(),*) 'current basal area:', total_basal_area
 
 
     currentPatch => site_in%oldest_patch
