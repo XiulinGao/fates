@@ -302,6 +302,8 @@ contains
          if(prt_params%woody(pft_i) == itrue)then ! only set logging rates for trees
             if (cur_harvest_tag == 0) then
                ! direct logging rates, based on dbh min and max criteria
+               total_basal_area = total_basal_area + 0._r8
+               write(fates_log(), *) 'Basal area inside log mort is:', total_basal_area
                if (dbh >= logging_dbhmin .and. .not. &
                   ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax )) .and. &
                   (total_basal_area > max_ba_targ)) then
