@@ -2952,19 +2952,22 @@ contains
    type (fates_patch_type),  pointer :: currentPatch
    type (fates_cohort_type), pointer :: currentCohort
 
-   total_basal_area = 0.0_r8
+   total_basal_area = 0._r8
+
    currentPatch => site_in%oldest_patch;
    do while (associated(currentPatch)) 
-      currentCohort  => currentPatch%shortest;
-      do while(associated(currentCohort)) 
-         if ( prt_params%woody(currentCohort%pft) == itrue) then
-            total_basal_area = total_basal_area + &
-            0.25_r8 * pi_const * ((currentCohort%dbh / 100.0_r8)**2.0_r8) * &
-            currentCohort%n / m2_per_ha
-         end if !end if tree
-         currentCohort => currentCohort%taller;
-      end do ! end cohort loop
-      currentPatch => currentPatch%younger;    
+      if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
+         currentCohort  => currentPatch%shortest;
+         do while(associated(currentCohort)) 
+            if ( prt_params%woody(currentCohort%pft) == itrue) then
+               total_basal_area = total_basal_area + &
+               0.25_r8 * pi_const * ((currentCohort%dbh / 100.0_r8)**2.0_r8) * &
+               currentCohort%n / m2_per_ha
+            end if !end if tree
+            currentCohort => currentCohort%taller;
+         end do ! end cohort loop
+      end if !nocomp_pft_label check
+      currentPatch=>currentPatch%younger;
    end do ! end patch loop
 
  end subroutine get_site_basal_area
