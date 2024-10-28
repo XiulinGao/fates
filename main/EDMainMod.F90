@@ -474,7 +474,7 @@ contains
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%anthro_disturbance_label,                          &
                currentPatch%age_since_anthro_disturbance, frac_site_primary,   &
-                 harvestable_forest_c, harvest_tag)
+                 harvestable_forest_c, total_basal_area, harvest_tag)
 
              ! -----------------------------------------------------------------------------
              ! Apply Plant Allocation and Reactive Transport
