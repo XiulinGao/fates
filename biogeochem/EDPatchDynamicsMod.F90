@@ -205,6 +205,7 @@ contains
     integer  :: i_dist
     integer  :: h_index
     real(r8) :: frac_site_primary
+    real(r8) :: total_basal_area
     real(r8) :: harvest_rate
     real(r8) :: tempsum
     real(r8) :: mean_temp
