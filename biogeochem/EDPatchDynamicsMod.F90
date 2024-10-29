@@ -225,7 +225,12 @@ contains
     call get_harvestable_carbon(site_in, bc_in%site_area, bc_in%hlm_harvest_catnames, harvestable_forest_c)
 
     currentPatch => site_in%oldest_patch
-    do while (associated(currentPatch))  
+    do while (associated(currentPatch)) 
+      ! first update patch basal area 
+      if(currentPatch%nocomp_pft_label /= nocomp_bareground) then
+         call currentPatch%UpdateTreeBasalArea()
+      end if 
+
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))        
           ! Mortality for trees in the understorey.

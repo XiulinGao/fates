@@ -5,6 +5,9 @@ module FatesPatchMod
   use FatesConstantsMod,   only : fates_unset_int
   use FatesConstantsMod,   only : primaryforest, secondaryforest
   use FatesConstantsMod,   only : TRS_regeneration
+  use FatesConstantsMod,   only : itrue
+  use FatesConstantsMod,   only : pi_const
+  use FatesConstantsMod,   only : nocomp_bareground
   use FatesGlobals,        only : fates_log
   use FatesGlobals,        only : endrun => fates_endrun
   use FatesUtilsMod,       only : check_hlm_list
@@ -16,6 +19,7 @@ module FatesPatchMod
   use PRTGenericMod,       only : num_elements
   use PRTGenericMod,       only : element_list
   use EDParamsMod,         only : maxSWb, nlevleaf, nclmax, maxpft
+  use PRTParametersMod,    only : prt_params
   use FatesConstantsMod,   only : n_dbh_bins, n_dist_types
   use FatesConstantsMod,   only : n_rad_stream_types
   use FatesConstantsMod,   only : t_water_freeze_k_1atm
@@ -226,6 +230,7 @@ module FatesPatchMod
       procedure :: InitRunningMeans
       procedure :: InitLitter
       procedure :: Create
+      procedure :: UpdateTreeBasalArea
       procedure :: FreeMemory
       procedure :: Dump
       procedure :: CheckVars
