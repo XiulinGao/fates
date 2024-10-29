@@ -231,6 +231,8 @@ contains
          call currentPatch%UpdateTreeBasalArea()
       end if 
 
+      write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
+
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))        
           ! Mortality for trees in the understorey.
