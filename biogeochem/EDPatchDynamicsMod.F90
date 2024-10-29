@@ -124,7 +124,6 @@ module EDPatchDynamicsMod
   public :: set_patchno
   private:: fuse_2_patches
   public :: get_frac_site_primary
-  public :: get_site_basal_area
 
   character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -205,7 +204,6 @@ contains
     integer  :: i_dist
     integer  :: h_index
     real(r8) :: frac_site_primary
-    real(r8) :: total_basal_area
     real(r8) :: harvest_rate
     real(r8) :: tempsum
     real(r8) :: mean_temp
@@ -226,15 +224,8 @@ contains
     ! get available biomass for harvest for all patches
     call get_harvestable_carbon(site_in, bc_in%site_area, bc_in%hlm_harvest_catnames, harvestable_forest_c)
 
-    ! get site basal area given current vegetation structure 
-    call get_site_basal_area(site_in, total_basal_area)
-
-    write(fates_log(),*) 'current basal area:', total_basal_area
-
-
     currentPatch => site_in%oldest_patch
-    do while (associated(currentPatch))   
-
+    do while (associated(currentPatch))  
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))        
           ! Mortality for trees in the understorey.
@@ -265,10 +256,10 @@ contains
                 currentPatch%age_since_anthro_disturbance, &
                 frac_site_primary, &
                 harvestable_forest_c, &
-                total_basal_area, &
+                currentPatch%total_basal_area, &
                 harvest_tag)
 
-         write(fates_log(),*) 'basal area after calling log mort:', total_basal_area
+        ! write(fates_log(),*) 'basal area after calling log mort:', total_basal_area
 
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral
@@ -2938,43 +2929,6 @@ contains
    end do
 
  end subroutine get_frac_site_primary
-
-
-
-! =====================================================================================
- 
- subroutine get_site_basal_area (site_in, total_basal_area)
-   !
-   ! This function returns site level total tree basal area (m2/m2)
-   
-   use EDTypesMod , only : ed_site_type
-
-   ! Arguments
-   type(ed_site_type) , intent(in), target :: site_in
-   real(r8)           , intent(out)        :: total_basal_area
-   ! Local variable
-   type (fates_patch_type),  pointer :: currentPatch
-   type (fates_cohort_type), pointer :: currentCohort
-
-   total_basal_area = 0._r8
-
-   currentPatch => site_in%oldest_patch;
-   do while (associated(currentPatch)) 
-      if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
-         currentCohort  => currentPatch%shortest;
-         do while(associated(currentCohort)) 
-            if ( prt_params%woody(currentCohort%pft) == itrue) then
-               total_basal_area = total_basal_area + &
-               0.25_r8 * pi_const * ((currentCohort%dbh / 100.0_r8)**2.0_r8) * &
-               currentCohort%n / m2_per_ha
-            end if !end if tree
-            currentCohort => currentCohort%taller;
-         end do ! end cohort loop
-      end if !nocomp_pft_label check
-      currentPatch=>currentPatch%younger;
-   end do ! end patch loop
-
- end subroutine get_site_basal_area
 
 
  end module EDPatchDynamicsMod

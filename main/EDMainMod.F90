@@ -373,7 +373,6 @@ contains
                                       ! because it inherited them (such as daily carbon balance)
     real(r8) :: target_leaf_c
     real(r8) :: frac_site_primary
-    real(r8) :: total_basal_area
 
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
@@ -475,7 +474,7 @@ contains
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%anthro_disturbance_label,                          &
                currentPatch%age_since_anthro_disturbance, frac_site_primary,   &
-                 harvestable_forest_c, total_basal_area, harvest_tag)
+                 harvestable_forest_c, currentPatch%total_basal_area, harvest_tag)
 
              ! -----------------------------------------------------------------------------
              ! Apply Plant Allocation and Reactive Transport
