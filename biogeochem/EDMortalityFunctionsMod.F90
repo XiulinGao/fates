@@ -232,7 +232,7 @@ contains
  ! ============================================================================
 
  subroutine Mortality_Derivative( currentSite, currentCohort, bc_in, btran_ft, &
-      mean_temp, anthro_disturbance_label, age_since_anthro_disturbance,       &
+      mean_temp, anthro_disturbance_label, age_since_anthro_disturbance, area, &
       frac_site_primary, harvestable_forest_c, delta_BA, harvest_tag)
 
     !
