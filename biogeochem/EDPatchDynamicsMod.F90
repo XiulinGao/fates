@@ -204,8 +204,7 @@ contains
     integer  :: i_dist
     integer  :: h_index
     real(r8) :: frac_site_primary
-    real(r8) :: harvest_rate
-    real(r8) :: delta_BA 
+    real(r8) :: harvest_rate 
     real(r8) :: tempsum
     real(r8) :: mean_temp
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
@@ -262,7 +261,7 @@ contains
 
           call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentPatch%area, &
                 currentCohort%n, currentPatch%delta_BA, &
-                currentCohort%canopy_layer,
+                currentCohort%canopy_layer, &
                 lmort_direct,lmort_collateral,lmort_infra,l_degrad, &
                 bc_in%hlm_harvest_rates, &
                 bc_in%hlm_harvest_catnames, &
