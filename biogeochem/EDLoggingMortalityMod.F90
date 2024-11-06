@@ -28,6 +28,7 @@ module EDLoggingMortalityMod
    use FatesConstantsMod , only : dtype_ilog
    use FatesConstantsMod , only : dtype_ifall
    use FatesConstantsMod , only : dtype_ifire
+   use FatesConstantsMod , only : pi_const
    use EDPftvarcon       , only : EDPftvarcon_inst
    use EDPftvarcon       , only : GetDecompyFrac
    use PRTParametersMod  , only : prt_params
