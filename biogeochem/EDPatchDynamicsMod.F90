@@ -199,19 +199,21 @@ contains
     real(r8) :: l_degrad         ! fraction of trees that are not killed but suffer from forest 
                                  ! degradation (i.e. they are moved to newly-anthro-disturbed 
                                  ! secondary forest patch)
+    real(r8) :: delta_BA
     real(r8) :: dist_rate_ldist_notharvested
     integer  :: threshold_sizeclass
     integer  :: i_dist
     integer  :: h_index
     real(r8) :: frac_site_primary
     real(r8) :: harvest_rate
+    real(r8) :: delta_BA 
     real(r8) :: tempsum
     real(r8) :: mean_temp
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
 
     !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
-    !real(r8), parameter :: max_ba_targ = 0.0034_r8   ! max. target basal area after logging
+    real(r8), parameter :: max_ba_targ = 0.0034_r8   ! max. target basal area after logging
 
     !----------------------------------------------------------------------------------------------
     ! Calculate Mortality Rates (these were previously calculated during growth derivatives)
@@ -230,8 +232,13 @@ contains
       if(currentPatch%nocomp_pft_label /= nocomp_bareground) then
          call currentPatch%UpdateTreeBasalArea()
       end if 
+      ! difference between current patch and target basal area
+      currentPatch%delta_BA = 0.0_r8 
+      currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
 
       write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
+      write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
+
 
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))        
@@ -254,8 +261,10 @@ contains
           currentCohort%asmort = asmort
           currentCohort%dgmort = dgmort
 
-          call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentCohort%canopy_layer, &
-                lmort_direct,lmort_collateral,lmort_infra,l_degrad,&
+          call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentPatch%area, &
+                currentCohort%n, currentPatch%delta_BA, &
+                currentCohort%canopy_layer,
+                lmort_direct,lmort_collateral,lmort_infra,l_degrad, &
                 bc_in%hlm_harvest_rates, &
                 bc_in%hlm_harvest_catnames, &
                 bc_in%hlm_harvest_units, &
@@ -263,15 +272,15 @@ contains
                 currentPatch%age_since_anthro_disturbance, &
                 frac_site_primary, &
                 harvestable_forest_c, &
-                currentPatch%total_basal_area, &
                 harvest_tag)
 
-        ! write(fates_log(),*) 'basal area after calling log mort:', total_basal_area
+         write(fates_log(),*) 'delta basal area after calling log mort:', delta_BA
 
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
+          currentPatch%delta_BA          = delta_BA
 
           currentCohort => currentCohort%taller
        end do

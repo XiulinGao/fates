@@ -100,6 +100,7 @@ module FatesPatchMod
     real(r8) :: total_canopy_area                           ! area that is covered by vegetation [m2]
     real(r8) :: total_tree_area                             ! area that is covered by woody vegetation [m2]
     real(r8) :: total_basal_area                            ! total tree basal area at each patch [m2/m2]
+    real(r8) :: delta_BA                                    ! difference between current patch basal area and target basal area for targeted logging
     real(r8) :: zstar                                       ! height of smallest canopy tree, only meaningful in "strict PPA" mode [m]
     real(r8) :: elai_profile(nclmax,maxpft,nlevleaf)        ! exposed leaf area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
     real(r8) :: esai_profile(nclmax,maxpft,nlevleaf)        ! exposed stem area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
@@ -311,6 +312,7 @@ module FatesPatchMod
       this%total_canopy_area            = nan
       this%total_tree_area              = nan 
       this%total_basal_area             = nan
+      this%delta_BA                     = nan
       this%zstar                        = nan 
       this%elai_profile(:,:,:)          = nan 
       this%esai_profile(:,:,:)          = nan   
@@ -447,6 +449,7 @@ module FatesPatchMod
       ! DISTURBANCE 
       this%disturbance_rates(:)              = 0.0_r8 
       this%fract_ldist_not_harvested         = 0.0_r8
+      this%delta_BA                          = 0.0_r8
 
       ! LITTER AND COARSE WOODY DEBRIS
       this%fragmentation_scaler(:)           = 0.0_r8
@@ -764,6 +767,7 @@ module FatesPatchMod
       write(fates_log(),*) 'pa%total_canopy_area  = ',this%total_canopy_area
       write(fates_log(),*) 'pa%total_tree_area    = ',this%total_tree_area
       write(fates_log(),*) 'pa%total_basal_area   = ',this%total_basal_area
+      write(fates_log(),*) 'pa%delta_BA           = ',this%delta_BA      
       write(fates_log(),*) 'pa%zstar              = ',this%zstar
       write(fates_log(),*) 'pa%solar_zenith_flag  = ',this%solar_zenith_flag
       write(fates_log(),*) 'pa%solar_zenith_angle = ',this%solar_zenith_angle
