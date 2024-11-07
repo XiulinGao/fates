@@ -18,6 +18,7 @@ module EDPatchDynamicsMod
   use FatesLitterMod       , only : litter_type
   use FatesConstantsMod    , only : n_dbh_bins 
   use FatesConstantsMod    , only : m2_per_ha
+  use FatesConstantsMod    , only : pi_const
   use FatesLitterMod       , only : adjust_SF_CWD_frac
   use EDTypesMod           , only : homogenize_seed_pfts
   use EDTypesMod           , only : area
@@ -272,7 +273,6 @@ contains
                 harvestable_forest_c, &
                 harvest_tag)
 
-         write(fates_log(),*) 'delta basal area after calling log mort:', delta_BA
          write(fates_log(),*) 'lmort_direct is:', lmort_direct
          write(fates_log(),*) 'lmort_collateral is:', lmort_collateral
          write(fates_log(),*) 'lmort_infra is:', lmort_infra
@@ -285,7 +285,7 @@ contains
 
           !update delta_BA by subtracting basal area from logged trees
           deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &
-          ((dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
+          ((currentCohort%dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
           lmort_infra + l_degrad)*currentCohort%n /currentPatch%area)
           currentPatch%delta_BA = deltaBA_update
 
