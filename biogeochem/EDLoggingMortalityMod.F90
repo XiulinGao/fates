@@ -210,7 +210,7 @@ contains
       real(r8), intent(in)  :: dbh              ! diameter at breast height (cm)
       real(r8), intent(in)  :: area             ! current patch area [m2]
       real(r8), intent(in)  :: n                ! number of plants in current cohort
-      real(r8), intent(inout)  :: delta_BA      ! difference between the current and the target basal area [m2/m2]
+      real(r8), intent(in)  :: delta_BA      ! difference between the current and the target basal area [m2/m2]
       integer,  intent(in)  :: canopy_layer     ! canopy layer of this cohort
       real(r8), intent(in) :: hlm_harvest_rates(:) ! annual harvest rate per hlm category
       character(len=64), intent(in) :: hlm_harvest_catnames(:) ! names of hlm harvest categories
@@ -344,11 +344,14 @@ contains
                      end if
                      ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
                      call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
-                     final_frac_logged = final_num / n
-                     !update delta_BA by subtracting basal area from logged trees
-                     delta_BA = delta_BA - (0.25_r8 * pi_const * &
-                     ((dbh / 100.0_r8)**2.0_r8) * final_num /area)
+                     write(fates_log(),*) 'final_num is:', final_num
                      
+                     if(n > 0._r8) then
+                        final_frac_logged = final_num / n
+                     else
+                        final_frac_logged = 0._r8
+                     end if
+
                      lmort_direct = harvest_rate * logging_direct_frac * (final_frac_logged / harvest_rate)
                   else
                      lmort_direct = harvest_rate * logging_direct_frac

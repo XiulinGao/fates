@@ -198,7 +198,7 @@ contains
     real(r8) :: l_degrad         ! fraction of trees that are not killed but suffer from forest 
                                  ! degradation (i.e. they are moved to newly-anthro-disturbed 
                                  ! secondary forest patch)
-    real(r8) :: delta_BA
+    real(r8) :: deltaBA_update
     real(r8) :: dist_rate_ldist_notharvested
     integer  :: threshold_sizeclass
     integer  :: i_dist
@@ -231,7 +231,7 @@ contains
          call currentPatch%UpdateTreeBasalArea()
       end if 
       ! difference between current patch and target basal area
-      currentPatch%delta_BA = 0.0_r8 
+      !currentPatch%delta_BA = 0.0_r8 
       currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
 
       write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
@@ -273,12 +273,24 @@ contains
                 harvest_tag)
 
          write(fates_log(),*) 'delta basal area after calling log mort:', delta_BA
+         write(fates_log(),*) 'lmort_direct is:', lmort_direct
+         write(fates_log(),*) 'lmort_collateral is:', lmort_collateral
+         write(fates_log(),*) 'lmort_infra is:', lmort_infra
+         write(fates_log(),*) 'l_degrad is:', l_degrad
 
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
-          currentPatch%delta_BA          = delta_BA
+
+          !update delta_BA by subtracting basal area from logged trees
+          deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &
+          ((dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
+          lmort_infra + l_degrad)*currentCohort%n /currentPatch%area)
+          currentPatch%delta_BA = deltaBA_update
+
+          write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
+
 
           currentCohort => currentCohort%taller
        end do
