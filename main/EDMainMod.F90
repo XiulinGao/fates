@@ -474,8 +474,9 @@ contains
              call Mortality_Derivative(currentSite, currentCohort, bc_in,      &
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%anthro_disturbance_label,                          &
-               currentPatch%age_since_anthro_disturbance, frac_site_primary,   &
-                 harvestable_forest_c, currentPatch%delta_BA, harvest_tag)
+               currentPatch%age_since_anthro_disturbance, 
+               currentPatch%delta_BA, currentPatch%area, frac_site_primary,    &
+               harvestable_forest_c, harvest_tag)
 
              ! -----------------------------------------------------------------------------
              ! Apply Plant Allocation and Reactive Transport

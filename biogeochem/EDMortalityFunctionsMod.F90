@@ -232,8 +232,8 @@ contains
  ! ============================================================================
 
  subroutine Mortality_Derivative( currentSite, currentCohort, bc_in, btran_ft, &
-      mean_temp, anthro_disturbance_label, age_since_anthro_disturbance, area, &
-      frac_site_primary, harvestable_forest_c, delta_BA, harvest_tag)
+      mean_temp, anthro_disturbance_label, age_since_anthro_disturbance, delta_BA, &
+      area, frac_site_primary, harvestable_forest_c, harvest_tag)
 
     !
     ! !DESCRIPTION:
@@ -253,7 +253,7 @@ contains
     integer,          intent(in)               :: anthro_disturbance_label
     real(r8),         intent(in)               :: age_since_anthro_disturbance
     real(r8),         intent(in)               :: frac_site_primary 
-    real(r8),         intent(inout)            :: delta_BA
+    real(r8),         intent(in)               :: delta_BA
     real(r8),         intent(in)               :: area 
 
     real(r8), intent(in) :: harvestable_forest_c(:)   ! total carbon available for logging, kgC site-1
