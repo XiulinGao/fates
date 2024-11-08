@@ -313,6 +313,36 @@ contains
        !  harvest_rate_scale_cohort = 1._r8/(1._r8 + exp(0.1*(dbh-(logging_dbhmin+logging_dbhmax)/2._r8)))
          ! also calculate delta basal area for achieving target basal area
 
+         ! get target logging fraction 
+         if(target_harvest == itrue) then
+            ! first get max. fraction of trees to be logged 
+            if(dbh <= ref_dbh1) then
+               cap_frac    = cap_targ1  
+            else if(dbh > ref_dbh1 .and. dbh <= ref_dbh2) then
+               cap_frac    = cap_targ2 
+            else if(dbh > ref_dbh2 .and. dbh <= ref_dbh3) then
+               cap_frac    = cap_targ3
+            else 
+               cap_frac    = 0.0_r8
+            end if
+            
+            ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
+            !call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
+            if(delta_BA > 0.0_r8) then
+               target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
+            else
+               target_num = 0.0_r8
+            end if
+
+            if(n > 0.0_r8) then
+               target_frac = target_num / n
+            else
+               target_frac = 0.0_r8
+            end if
+            
+            final_frac_logged = min(cap_frac, target_frac)
+         end if
+
 
          ! transfer of area to secondary land is based on overall area affected, not just logged crown area
          ! l_degrad accounts for the affected area between logged crowns
@@ -322,37 +352,16 @@ contains
 
                if (dbh >= logging_dbhmin .and. .not. &
                   ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax ))) then
+
                   ! the logic of the above line is a bit unintuitive but allows turning off the dbhmax comparison entirely.
                   ! since there is an .and. .not. after the first conditional, the dbh:dbhmax comparison needs to be 
-                  ! the opposite of what would otherwise be expected...
-               
-                  if(target_harvest == itrue .and. delta_BA > 0._r8) then
-                     ! first get max. number of trees to be logged 
-                     if(dbh <= ref_dbh1) then
-                        cap_frac    = cap_targ1  
-                     else if(dbh > ref_dbh1 .and. dbh <= ref_dbh2) then
-                        cap_frac    = cap_targ2 
-                     else if(dbh > ref_dbh2 .and. dbh <= ref_dbh3) then
-                        cap_frac    = cap_targ3
-                     else 
-                        cap_frac    = 0.0_r8
-                     end if
-                     ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
-                     !call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
-                  
-                     target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
-                     if(n > 0.0_r8) then
-                        target_frac = target_num / n
-                     else
-                        target_frac = 0.0_r8
-                     end if
-                     
-                     final_frac_logged = min(target_frac,cap_frac)
-
+                  ! the opposite of what would otherwise be expected..
+                  if(target_harvest == itrue) then
                      lmort_direct = final_frac_logged * logging_direct_frac
                   else
                      lmort_direct = harvest_rate * logging_direct_frac
                   end if ! end target harvest check
+
                else
                   lmort_direct = 0.0_r8
                end if ! end dbh check 
@@ -364,7 +373,7 @@ contains
             if (dbh >= logging_dbhmax_infra) then
                lmort_infra      = 0.0_r8
             else 
-               if (target_harvest == itrue .and. delta_BA > 0._r8) then
+               if (target_harvest == itrue) then
                   lmort_infra      =  final_frac_logged * logging_mechanical_frac 
                else
                   lmort_infra      =  harvest_rate * logging_mechanical_frac
@@ -374,7 +383,7 @@ contains
             ! Collateral damage to smaller plants below the direct logging size threshold
             ! will be applied via "understory_death" via the disturbance algorithm
             if (canopy_layer .eq. 1 ) then
-               if (target_harvest == itrue .and. delta_BA > 0._r8) then
+               if (target_harvest == itrue) then
                   lmort_collateral = final_frac_logged * logging_collateral_frac 
                else
                   lmort_collateral = harvest_rate * logging_collateral_frac
@@ -387,7 +396,7 @@ contains
          else  ! non-woody plants still killed by infrastructure
             lmort_direct    = 0.0_r8
             lmort_collateral = 0.0_r8
-            if (target_harvest == itrue .and. delta_BA > 0._r8) then
+            if (target_harvest == itrue) then
                lmort_infra      =   final_frac_logged * logging_mechanical_frac 
             else
                lmort_infra      =   harvest_rate * logging_mechanical_frac
@@ -397,7 +406,7 @@ contains
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
          if (canopy_layer .eq. 1 ) then
-            if(target_harvest == itrue .and. delta_BA > 0._r8) then
+            if(target_harvest == itrue) then
                l_degrad = final_frac_logged  - (lmort_direct + lmort_infra + lmort_collateral)
             else
                l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
