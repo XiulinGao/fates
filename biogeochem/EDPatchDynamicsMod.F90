@@ -273,10 +273,10 @@ contains
                 harvestable_forest_c, &
                 harvest_tag)
 
-         write(fates_log(),*) 'lmort_direct is:', lmort_direct
-         write(fates_log(),*) 'lmort_collateral is:', lmort_collateral
-         write(fates_log(),*) 'lmort_infra is:', lmort_infra
-         write(fates_log(),*) 'l_degrad is:', l_degrad
+          write(fates_log(),*) 'lmort_direct is:', lmort_direct
+          write(fates_log(),*) 'lmort_collateral is:', lmort_collateral
+          write(fates_log(),*) 'lmort_infra is:', lmort_infra
+          write(fates_log(),*) 'l_degrad is:', l_degrad
 
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral

@@ -210,7 +210,7 @@ contains
       real(r8), intent(in)  :: dbh              ! diameter at breast height (cm)
       real(r8), intent(in)  :: area             ! current patch area [m2]
       real(r8), intent(in)  :: n                ! number of plants in current cohort
-      real(r8), intent(in)  :: delta_BA      ! difference between the current and the target basal area [m2/m2]
+      real(r8), intent(in)  :: delta_BA         ! difference between the current and the target basal area [m2/m2]
       integer,  intent(in)  :: canopy_layer     ! canopy layer of this cohort
       real(r8), intent(in) :: hlm_harvest_rates(:) ! annual harvest rate per hlm category
       character(len=64), intent(in) :: hlm_harvest_catnames(:) ! names of hlm harvest categories
@@ -327,11 +327,8 @@ contains
                   ! since there is an .and. .not. after the first conditional, the dbh:dbhmax comparison needs to be 
                   ! the opposite of what would otherwise be expected...
                
-                  if(target_harvest == 1 .and. delta_BA > 0._r8) then
+                  if(target_harvest == itrue .and. delta_BA > 0._r8) then
                      final_frac_logged = 0.0_r8
-                     cap_num = 0.0_r8
-                     final_num = 0.0_r8
-                     target_num = 0.0_r8
                      ! first get max. number of trees to be logged 
                      if(dbh <= ref_dbh1) then
                         cap_num    = cap_targ1 * n 
@@ -343,8 +340,15 @@ contains
                         cap_num    = 0.0_r8
                      end if
                      ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
-                     call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
-                     write(fates_log(),*) 'final_num is:', final_num
+                     !call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
+                  
+                     target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
+                     
+                     if(target_num >= cap_num) then
+                        final_num = cap_num   ! max out if target is greater than current capacity
+                     else
+                        final_num = target_num ! harvest the corresponding amount to achive target
+                     end if
                      
                      if(n > 0._r8) then
                         final_frac_logged = final_num / n
@@ -352,7 +356,7 @@ contains
                         final_frac_logged = 0._r8
                      end if
 
-                     lmort_direct = harvest_rate * logging_direct_frac * (final_frac_logged / harvest_rate)
+                     lmort_direct = final_frac_logged * logging_direct_frac
                   else
                      lmort_direct = harvest_rate * logging_direct_frac
                   end if ! end target harvest check
@@ -367,8 +371,8 @@ contains
             if (dbh >= logging_dbhmax_infra) then
                lmort_infra      = 0.0_r8
             else 
-               if (target_harvest == 1) then
-                  lmort_infra      =  harvest_rate * logging_mechanical_frac * (final_frac_logged / harvest_rate)
+               if (target_harvest == iture .and. delta_BA > 0._r8) then
+                  lmort_infra      =  final_frac_logged * logging_mechanical_frac 
                else
                   lmort_infra      =  harvest_rate * logging_mechanical_frac
                end if
@@ -377,8 +381,8 @@ contains
             ! Collateral damage to smaller plants below the direct logging size threshold
             ! will be applied via "understory_death" via the disturbance algorithm
             if (canopy_layer .eq. 1 ) then
-               if (target_harvest == 1) then
-                  lmort_collateral = harvest_rate * logging_collateral_frac * (final_frac_logged / harvest_rate) 
+               if (target_harvest == itrue .and. delta_BA > 0._r8) then
+                  lmort_collateral = final_frac_logged * logging_collateral_frac 
                else
                   lmort_collateral = harvest_rate * logging_collateral_frac
                end if
@@ -390,8 +394,8 @@ contains
          else  ! non-woody plants still killed by infrastructure
             lmort_direct    = 0.0_r8
             lmort_collateral = 0.0_r8
-            if (target_harvest == 1) then
-               lmort_infra      =   harvest_rate * logging_mechanical_frac * (final_frac_logged / harvest_rate) 
+            if (target_harvest == itrue .and. delta_BA > 0._r8) then
+               lmort_infra      =   final_frac_logged * logging_mechanical_frac 
             else
                lmort_infra      =   harvest_rate * logging_mechanical_frac
             end if
@@ -400,8 +404,8 @@ contains
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
          if (canopy_layer .eq. 1 ) then
-            if(target_harvest == 1) then
-               l_degrad = (harvest_rate * (final_frac_logged / harvest_rate)) - (lmort_direct + lmort_infra + lmort_collateral)
+            if(target_harvest == itrue .and. delta_BA > 0._r8) then
+               l_degrad = final_frac_logged  - (lmort_direct + lmort_infra + lmort_collateral)
             else
                l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
             end if
@@ -410,10 +414,10 @@ contains
          endif
          
       else 
-         lmort_direct    = 0.0_r8
-         lmort_collateral = 0.0_r8
-         lmort_infra      = 0.0_r8
-         l_degrad         = 0.0_r8
+         lmort_direct    = 0.01_r8
+         lmort_collateral = 0.01_r8
+         lmort_infra      = 0.01_r8
+         l_degrad         = 0.01_r8
       end if
 
    end subroutine LoggingMortality_frac
@@ -773,8 +777,13 @@ contains
 
       ! Local variables
       real(r8) :: target_num   ! counts of plants to be logged 
-
-      target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh/100.0_r8)**2.0_r8)
+      
+      if(delta_BA > 0.0_r8) then
+         target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh/100.0_r8)**2.0_r8)
+      else
+         target_num = 0.0_r8
+      end if
+      
       if(target_num >= cap_num) then
          final_num = cap_num   ! max out if target is greater than current capacity
       else
