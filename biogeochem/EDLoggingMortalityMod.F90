@@ -371,7 +371,7 @@ contains
             if (dbh >= logging_dbhmax_infra) then
                lmort_infra      = 0.0_r8
             else 
-               if (target_harvest == iture .and. delta_BA > 0._r8) then
+               if (target_harvest == itrue .and. delta_BA > 0._r8) then
                   lmort_infra      =  final_frac_logged * logging_mechanical_frac 
                else
                   lmort_infra      =  harvest_rate * logging_mechanical_frac
