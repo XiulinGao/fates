@@ -353,7 +353,7 @@ contains
                      if(n > 0._r8) then
                         final_frac_logged = final_num / n
                      else
-                        final_frac_logged = 0._r8
+                        final_frac_logged = 0.0_r8
                      end if
 
                      lmort_direct = final_frac_logged * logging_direct_frac
@@ -410,14 +410,14 @@ contains
                l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
             end if
          else
-            l_degrad = 0._r8
+            l_degrad = 0.1_r8
          endif
          
       else 
-         lmort_direct    = 0.01_r8
-         lmort_collateral = 0.01_r8
-         lmort_infra      = 0.01_r8
-         l_degrad         = 0.01_r8
+         lmort_direct     = 0.0_r8
+         lmort_collateral = 0.0_r8
+         lmort_infra      = 0.0_r8
+         l_degrad         = 0.0_r8
       end if
 
    end subroutine LoggingMortality_frac
