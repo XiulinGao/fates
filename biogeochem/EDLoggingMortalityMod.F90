@@ -99,7 +99,6 @@ module EDLoggingMortalityMod
    public :: get_harvest_rate_area
    public :: get_harvestable_carbon
    public :: get_harvest_rate_carbon
-   public :: get_target_harvest_stem
    public :: get_harvest_debt
    public :: UpdateHarvestC
 
@@ -240,8 +239,8 @@ contains
       real(r8) :: harvest_rate ! the final harvest rate to apply to this cohort today
      ! real(r8) :: harvest_rate_scale_cohort  ! scaling factor after considering dbh size
       real(r8) :: target_num   ! number of plants to harvest in order to achieve target basal area   
-      real(r8) :: cap_num      ! max. number of plants can be harvested 
-      real(r8) :: final_num    ! final number of plants that are harvested
+      real(r8) :: target_frac
+      real(r8) :: cap_frac      ! max. fraction of plants can be harvested 
       real(r8) :: final_frac_logged   ! final fraction of plants that need to be logged 
 
       !real(r8), parameter :: max_ba_targ = 0.0034_r8 !target site max. basal area below which logging stops (m2/m2)
@@ -328,33 +327,27 @@ contains
                   ! the opposite of what would otherwise be expected...
                
                   if(target_harvest == itrue .and. delta_BA > 0._r8) then
-                     final_frac_logged = 0.0_r8
                      ! first get max. number of trees to be logged 
                      if(dbh <= ref_dbh1) then
-                        cap_num    = cap_targ1 * n 
+                        cap_frac    = cap_targ1  
                      else if(dbh > ref_dbh1 .and. dbh <= ref_dbh2) then
-                        cap_num    = cap_targ2 * n
+                        cap_frac    = cap_targ2 
                      else if(dbh > ref_dbh2 .and. dbh <= ref_dbh3) then
-                        cap_num    = cap_targ3 * n
+                        cap_frac    = cap_targ3
                      else 
-                        cap_num    = 0.0_r8
+                        cap_frac    = 0.0_r8
                      end if
                      ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
                      !call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
                   
                      target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
-                     
-                     if(target_num >= cap_num) then
-                        final_num = cap_num   ! max out if target is greater than current capacity
+                     if(n > 0.0_r8) then
+                        target_frac = target_num / n
                      else
-                        final_num = target_num ! harvest the corresponding amount to achive target
+                        target_frac = 0.0_r8
                      end if
                      
-                     if(n > 0._r8) then
-                        final_frac_logged = final_num / n
-                     else
-                        final_frac_logged = 0.0_r8
-                     end if
+                     final_frac_logged = min(target_frac,cap_frac)
 
                      lmort_direct = final_frac_logged * logging_direct_frac
                   else
@@ -410,7 +403,7 @@ contains
                l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
             end if
          else
-            l_degrad = 0.1_r8
+            l_degrad = 0._r8
          endif
          
       else 
@@ -755,42 +748,6 @@ contains
      end if
 
    end subroutine get_harvest_rate_carbon
-
-   ! ============================================================================
-
-   subroutine get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
-
-      ! -------------------------------------------------------------------------------------------
-      ! DESCRIPTION
-      ! Calculate number of plants, thus fraction, to be logged for current cohorts in order to achive 
-      ! target basal area at current patch; and update the difference between current patch basal
-      ! area and target basal area after log each cohort
-      ! -------------------------------------------------------------------------------------------
-
-      ! Arguments
-      real(r8), intent(in) :: dbh            !dbh of the cohort [cm]
-      real(r8), intent(in) :: n              !counts of plants in the cohort [unitless]
-      real(r8), intent(in) :: area           !patch area [m2]
-      real(r8), intent(in) :: cap_num        !max. number of plants that can be logged [unitless]
-      real(r8), intent(in) :: delta_BA    !difference between current and target basal area, updated after subtracting logged trees in each call
-      real(r8), intent(out)   :: final_num ! calculated stem counts to be logged in order to achieve target basal area
-
-      ! Local variables
-      real(r8) :: target_num   ! counts of plants to be logged 
-      
-      if(delta_BA > 0.0_r8) then
-         target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh/100.0_r8)**2.0_r8)
-      else
-         target_num = 0.0_r8
-      end if
-      
-      if(target_num >= cap_num) then
-         final_num = cap_num   ! max out if target is greater than current capacity
-      else
-         final_num = target_num ! harvest the corresponding amount to achive target
-      end if
-
-      end subroutine get_target_harvest_stem
 
 
 
