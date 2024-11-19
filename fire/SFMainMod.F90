@@ -1135,17 +1135,17 @@ contains
 
    ! local variables
    real(r8) :: total_burnable_area    ! total area that can apply prescribed fire (m2)
-   !real(r8) :: site_frac_burnable     ! fraction site area that can apply prescribed fire 
+   real(r8) :: min_burnable_area      ! Rx occurs only if total_burnable_area >= min_burnable_area
    real(r8) :: prescribed_burnt_area  ! max. daily burning capacity in absolute area (m2) at site level
-   real(r8) :: patch_burnt_area       ! temporal variable for calculating burnt fraction for patch (m2)
 
    !real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
    !integer,  parameter :: rx_freq = 10 ! Rx fire return interval 
+   real(r8), parameter :: min_frac_site = 0.1_r8  ! min. burnable fraction for Rx fire to happen
 
    ! zero current site total burnable area and fraction before loop through patches
    total_burnable_area = 0._r8
    prescribed_burnt_area = 0._r8
-   patch_burnt_area = 0._r8
+   min_burnable_area = 0._r8
 
 
    currentPatch => currentSite%oldest_patch;
@@ -1160,7 +1160,7 @@ contains
       currentPatch => currentPatch%younger;  
    enddo !end patch loop
 
-   !site_frac_burnable = total_burnable_area / AREA
+   min_burnable_area = min_frac_site * AREA
    prescribed_burnt_area = SF_val_rxfire_AB * AREA
 
    
@@ -1171,10 +1171,9 @@ contains
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
          currentPatch%rxfire_frac_burnt = 0.0_r8
-         if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. prescribed_burnt_area)then ! .and. &
+         if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. min_burnable_area)then ! .and. &
 !         currentSite%rx_burn_accum .lt. AREA)then
-            patch_burnt_area = (currentPatch%area / total_burnable_area)* prescribed_burnt_area
-            currentPatch%rxfire_frac_burnt = patch_burnt_area / currentPatch%area
+            currentPatch%rxfire_frac_burnt = min(0.99_r8, (prescribed_burnt_area / total_burnable_area))
 !            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
  !           if(currentSite%rx_burn_accum .ge. AREA)then
                !currentSite%lst_rx_year = hlm_current_year
