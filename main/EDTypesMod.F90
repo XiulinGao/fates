@@ -320,7 +320,10 @@ module EDTypesMod
      real(r8) ::  fdi                                          ! daily probability an ignition event will start a fire
      real(r8) ::  NF                                           ! daily ignitions in km2
      real(r8) ::  NF_successful                                ! daily ignitions in km2 that actually lead to fire
-     integer  ::  rx_flag                                      ! dainly burn window flag
+     integer  ::  rx_flag                                      ! daily burn window flag
+     real(r8) ::  rxfire_area_fuel                             ! daily total burnable area when burn window present and fuel condition met [m2]
+     real(r8) ::  rxfire_area_fi                               ! daily total burnable area when burn window present, fuel and fire intensity met [m2]
+     real(r8) ::  rxfire_area_final                            ! daily total burnable area when all conditions met [m2]           
      !real(r8) ::  rx_burn_accum                                ! cumulative burnt fraction by Rx fire at site
      !integer  ::  lst_rx_year                                  ! year of last Rx fire
      !integer  ::  next_rx_year                                 ! year of next Rx fire

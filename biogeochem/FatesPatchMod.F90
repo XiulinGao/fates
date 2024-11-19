@@ -211,6 +211,7 @@ module FatesPatchMod
     real(r8)              :: rxfire_fi               ! average fire intensity of prescribed fire flaming front
     real(r8)              :: rxfire_frac_burnt       ! fraction burnt by prescribed fire, it's user defined at patch level per fire event
 
+
     ! fire effects      
     real(r8)              :: scorch_ht(maxpft)       ! scorch height [m] 
     real(r8)              :: frac_burnt              ! fraction burnt [0-1/day]  

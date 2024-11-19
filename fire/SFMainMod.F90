@@ -841,6 +841,8 @@ contains
 
     !  ---initialize site parameters to zero--- 
     currentSite%NF_successful = 0._r8
+    currentSite%rxfire_area_fuel = 0._r8
+    currentSite%rxfire_area_fi   = 0._r8
     
     ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
     ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
@@ -1054,7 +1056,9 @@ contains
          if (currentSite%rx_flag .eq. itrue .and. &                   !rx fire weather condition check 
              currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
              currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
+               currentSite%rxfire_area_fuel = currentSite%rxfire_area_fuel + currentPatch%area             
                if(is_rxfire) then
+                  currentSite%rxfire_area_fi = currentSite%rxfire_area_fi + currentPatch%area
                   currentPatch%fire = 0
                   currentPatch%rxfire = 1
                   currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
@@ -1143,6 +1147,7 @@ contains
    real(r8), parameter :: min_frac_site = 0.1_r8  ! min. burnable fraction for Rx fire to happen
 
    ! zero current site total burnable area and fraction before loop through patches
+   currentSite%rxfire_area_final = 0._r8
    total_burnable_area = 0._r8
    prescribed_burnt_area = 0._r8
    min_burnable_area = 0._r8
@@ -1173,6 +1178,7 @@ contains
          currentPatch%rxfire_frac_burnt = 0.0_r8
          if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. min_burnable_area)then ! .and. &
 !         currentSite%rx_burn_accum .lt. AREA)then
+            currentSite%rxfire_area_final = currentSite%rxfire_area_final + currentPatch%area
             currentPatch%rxfire_frac_burnt = min(0.99_r8, (prescribed_burnt_area / total_burnable_area))
 !            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
  !           if(currentSite%rx_burn_accum .ge. AREA)then
