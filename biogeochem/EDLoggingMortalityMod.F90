@@ -407,7 +407,7 @@ contains
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
          if (canopy_layer .eq. 1 ) then
             if(target_harvest == itrue) then
-               l_degrad = final_frac_logged  - (lmort_direct + lmort_infra + lmort_collateral)
+               l_degrad = harvest_rate  - (lmort_direct + lmort_infra + lmort_collateral)
             else
                l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
             end if
