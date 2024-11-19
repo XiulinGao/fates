@@ -283,10 +283,10 @@ contains
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
 
-          !update delta_BA by subtracting basal area from logged trees
+          !update delta_BA by subtracting basal area from trees that died in logging, excluding degradation
           deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &
           ((currentCohort%dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
-          lmort_infra + l_degrad)*currentCohort%n /currentPatch%area)
+          lmort_infra)*currentCohort%n /currentPatch%area)
           currentPatch%delta_BA = deltaBA_update
 
           write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
