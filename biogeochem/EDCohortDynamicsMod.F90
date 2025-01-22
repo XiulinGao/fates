@@ -1315,10 +1315,10 @@ end subroutine create_cohort
     shortestc => NULL()
     storebigcohort   => null()
     storesmallcohort => null()
-    current_c => current_patch%tallest
+    current_c => current_patch%shortest
 
     do while (associated(current_c))
-       next_c => current_c%shorter
+       next_c => current_c%taller
        tallestc  => storebigcohort
        shortestc => storesmallcohort
        if (associated(tallestc)) then
@@ -1394,7 +1394,7 @@ end subroutine create_cohort
     !taller than tree being considered and return its pointer
     if (associated(current)) then
        do while (associated(current).and.exitloop == 0)
-          if (current%height < tsp) then
+          if (current%height <= tsp) then
              current => current%taller
           else
              exitloop = 1
