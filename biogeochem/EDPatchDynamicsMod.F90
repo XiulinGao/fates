@@ -1716,6 +1716,7 @@ contains
     type(fates_patch_type) , intent(inout) :: newPatch           ! New patch
     real(r8)            , intent(in)    :: patch_site_areadis ! Area being donated
                                                               ! by current patch
+    integer,              intent(in)    :: dist_type          ! disturbance type
 
     
     ! locals
@@ -1738,6 +1739,7 @@ contains
     real(r8) :: litter_stock0,litter_stock1
     real(r8) :: burn_flux0,burn_flux1
     real(r8) :: error
+    real(r8) :: frac_burnt                 ! fraction burnt of current fuel type [0-1]
 
     do el = 1,num_elements
 
@@ -1823,13 +1825,17 @@ contains
        end if
 
        do c = 1,ncwd
+         frac_burnt = 0.0_r8
+         if (dist_type == dtype_ifire .and. currentPatch%fire == 1) then
+            frac_burnt = currentPatch%burnt_frac_litter(c)
+         end if 
              
           ! Transfer above ground CWD
           donatable_mass     = curr_litt%ag_cwd(c) * patch_site_areadis * &
-                               (1._r8 - currentPatch%burnt_frac_litter(c))
+                               (1._r8 - frac_burnt)
 
           burned_mass        = curr_litt%ag_cwd(c) * patch_site_areadis * &
-                               currentPatch%burnt_frac_litter(c)
+                               frac_burnt
  
           new_litt%ag_cwd(c) = new_litt%ag_cwd(c) + donatable_mass*donate_m2
           curr_litt%ag_cwd(c) = curr_litt%ag_cwd(c) + donatable_mass*retain_m2
@@ -1845,15 +1851,20 @@ contains
           end do
           
        enddo
+
+       frac_burnt = 0.0_r8
+       if (dist_type == dtype_ifire .and. currentPatch%fire == 1) then
+         frac_burnt = currentPatch%burnt_frac_litter(dl_sf)
+      end if 
           
        do dcmpy=1,ndcmpy
 
            ! Transfer leaf fines
            donatable_mass           = curr_litt%leaf_fines(dcmpy) * patch_site_areadis * &
-                                      (1._r8 - currentPatch%burnt_frac_litter(dl_sf))
+                                      (1._r8 - frac_burnt)
 
            burned_mass              = curr_litt%leaf_fines(dcmpy) * patch_site_areadis * &
-                                      currentPatch%burnt_frac_litter(dl_sf)
+                                      frac_burnt
 
            new_litt%leaf_fines(dcmpy) = new_litt%leaf_fines(dcmpy) + donatable_mass*donate_m2
            curr_litt%leaf_fines(dcmpy) = curr_litt%leaf_fines(dcmpy) + donatable_mass*retain_m2

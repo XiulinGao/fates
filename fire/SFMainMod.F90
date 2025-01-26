@@ -109,6 +109,7 @@ contains
        currentPatch%rxfire_frac_burnt = 0.0_r8
        currentPatch%fire       = 0
        currentPatch%rxfire     = 0
+       currentPatch%burnt_frac_litter(:) = 0.0_r8
        currentPatch => currentPatch%older
     enddo
 
