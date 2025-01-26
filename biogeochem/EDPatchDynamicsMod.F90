@@ -683,11 +683,8 @@ contains
                       ! and burned litter to atmosphere. Thus it is important to zero burnt_frac_litter when
                       ! fire is not the current disturbance regime.
 
-                      if(i_disturbance_type .ne. dtype_ifire) then
-                         currentPatch%burnt_frac_litter(:) = 0._r8
-                      end if
 
-                      call TransLitterNewPatch( currentSite, currentPatch, new_patch, patch_site_areadis)
+                      call TransLitterNewPatch( currentSite, currentPatch, new_patch, patch_site_areadis, i_disturbance_type)
 
                       ! Transfer in litter fluxes from plants in various contexts of death and destruction
 
@@ -1669,7 +1666,8 @@ contains
   subroutine TransLitterNewPatch(currentSite,        &
                                  currentPatch,       &
                                  newPatch,           &
-                                 patch_site_areadis)
+                                 patch_site_areadis, &
+                                 dist_type)
 
     ! -----------------------------------------------------------------------------------
     ! 
