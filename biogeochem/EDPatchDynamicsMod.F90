@@ -200,7 +200,6 @@ contains
                                  ! degradation (i.e. they are moved to newly-anthro-disturbed 
                                  ! secondary forest patch)
     real(r8) :: deltaBA_update
-    real(r8) :: dist_rate_ldist_notharvested
     integer  :: threshold_sizeclass
     integer  :: i_dist
     integer  :: h_index
@@ -213,6 +212,7 @@ contains
 
     !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
     real(r8), parameter :: max_ba_targ = 0.0034_r8   ! max. target basal area after logging
+    integer , parameter :: target_harvest = 1  
 
     !----------------------------------------------------------------------------------------------
     ! Calculate Mortality Rates (these were previously calculated during growth derivatives)
