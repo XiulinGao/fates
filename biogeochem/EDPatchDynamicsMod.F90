@@ -333,6 +333,7 @@ contains
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))   
 
+
           if(currentCohort%canopy_layer == 1)then
 
              ! Treefall Disturbance Rate.  Only count this for trees, not grasses
@@ -341,6 +342,9 @@ contains
                      fates_mortality_disturbance_fraction * &
                      min(1.0_r8,currentCohort%dmort)*hlm_freq_day*currentCohort%c_area/currentPatch%area
              end if
+          end if
+
+          if(currentCohort%canopy_layer == 1 .or. target_harvest == itrue)then
 
              ! Logging Disturbance Rate
              currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
@@ -358,7 +362,7 @@ contains
              ! Non-harvested part of the logging disturbance rate
              dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + currentCohort%l_degrad * &
                   currentCohort%c_area/currentPatch%area
-             
+  
           endif
           currentCohort => currentCohort%taller
        enddo !currentCohort

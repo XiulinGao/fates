@@ -850,6 +850,10 @@ contains
       integer  :: el                     ! elemend loop index
       real(r8) :: SF_val_CWD_frac_adj(4) !Updated wood partitioning to CWD based on dbh
 
+      ! Test parameter for targeted harvesting
+
+      integer, parameter :: target_harvest = 1
+
       nlevsoil = currentSite%nlevsoil
 
       ! If/when sending litter fluxes to the old patch, we divide the total 
