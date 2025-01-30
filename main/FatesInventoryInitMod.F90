@@ -772,25 +772,30 @@ contains
       character(len=patchname_strlen)             :: p_name     ! unique string identifier of patch
       real(r8)                                    :: p_age      ! Patch age [years]
       real(r8)                                    :: p_area     ! Patch area [fraction]
-      real(r8)                                    :: p_water    ! Patch water (unused)
-      real(r8)                                    :: p_fsc      ! Patch fast soil carbon
-      real(r8)                                    :: p_stsc     ! Patch structural soil carbon
-      real(r8)                                    :: p_stsl     ! Patch structural soil lignins
-      real(r8)                                    :: p_ssc      ! Patch slow soil carbon
-      real(r8)                                    :: p_psc      ! Patch P soil carbon
-      real(r8)                                    :: p_msn      ! Patch mean soil nitrogen
-      real(r8)                                    :: p_fsn      ! Patch fast soil nitrogen
+      !real(r8)                                    :: p_water    ! Patch water (unused)
+      !real(r8)                                    :: p_fsc      ! Patch fast soil carbon
+      !real(r8)                                    :: p_stsc     ! Patch structural soil carbon
+      !real(r8)                                    :: p_stsl     ! Patch structural soil lignins
+      !real(r8)                                    :: p_ssc      ! Patch slow soil carbon
+      !real(r8)                                    :: p_psc      ! Patch P soil carbon
+      !real(r8)                                    :: p_msn      ! Patch mean soil nitrogen
+      !real(r8)                                    :: p_fsn      ! Patch fast soil nitrogen
       integer                                     :: icwd       ! index for counting CWD pools
       integer                                     :: ipft       ! index for counting PFTs
       real(r8)                                    :: pftfrac    ! the inverse of the total number of PFTs
 
-      character(len=128),parameter    :: wr_fmt = &
-            '(F5.2,2X,A4,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2)'
+      !character(len=128),parameter    :: wr_fmt = &
+       !     '(F5.2,2X,A4,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2)'
+
+      character(len=30),parameter    :: hd_fmt = &
+            '(A5,2X,A20,2X,A4,2X,A5,2X,A17)'
+      character(len=47),parameter    :: wr_fmt = &
+            '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14)'
 
 
-      read(pss_file_unit,fmt=*,iostat=ios) p_time, p_name, p_trk, p_age, p_area, &
-            p_water,p_fsc, p_stsc, p_stsl, p_ssc, &
-            p_psc, p_msn, p_fsn
+      read(pss_file_unit,fmt=*,iostat=ios) p_time, p_name, p_trk, p_age, p_area !, &
+            !p_water,p_fsc, p_stsc, p_stsl, p_ssc, &
+            !p_psc, p_msn, p_fsn
 
       if (ios/=0) return
 
@@ -798,9 +803,9 @@ contains
 
       if( debug_inv) then
          write(*,fmt=wr_fmt) &
-               p_time, p_name, p_trk, p_age, p_area, &
-               p_water,p_fsc, p_stsc, p_stsl, p_ssc, &
-               p_psc, p_msn, p_fsn
+               p_time, p_name, p_trk, p_age, p_area !, &
+               !p_water,p_fsc, p_stsc, p_stsl, p_ssc, &
+               !p_psc, p_msn, p_fsn
       end if
 
       ! Fill in the patch's memory structures
@@ -898,9 +903,9 @@ contains
       real(r8)                                    :: c_height      ! tree height (m)
       integer                                     :: c_pft         ! plant functional type index
       real(r8)                                    :: c_nplant      ! plant density (/m2)
-      real(r8)                                    :: c_bdead       ! dead biomass (kg)
-      real(r8)                                    :: c_balive      ! live biomass (kg)
-      real(r8)                                    :: c_avgRG       ! avg radial growth (NOT USED)
+      !real(r8)                                    :: c_bdead       ! dead biomass (kg)
+      !real(r8)                                    :: c_balive      ! live biomass (kg)
+      !real(r8)                                    :: c_avgRG       ! avg radial growth (NOT USED)
       real(r8)                                    :: site_spread   ! initial guess of site spread
                                                                    ! should be quickly re-calculated
       integer,parameter                           :: rstatus = 0   ! recruit status
@@ -930,21 +935,35 @@ contains
       real(r8) :: stem_drop_fraction ! Stem abscission fraction
       integer  :: i_pft, ncohorts_to_create
      
-      character(len=128),parameter    :: wr_fmt = &
-           '(F7.1,2X,A20,2X,A20,2X,F5.2,2X,F5.2,2X,I4,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2)'
+      !character(len=128),parameter    :: wr_fmt = &
+      !     '(F7.1,2X,A20,2X,A20,2X,F5.2,2X,F5.2,2X,I4,2X,F5.2,2X,F5.2,2X,F5.2,2X,F5.2)'
+
+      character(len=35),parameter    :: hd_fmt = &
+      '(A7,2X,A20,2X,A5,2X,A6,2X,A4,2X,A9)'
+      character(len=43),parameter    :: wr_fmt = &
+      '(F7.1,2X,A20,2X,F5.2,2X,F6.2,2X,I4,2X,F9.6)'
 
       real(r8), parameter :: abnormal_large_nplant = 1000.0_r8  ! Used to catch bad values
       real(r8), parameter :: abnormal_large_dbh    = 500.0_r8   ! I've never heard of a tree > 3m
       integer,  parameter :: recruitstatus = 0
-
+      logical, parameter :: old_type1_override = .false.
      
-      read(css_file_unit,fmt=*,iostat=ios) c_time, p_name, c_name, c_dbh, c_height, &
-            c_pft, c_nplant, c_bdead, c_balive, c_avgRG
+      if(old_type1_override) then
+         ! time patch cohort dbh hite pft nplant bdead alive Avgrg 
+         read(css_file_unit,fmt=*,iostat=ios) c_time, p_name, c_name, c_dbh, &
+              c_height, c_pft, c_nplant
+      else
+         read(css_file_unit,fmt=*,iostat=ios) c_time, p_name, c_dbh, &
+              c_height, c_pft, c_nplant
+      end if
+
+      !read(css_file_unit,fmt=*,iostat=ios) c_time, p_name, c_name, c_dbh, c_height, &
+      !      c_pft, c_nplant, c_bdead, c_balive, c_avgRG
 
       if( debug_inv) then
          write(*,fmt=wr_fmt) &
               c_time, p_name, c_name, c_dbh, c_height, &
-              c_pft, c_nplant, c_bdead, c_balive, c_avgRG
+              c_pft, c_nplant !, c_bdead, c_balive, c_avgRG
       end if
 
       if (ios/=0) return
@@ -962,7 +981,7 @@ contains
          write(fates_log(), *) 'could not match a cohort with a patch'
          write(fates_log(),fmt=wr_fmt) &
                c_time, p_name, c_name, c_dbh, c_height, &
-               c_pft, c_nplant, c_bdead, c_balive, c_avgRG
+               c_pft, c_nplant !, c_bdead, c_balive, c_avgRG
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
