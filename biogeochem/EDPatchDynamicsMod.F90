@@ -345,7 +345,7 @@ contains
              end if
           end if
 
-          if(currentCohort%canopy_layer == 1 .or. target_harvest == itrue)then
+          if(currentCohort%canopy_layer == 1 .or. target_harvest == 1)then
 
              ! Logging Disturbance Rate
              currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
@@ -383,7 +383,7 @@ contains
                   bc_in%hlm_harvest_rates, frac_site_primary, currentPatch%age_since_anthro_disturbance, harvest_rate)
           end if
 
-          if(target_harvest == itrue) then
+          if(target_harvest == 1) then
             currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
             (currentPatch%area - currentPatch%total_canopy_area) * &
             currentPatch%disturbance_rates(dtype_ilog) / currentPatch%area

@@ -315,7 +315,7 @@ contains
          ! also calculate delta basal area for achieving target basal area
 
          ! get target logging fraction 
-         if(target_harvest == itrue) then
+         if(target_harvest == 1) then
             ! first get max. fraction of trees to be logged 
             if(dbh <= ref_dbh1) then
                cap_frac    = cap_targ1  
@@ -344,6 +344,10 @@ contains
             final_frac_logged = min(cap_frac, target_frac)
          end if
 
+         if (fates_global_verbose()) then
+            write(fates_log(), *) 'final logging fraction for target logging is:', final_frac_logged
+         end if
+
 
          ! transfer of area to secondary land is based on overall area affected, not just logged crown area
          ! l_degrad accounts for the affected area between logged crowns
@@ -357,7 +361,7 @@ contains
                   ! the logic of the above line is a bit unintuitive but allows turning off the dbhmax comparison entirely.
                   ! since there is an .and. .not. after the first conditional, the dbh:dbhmax comparison needs to be 
                   ! the opposite of what would otherwise be expected..
-                  if(target_harvest == itrue) then
+                  if(target_harvest == 1) then
                      lmort_direct = final_frac_logged * logging_direct_frac
                   else
                      lmort_direct = harvest_rate * logging_direct_frac
@@ -374,7 +378,7 @@ contains
             if (dbh >= logging_dbhmax_infra) then
                lmort_infra      = 0.0_r8
             else 
-               if (target_harvest == itrue) then
+               if (target_harvest == 1) then
                   lmort_infra      =  final_frac_logged * logging_mechanical_frac 
                else
                   lmort_infra      =  harvest_rate * logging_mechanical_frac
@@ -384,7 +388,7 @@ contains
             ! Collateral damage to smaller plants below the direct logging size threshold
             ! will be applied via "understory_death" via the disturbance algorithm
             if (canopy_layer .eq. 1 ) then
-               if (target_harvest == itrue) then
+               if (target_harvest == 1) then
                   lmort_collateral = final_frac_logged * logging_collateral_frac 
                else
                   lmort_collateral = harvest_rate * logging_collateral_frac
@@ -397,7 +401,7 @@ contains
          else  ! non-woody plants still killed by infrastructure
             lmort_direct    = 0.0_r8
             lmort_collateral = 0.0_r8
-            if (target_harvest == itrue) then
+            if (target_harvest == 1) then
                lmort_infra      =   final_frac_logged * logging_mechanical_frac 
             else
                lmort_infra      =   harvest_rate * logging_mechanical_frac
@@ -407,7 +411,7 @@ contains
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
          if (canopy_layer .eq. 1 ) then
-            if(target_harvest == itrue) then
+            if(target_harvest == 1) then
                l_degrad = final_frac_logged - (lmort_direct + lmort_infra + lmort_collateral)
             else
                l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
