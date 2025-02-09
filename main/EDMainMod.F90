@@ -473,6 +473,7 @@ contains
              call Mortality_Derivative(currentSite, currentCohort, bc_in,      &
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%land_use_label,                                    &
+               currentPatch%delta_BA, currentPatch%area,                       &
                currentPatch%age_since_anthro_disturbance, frac_site_primary,   &
                  harvestable_forest_c, harvest_tag)
 

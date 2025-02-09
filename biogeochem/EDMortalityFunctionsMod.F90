@@ -234,8 +234,8 @@ contains
  ! ============================================================================
 
  subroutine Mortality_Derivative( currentSite, currentCohort, bc_in, btran_ft, &
-      mean_temp, land_use_label, age_since_anthro_disturbance,       &
-      frac_site_primary, harvestable_forest_c, harvest_tag)
+      mean_temp, land_use_label, age_since_anthro_disturbance, delta_BA,       &
+      area, frac_site_primary, harvestable_forest_c, harvest_tag)
 
     !
     ! !DESCRIPTION:
@@ -255,6 +255,8 @@ contains
     integer,          intent(in)               :: land_use_label
     real(r8),         intent(in)               :: age_since_anthro_disturbance
     real(r8),         intent(in)               :: frac_site_primary
+    real(r8),         intent(in)               :: delta_BA
+    real(r8),         intent(in)               :: area 
 
     real(r8), intent(in) :: harvestable_forest_c(:)   ! total carbon available for logging, kgC site-1
     integer, intent(out) :: harvest_tag(:)    ! tag to record the harvest status
@@ -283,7 +285,9 @@ contains
     !if trees are in the canopy, then their death is 'disturbance'. This probably needs a different terminology
     call mortality_rates(currentCohort,bc_in,btran_ft, mean_temp,              &
       cmort,hmort,bmort,frmort, smort, asmort, dgmort)
-    call LoggingMortality_frac(ipft, currentCohort%dbh, currentCohort%canopy_layer, &
+    call LoggingMortality_frac(ipft, currentCohort%dbh, area, &
+                               currentCohort%n, delta_BA, &
+                               currentCohort%canopy_layer, &
                                currentCohort%lmort_direct,                       &
                                currentCohort%lmort_collateral,                    &
                                currentCohort%lmort_infra,                        &
