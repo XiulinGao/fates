@@ -26,6 +26,7 @@ module EDLoggingMortalityMod
    use FatesLitterMod    , only : adjust_SF_CWD_frac
    use EDTypesMod        , only : ed_site_type
    use EDTypesMod        , only : ed_resources_management_type
+   use FatesConstantsMod , only : pi_const
    use FatesConstantsMod , only : dtype_ilog
    use FatesConstantsMod , only : dtype_ifall
    use FatesConstantsMod , only : dtype_ifire
