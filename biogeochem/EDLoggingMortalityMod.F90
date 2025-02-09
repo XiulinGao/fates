@@ -429,7 +429,7 @@ contains
             ! Collateral damage to smaller plants below the direct logging size threshold
             ! will be applied via "understory_death" via the disturbance algorithm
             if (canopy_layer .eq. 1) then
-               if(target_harvet == 1) then
+               if(target_harvest == 1) then
                   lmort_collateral = final_frac_logged * logging_collateral_frac 
                else 
                   lmort_collateral = harvest_rate * logging_collateral_frac
