@@ -385,7 +385,7 @@ contains
                target_frac = 0.0_r8
             end if
             
-            final_frac_logged = min(cap_frac, target_frac)
+            final_frac_logged = min(harvest_rate, min(cap_frac, target_frac))
          end if
 
          if (fates_global_verbose()) then
@@ -451,11 +451,9 @@ contains
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
          if (canopy_layer .eq. 1) then
-            if(target_harvest == 1) then
-               l_degrad = final_frac_logged - (lmort_direct + lmort_infra + lmort_collateral)
-            else
-               l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
-            end if
+             
+            l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
+          
          else
             l_degrad = 0._r8
          endif
