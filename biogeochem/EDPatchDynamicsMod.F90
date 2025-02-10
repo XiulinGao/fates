@@ -400,23 +400,14 @@ contains
                   bc_in%hlm_harvest_rates, frac_site_primary, currentPatch%age_since_anthro_disturbance, harvest_rate)
           end if
 
-          if(target_harvest == 1) then
-            currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
-            (currentPatch%area - currentPatch%total_canopy_area) * &
-            currentPatch%disturbance_rates(dtype_ilog) / currentPatch%area
+         
+         currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
+         (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
 
-            ! Non-harvested part of the logging disturbance rate
-            dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + &
-            (currentPatch%area - currentPatch%total_canopy_area) * &
-            currentPatch%disturbance_rates(dtype_ilog) / currentPatch%area
-          else
-            currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
-               (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
-
-          ! Non-harvested part of the logging disturbance rate
-            dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + &
-               (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
-          end if
+         ! Non-harvested part of the logging disturbance rate
+         dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + &
+         (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
+         
 
           
        endif
