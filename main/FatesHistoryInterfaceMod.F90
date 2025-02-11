@@ -403,6 +403,9 @@ module FatesHistoryInterfaceMod
   integer :: ih_rxfire_intensity_si
   integer :: ih_fire_area_si
   integer :: ih_rxfire_area_si
+  integer :: ih_rxfire_area_fuel_si
+  integer :: ih_rxfire_area_fi_si
+  integer :: ih_rxfire_area_final_si
   integer :: ih_fire_fuel_bulkd_si
   integer :: ih_fire_fuel_eff_moist_si
   integer :: ih_fire_fuel_sav_si
@@ -2378,6 +2381,9 @@ end subroutine flush_hvars
                hio_rxfire_intensity_area_product_si => this%hvars(ih_rxfire_intensity_area_product_si)%r81d, &
                hio_fire_area_si        => this%hvars(ih_fire_area_si)%r81d, &
                hio_rxfire_area_si      => this%hvars(ih_rxfire_area_si)%r81d, &
+               hio_rxfire_area_fuel_si => this%hvars(ih_rxfire_area_fuel_si)%r81d, &
+               hio_rxfire_area_fi_si   => this%hvars(ih_rxfire_area_fi_si)%r81d, &
+               hio_rxfire_area_final_si => this%hvars(ih_rxfire_area_final_si)%r81d, &
                hio_fire_fuel_bulkd_si  => this%hvars(ih_fire_fuel_bulkd_si)%r81d, &
                hio_fire_fuel_eff_moist_si => this%hvars(ih_fire_fuel_eff_moist_si)%r81d, &
                hio_fire_fuel_sav_si    => this%hvars(ih_fire_fuel_sav_si)%r81d, &
@@ -2755,6 +2761,15 @@ end subroutine flush_hvars
 
       ! Fire danger index (FDI) (0-1)
       hio_fire_fdi_si(io_si) = sites(s)%FDI
+
+      ! total rx burnable fraction when fuel condition met
+      hio_rxfire_area_fuel_si(io_si) = sites(s)%rxfire_area_fuel * AREA_INV
+
+      ! total rx burnable fraction when fuel and FI conditions met
+      hio_rxfire_area_fi_si(io_si) = sites(s)%rxfire_area_fi * AREA_INV
+
+      ! total rx burnable fraction when all conditions met
+      hio_rxfire_area_final_si(io_si) = sites(s)%rxfire_area_final * AREA_INV
 
       ! If hydraulics are turned on, track the error terms associated with
       ! dynamics [kg/m2]
@@ -5955,6 +5970,24 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_rxfire_area_si)
+
+    call this%set_history_var(vname='FATES_RXFIRE_BURNABLE_FUEL', units='',    &
+         long='burnable area fraction by Rx fire when fuel cond. met',         &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rxfire_area_fuel_si)
+
+    call this%set_history_var(vname='FATES_RXFIRE_BURNABLE_FI', units='',      &
+         long='burnable area fraction by Rx fire when fuel and FI cond. met',  &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rxfire_area_fi_si)
+
+    call this%set_history_var(vname='FATES_RXFIRE_BURNABLE_FINAL', units='',   &
+         long='burnable area fraction by Rx fire when all cond. met',          &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rxfire_area_final_si)
     
     call this%set_history_var(vname='FATES_FUEL_MEF', units='m3 m-3',          &
          long='fuel moisture of extinction (volumetric)',                      &
