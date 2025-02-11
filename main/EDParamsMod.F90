@@ -78,12 +78,14 @@ module EDParamsMod
                                                                       ! (3) for the Tree Recruitment Scheme without seedling dynamics
    integer,protected, public  :: lethal_heating_model                 ! (1) deafult calculation using fraction litter burned (Peterson & Ryan 1986)
                                                                       ! (2) lethal heating duration is calculated using fire intensity (Eq. 18 in Mercer & Weber 2001 "Fire Plumes")
+   integer,protected, public :: rxfire_switch                         ! flag, 1=use management fire 0=no management fire
    
    logical,protected, public :: active_crown_fire        ! flag, 1=active crown fire 0=no active crown fire
    character(len=param_string_length),parameter :: fates_name_active_crown_fire = "fates_fire_active_crown_fire"
 
    real(r8), protected, public :: cg_strikes             ! fraction of cloud to ground lightning strikes (0-1)
    character(len=param_string_length),parameter :: fates_name_cg_strikes="fates_fire_cg_strikes"
+
 
    ! empirical curvature parameters for ac, aj photosynthesis co-limitation, c3 and c4 plants respectively
    real(r8),protected,public  :: theta_cj_c3    ! Empirical curvature parameter for ac, aj photosynthesis co-limitation in c3 plants
@@ -189,6 +191,7 @@ integer, parameter, public :: maxpft = 16      ! maximum number of PFTs allowed
    character(len=param_string_length),parameter,public :: ED_name_stomatal_model= "fates_leaf_stomatal_model"
    character(len=param_string_length),parameter,public :: ED_name_regeneration_model= "fates_regeneration_model"
    character(len=param_string_length),parameter,public :: ED_name_lethal_heating_model= "fates_fire_lh_mod"
+   character(len=param_string_length),parameter,public :: fates_name_rxfire_switch= "fates_rxfire_switch"
 
    character(len=param_string_length),parameter,public :: name_theta_cj_c3 = "fates_leaf_theta_cj_c3"
    character(len=param_string_length),parameter,public :: name_theta_cj_c4 = "fates_leaf_theta_cj_c4"
@@ -363,6 +366,7 @@ contains
     stomatal_assim_model                  = -9
     lethal_heating_model                  = -9
     max_cohort_per_patch                  = -9
+    rxfire_switch                         = -9
     hydr_kmax_rsurf1                      = nan
     hydr_kmax_rsurf2                      = nan
     hydr_psi0                             = nan
@@ -606,6 +610,9 @@ contains
 
     call fates_params%RegisterParameter(name=fates_name_active_crown_fire, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
+     
+    call fates_params%RegisterParameter(name=fates_name_rxfire_switch, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
     
     call fates_params%RegisterParameter(name=fates_name_cg_strikes, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
@@ -817,6 +824,10 @@ contains
           data=tmpreal)
     active_crown_fire = (abs(tmpreal-1.0_r8)<nearzero)
 
+    call fates_params%RetrieveParameter(name=fates_name_rxfire_switch, &
+         data=tmpreal)
+    rxfire_switch = nint(tmpreal)
+
     call fates_params%RetrieveParameter(name=fates_name_cg_strikes, &
           data=cg_strikes)
 
@@ -924,6 +935,7 @@ contains
         write(fates_log(),fmt0) 'q10_froz = ',q10_froz
         write(fates_log(),fmt0) 'cg_strikes = ',cg_strikes
         write(fates_log(),'(a,L2)') 'active_crown_fire = ',active_crown_fire
+        write(fates_log(),fmti) 'rxfire_switch = ',rxfire_switch
         write(fates_log(),fmt0) 'damage_event_code = ',damage_event_code
         write(fates_log(),fmt0) 'damage_canopy_layer_code = ', damage_canopy_layer_code
         write(fates_log(),*) '------------------------------------------------------'
