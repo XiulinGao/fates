@@ -65,6 +65,7 @@
   public :: ground_fuel_consumption
   public :: wind_effect
   public :: area_burnt_intensity
+  public :: rxfire_area
   public :: crown_scorching
   public :: crown_damage
   public :: cambial_damage_kill
@@ -116,6 +117,7 @@ contains
        call rate_of_spread(currentSite)
        call ground_fuel_consumption(currentSite)
        call area_burnt_intensity(currentSite, bc_in)
+       call rxfire_area(currentSite, bc_in)
        call crown_scorching(currentSite)
        call crown_damage(currentSite)
        call cambial_damage_kill(currentSite)
@@ -206,6 +208,8 @@ contains
     real(r8) :: rh_check   !rh check
     real(r8) :: wd_check   !wind speed check
     integer  :: iofp       ! index of oldest the fates patch
+
+    if(rxfire_switch .eq. ifalse) return !skip when management fire is off
      
 
     currentPatch => currentSite%oldest_patch
@@ -778,8 +782,13 @@ end subroutine  rxfire_burn_window
     real(r8) df               !distance fire has travelled forward in m
     real(r8) db               !distance fire has travelled backward in
     real(r8) AB               !daily area burnt in m2 per km2
-    logical :: is_rxfire      ! is it a rx fire?
-    logical :: is_managed_wildfire ! is it a wildfire with FI lower than the max rxfire intensity?
+    logical  :: is_rxfire           ! is it a rx fire?
+    logical  :: rx_man              ! rxfire use human igniton
+    logical  :: rx_hyb              ! rxfire due to both strike and human ignition
+    logical  :: managed_wildfire ! is it a wildfire with FI lower than the max rxfire intensity?
+    logical  :: true_wildfire       ! is it a wildfire that cannot be managed?
+    logical  :: is_wildfire         ! combine both managed and true wildfire 
+
     
     real(r8) size_of_fire !in m2
     real(r8) cloud_to_ground_strikes  ! [fraction] depends on hlm_spitfire_mode
@@ -792,6 +801,8 @@ end subroutine  rxfire_burn_window
 
     !  ---initialize site parameters to zero--- 
     currentSite%NF_successful = 0._r8
+    currentSite%rxfire_area_fuel = 0._r8
+    currentSite%rxfire_area_fi   = 0._r8
     
     ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
     ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
@@ -934,14 +945,12 @@ end subroutine  rxfire_burn_window
          ! currently we only calculated theoretical burned fraction and fire intensity when burn window presents
 
           if(currentSite%rx_flag .eq. itrue)then
-             currentPatch%rxfire_frac_burnt = SF_val_rxfire_AB / km2_to_m2
+
              currentPatch%rxfire_FI = SF_val_fuel_energy * W * ROS 
              if(write_SF .eq. itrue)then
-                if ( hlm_masterproc .eq. itrue) write(fates_log(),*) 'rxfire_frac_burnt', currentPatch%rxfire_frac_burnt
                 if ( hlm_masterproc .eq. itrue) write(fates_log(),*) 'rxfire_FI', currentPatch%rxfire_FI
              endif
           else
-             currentPatch%rxfire_frac_burnt = 0.0_r8
              currentPatch%rxfire_FI = 0.0_r8
           endif
 
@@ -955,24 +964,36 @@ end subroutine  rxfire_burn_window
          !'decide_fire' subroutine
          ! store some condition check here to simplify the decision tree
 
-         is_rxfire = (currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
-              currentPatch%FI .lt. SF_val_rxfire_maxthreshold)
-         is_managed_wildfire = (currentSite%NF .gt. 0.0_r8 .and.  &
-              currentPatch%FI .gt. SF_val_fire_threshold .and. &
-              currentPatch%FI .lt. SF_val_rxfire_maxthreshold)
+         rx_man = (currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
+              currentPatch%FI .lt. SF_val_rxfire_maxthreshold .and. &
+              currentSite%NF .eq. 0.0_r8)
+
+         rx_hyb = (currentPatch%FI .lt. SF_val_fire_threshold .and. &
+              currentPatch%FI .gt. SF_val_rxfire_minthreshold .and. &
+              currentPatch%FI .lt. SF_val_rxfire_maxthreshold .and. &
+              currentSite%NF .gt. 0.0_r8)
+         
+         is_rxfire = (rx_man .or. rx_hyb)
+
+         managed_wildfire = (currentSite%NF .gt. 0.0_r8 .and.  &
+               currentPatch%FI .gt. SF_val_fire_threshold .and. &
+               currentPatch%FI .lt. SF_val_rxfire_maxthreshold)
+         
+         is_wildfire = (managed_wildfire .or. true_wildfire)
+
 
          if (currentSite%rx_flag .eq. itrue .and. &                   !rx fire condition check 
              currentPatch%sum_fuel .ge. SF_val_rxfire_fuel_min .and. & !fuel load check for rx fire
              currentPatch%sum_fuel .le. SF_val_rxfire_fuel_max) then
-            if(is_rxfire .or. is_managed_wildfire) then
-               currentPatch%fire = 0
-               currentPatch%rxfire = 1
-               currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
-               currentPatch%FD         = 0.0_r8      ! zero wildfire duration
+               currentSite%rxfire_area_fuel = currentSite%rxfire_area_fuel + currentPatch%area !burnable area after checking fuel condition
+               if(is_rxfire) then
+                  currentSite%rxfire_area_fi = currentSite%rxfire_area_fi + currentPatch%area !burnable area after checking intensity condition
+                  currentPatch%fire = 0
+                  currentPatch%rxfire = 1
+                  currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
+                  currentPatch%FD         = 0.0_r8      ! zero wildfire duration
 
-            else if (currentSite%NF .gt. 0.0_r8 .and. &
-                 currentPatch%FI .gt. SF_val_fire_threshold .and. &
-                 currentPatch%FI .gt. SF_val_rxfire_maxthreshold) then
+            else if (is_wildfire) then
                currentPatch%fire = 1         !wildfire happens before start the rx fire
                currentSite%NF_successful = currentSite%NF_successful + &
                        currentSite%NF * currentSite%FDI * currentPatch%area / area
@@ -1011,7 +1032,7 @@ end subroutine  rxfire_burn_window
     ! end run if that's the case?
     if(currentPatch%fire * currentPatch%rxfire .eq. 1) then
        
-       write(fates_log(),*) 'Both wildfire and management fire are happening'
+       write(fates_log(),*) 'Both wildfire and management fire are happening at same patch'
        write(fates_log(),*) 'rxfire =',currentPatch%rxfire
        write(fates_log(),*) 'fire =',currentPatch%fire
        call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1023,6 +1044,97 @@ end subroutine  rxfire_burn_window
     enddo !end patch loop
 
   end subroutine area_burnt_intensity
+
+
+
+
+  !*****************************************************************
+  subroutine rxfire_area ( currentSite, bc_in )
+   !*****************************************************************
+    
+    !returns burned fraction for prescribed fire per patch by first checking
+    !if total burnable area at site level is greater than 50% of site area 
+    !if yes, calculate burned fraction as the prescribed burned area / total burnable area 
+    
+ 
+ 
+    !use FatesInterfaceTypesMod, only : hlm_current_month
+    use FatesInterfaceTypesMod, only : hlm_current_year
+    use SFParamsMod,            only : SF_val_rxfire_AB !user defined prescribed fire area in m2 per day to reflect burning capacity
+ 
+    type(ed_site_type), intent(inout), target :: currentSite
+    type(bc_in_type), intent(in) :: bc_in
+ 
+    type(fates_patch_type), pointer  :: currentPatch
+ 
+ 
+    ! local variables
+    real(r8) :: total_burnable_area    ! total area that can apply prescribed fire (m2)
+    real(r8) :: min_burnable_area      ! Rx occurs only if total_burnable_area >= min_burnable_area
+    real(r8) :: prescribed_burnt_area  ! max. daily burning capacity in absolute area (m2) at site level
+ 
+    !real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
+    !integer,  parameter :: rx_freq = 10 ! Rx fire return interval 
+    real(r8), parameter :: min_frac_site = 0.1_r8  ! min. burnable fraction for Rx fire to happen
+ 
+    ! zero current site total burnable area and fraction before loop through patches
+    currentSite%rxfire_area_final = 0._r8
+    total_burnable_area = 0._r8
+    prescribed_burnt_area = 0._r8
+    min_burnable_area = 0._r8
+ 
+ 
+    currentPatch => currentSite%oldest_patch;
+    !calculate total area that can be burned by prescribed fire at site level
+    do while(associated(currentPatch))
+ 
+       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then
+          if(currentPatch%rxfire == 1)then
+             total_burnable_area = total_burnable_area + currentPatch%area
+          endif
+       endif
+       currentPatch => currentPatch%younger;  
+    enddo !end patch loop
+ 
+    min_burnable_area = min_frac_site * AREA
+    prescribed_burnt_area = SF_val_rxfire_AB * AREA
+ 
+    
+    
+    currentPatch => currentSite%oldest_patch;
+ 
+    do while(associated(currentPatch))
+ 
+       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
+          currentPatch%rxfire_frac_burnt = 0.0_r8
+          if(currentPatch%rxfire == 1 .and. total_burnable_area .ge. min_burnable_area)then ! .and. &
+ !         currentSite%rx_burn_accum .lt. AREA)then
+             currentSite%rxfire_area_final = currentSite%rxfire_area_final + currentPatch%area
+             currentPatch%rxfire_frac_burnt = min(0.99_r8, (prescribed_burnt_area / total_burnable_area))
+ !            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
+  !           if(currentSite%rx_burn_accum .ge. AREA)then
+                !currentSite%lst_rx_year = hlm_current_year
+                !currentSite%lst_rx_month = hlm_current_month
+   !             currentSite%next_rx_year = hlm_current_year + rx_freq
+    !         endif
+          else
+             currentPatch%rxfire = 0 !update rxfire tag when fraction burnable area is less then 50% of grid area, so we do not apply rx fire  
+             currentPatch%rxfire_frac_burnt = 0.0_r8  
+             currentPatch%rxfire_FI = 0.0_r8
+          endif
+       endif
+       currentPatch => currentPatch%younger;
+    enddo !end patch loop
+ 
+    !flush cumulative burnt area once it's time for the next cycle of Rx fire
+    !if(currentSite%rx_burn_accum .ge. AREA)then
+    !   if(hlm_current_year .eq. currentSite%next_rx_year)then
+     !     currentSite%rx_burn_accum = 0.0_r8
+     !  endif
+    !endif
+ 
+ end subroutine rxfire_area
+ 
 
 
 
@@ -1248,6 +1360,7 @@ end subroutine  rxfire_burn_window
              endif !trees
 
              ! if it is rx fire, pass calculated mortality rates to rxfire and zero them for wildfire to track them separately
+<<<<<<< HEAD
              if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0)then
                 currentCohort%rxfire_mort = currentCohort%fire_mort
                 currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
@@ -1256,9 +1369,23 @@ end subroutine  rxfire_burn_window
                 currentCohort%crownfire_mort = 0.0_r8
                 currentCohort%cambial_mort = 0.0_r8
              else
+=======
+             ! but only apply rxfire-caused mortality to cohort with DBH <= 10 cm 
+             
+            if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0) then
+
+               currentCohort%rxfire_mort = currentCohort%fire_mort
+               currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
+               currentCohort%rxcambial_mort = currentCohort%cambial_mort
+               currentCohort%fire_mort = 0.0_r8
+               currentCohort%crownfire_mort = 0.0_r8
+               currentCohort%cambial_mort = 0.0_r8
+            else
+>>>>>>> 09a64b44 (add subroutine to calculate rx fire burnt fraction)
                 currentCohort%rxfire_mort = 0.0_r8
                 currentCohort%rxcrownfire_mort = 0.0_r8
                 currentCohort%rxcambial_mort = 0.0_r8
+
              endif
                     
              currentCohort => currentCohort%shorter
