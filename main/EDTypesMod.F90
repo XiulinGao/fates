@@ -324,6 +324,9 @@ module EDTypesMod
      real(r8) ::  NF                                           ! daily ignitions in km2
      real(r8) ::  NF_successful                                ! daily ignitions in km2 that actually lead to fire
      integer  ::  rx_flag                                      ! dainly burn window flag
+     real(r8) ::  rxfire_area_fuel                             ! daily total burnable area when burn window present and fuel condition met [m2]
+     real(r8) ::  rxfire_area_fi                               ! daily total burnable area when burn window present, fuel and fire intensity met [m2]
+     real(r8) ::  rxfire_area_final                            ! daily total burnable area when all conditions met [m2]   
 
      ! PLANT HYDRAULICS
      type(ed_site_hydr_type), pointer :: si_hydr
