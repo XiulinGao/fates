@@ -787,6 +787,8 @@ contains
     type(fates_patch_type),  pointer :: currentPatch
     type(fates_cohort_type), pointer :: currentCohort
 
+    real(r8) :: link_fun  ! link function for post-fire grass survival probability, using data from Gao and Schwilk, 2022
+
     currentPatch => currentSite%oldest_patch
 
     do while(associated(currentPatch)) 
@@ -805,7 +807,10 @@ contains
                 currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.   
              else
-                currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
+               link_fun = -0.193_r8 + 0.233_r8 * currentCohort%dbh - 0.926_r8 * currentPatch%tau_l + &
+               0.106_r8 * currentCohort%dbh * currentPatch%tau_l   ! using data from Gao & Schwilk 2022, in which grass survival 
+                                                                   ! accounts for reprouting prob
+               currentCohort%fire_mort = 1.0_r8 - (1.0_r8 / (1.0_r8 + exp(-link_fun)))
              endif !trees
 
              currentCohort => currentCohort%shorter
