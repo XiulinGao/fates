@@ -358,20 +358,6 @@ contains
          FC_ground(dl_sf)       = currentPatch%fuel%frac_burnt(dl_sf)   * sum(litt_c%leaf_fines(:))
          FC_ground(lg_sf)       = currentPatch%fuel%frac_burnt(lg_sf)   * currentPatch%livegrass  
          
-       ! Following used for determination of cambial kill follows from Peterson & Ryan (1986) scheme 
-       ! less empirical cf current scheme used in SPITFIRE which attempts to mesh Rothermel 
-       ! and P&R, and while solving potential inconsistencies, actually results in BIG values for 
-       ! fire residence time, thus lots of vegetation death!   
-       ! taul is the duration of the lethal heating.  
-       ! The /10 is to convert from kgC/m2 into gC/cm2, as in the Peterson and Ryan paper #Rosie,Jun 2013
-        
-       do c = 1,num_fuel_classes 
-          tau_b(c)   =  39.4_r8 *(currentPatch%fuel%frac_loading(c)*currentPatch%fuel%non_trunk_loading/0.45_r8/10._r8)* &
-               (1.0_r8-((1.0_r8-currentPatch%fuel%frac_burnt(c))**0.5_r8))  
-       enddo
-       tau_b(tr_sf)   =  0.0_r8
-       ! Cap the residence time to 8mins, as suggested by literature survey by P&R (1986).
-       currentPatch%tau_l = min(8.0_r8,sum(tau_b)) 
 
        !---calculate overall fuel consumed by spreading fire --- 
        ! ignore 1000hr fuels. Just interested in fuels affecting ROS   
@@ -415,6 +401,11 @@ contains
     real(r8) df               !distance fire has travelled forward in m
     real(r8) db               !distance fire has travelled backward in m
     real(r8) AB               !daily area burnt in m2 per km2
+    real(r8) ambient_t        !ambient mean temp in C
+    real(r8) delta_t          !difference between ambient temp and the lethal temp 
+    real(r8) ln_base          !nature log base for calculating lethal heating duratio
+    real(r8) l_tot            !total time in min when flame temperature is above 60 celsius degree
+    real(r8) :: tau_b(nfsc)   !lethal heating rates for each fuel class (min) 
     
     real(r8) size_of_fire !in m2
     real(r8) cloud_to_ground_strikes  ! [fraction] depends on hlm_spitfire_mode
@@ -424,6 +415,15 @@ contains
     real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
     real(r8), parameter :: m_per_min__to__km_per_hour = 0.06_r8  ! convert wind speed from m/min to km/hr
     real(r8), parameter :: forest_grassland_lengthtobreadth_threshold = 0.55_r8 ! tree canopy cover below which to use grassland length-to-breadth eqn
+
+    ! some constants in Mercer & Weber 2001 'Fire Plumes' to estimate lethal heating duration
+    ! this calculation is based on location above the fire source and fire intensity
+    
+    real(r8), parameter :: z = 1.0_r8     !vertical distance from the fire, set to 1m
+    real(r8), parameter :: k = 4.47_r8    !see Eq. 1, 2, and 18 in Mercer & Weber 2001
+    real(r8), parameter :: r = 0.016_r8   !fuel type specific constant, influencing how fast a fire cools down
+                                          !once pass the max. temp. larger value leads to faster cooling process thus shorter heating duration
+    real(r8), parameter :: beta = 0.16_r8 ! see Eq. 3 in Mercer & Weber 2001
 
     !  ---initialize site parameters to zero--- 
     currentSite%NF_successful = 0._r8
@@ -563,6 +563,47 @@ contains
          if(write_sf == itrue)then
              if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
          endif
+
+          !There are two ways to calculate lethal heating duration:
+         !1) lethal heating duration is a function of litter burned fraction, which is determined by FMC and associated params (Peterson & Ryan (1986)
+         !2) lethal heating duration is a function of fire intensity (Eq. 18 in Mercer & Weber 2001)
+
+         case_lethal_heating: select case (lethal_heating_model)
+
+         case (pr_lh)
+         !Following used for determination of cambial kill follows from Peterson & Ryan (1986) scheme
+         !less empirical cf current scheme used in SPITFIRE which attempts to mesh Rothermel
+         !and P&R, and while solving potential inconsistencies, actually results in BIG values for
+         !fire residence time, thus lots of vegetation death!
+         !taul is the duration of the lethal heating.
+         !The /10 is to convert from kgC/m2 into gC/cm2, as in the Peterson and Ryan paper #Rosie,Jun 2013 
+            do c = 1,nfsc
+               tau_b(c) = 39.4_r8 *(currentPatch%fuel%frac_loading(c)*currentPatch%fuel%non_trunk_loading/0.45_r8/10._r8)* &
+                    (1.0_r8-((1.0_r8-currentPatch%fuel%frac_burnt(c))**0.5_r8))
+            enddo
+            tau_b(tr_sf)   =  0.0_r8
+            currentPatch%tau_l = min(8.0_r8,sum(tau_b))
+
+         case (merweb_lh)
+            ambient_t = currentPatch%tveg24%GetMean() - tfrz
+            delta_t   = 60.0_r8 - ambient_t
+            ln_base   = (k * (currentPatch%FI**0.667_r8)) / (z * delta_t)
+            l_tot     = (beta * z * (log(ln_base))**0.5_r8) + (1.0_r8 / r) * log(ln_base) ! in sec
+            currentPatch%tau_l = min(8.0_r8, (l_tot / 60.0_r8))  !in min, and cap it to 8 min, as suggested by literature survey by P&R (1986).
+
+         case DEFAULT
+            write(fates_log(),*) 'An undefined lethal heating calculation was specified: ',lethal_heating_model
+            write(fates_log(),*) 'Aborting'
+            call endrun(msg=errMsg(sourcefile, __LINE__))
+
+         end select case_lethal_heating
+         
+    
+         if(write_sf == itrue)then
+            if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
+            if( hlm_masterproc == itrue ) write(fates_log(),*) 'lethal_heating_duration', currentPatch%tau_l
+         endif
+
 
          !'decide_fire' subroutine 
          if (currentPatch%FI > SF_val_fire_threshold) then !track fires greater than kW/m energy threshold

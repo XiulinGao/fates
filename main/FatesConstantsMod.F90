@@ -135,6 +135,10 @@ integer, parameter, public :: isemi_stress_decid = 2 ! If the PFT is stress (dro
                                                             ! based on average age of global
                                                             ! secondary 1900s land in hurtt-2011
 
+  ! flags specify how to calculate lethal heating duration in SPITFIRE
+  integer, public, parameter :: pr_lh = 1     ! lethal heating duration is a function of litter fraction burned
+  integer, public, parameter :: merweb_lh = 2 ! lethal heating duration is a function of fire intensity 
+
   ! integer labels for specifying harvest units
   integer, parameter, public :: photosynth_acclim_model_none = 1
   integer, parameter, public :: photosynth_acclim_model_kumarathunge_etal_2019 = 2
