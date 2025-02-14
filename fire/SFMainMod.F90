@@ -764,7 +764,6 @@ end subroutine  rxfire_burn_window
     use FatesInterfaceTypesMod, only : hlm_spitfire_mode
     use EDParamsMod,       only : ED_val_nignitions
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
-    use EDParamsMod,       only : lethal_heating_model !how to calculate lethal heating duration
     use FatesConstantsMod, only : years_per_day
     use SFParamsMod,       only : SF_val_fdi_alpha,SF_val_fuel_energy, &
          SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
@@ -783,11 +782,6 @@ end subroutine  rxfire_burn_window
     real(r8) df               !distance fire has travelled forward in m
     real(r8) db               !distance fire has travelled backward in
     real(r8) AB               !daily area burnt in m2 per km2
-    real(r8) ambient_t        !ambient mean temp in C
-    real(r8) delta_t          !difference between ambient temp and the lethal temp 
-    real(r8) ln_base          !nature log base for calculating lethal heating duration
-    real(r8) l_tot            !total time in min when flame temperature is above 60 celsius degree
-    real(r8) :: tau_b(nfsc)   !lethal heating rates for each fuel class (min)   
 
     logical  :: is_rxfire           ! is it a rx fire?
     logical  :: rx_man              ! rxfire use human igniton
@@ -965,7 +959,6 @@ end subroutine  rxfire_burn_window
        
          if(write_sf == itrue)then
             if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
-            if( hlm_masterproc == itrue ) write(fates_log(),*) 'lethal_heating_duration', currentPatch%tau_l
          endif
 
          !'decide_fire' subroutine
