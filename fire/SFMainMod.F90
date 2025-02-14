@@ -201,7 +201,7 @@ contains
     type(fates_patch_type),  pointer :: currentPatch
 
     real(r8) :: temp_in_C  !daily averaged temperature in celcius
-!    real(r8) :: rainfall   !daily precip in mm/day
+    real(r8) :: rainfall   !daily precip in mm/day
     real(r8) :: rh         !daily relative humidity
     real(r8) :: wind       !daily wind speed in m/s
     real(r8) :: t_check    !intermediate value derived from temp condition check
@@ -221,22 +221,22 @@ contains
     iofp = currentPatch%patchno
 
     temp_in_C = currentPatch%tveg24%GetMean() - tfrz
- !   rainfall  = bc_in%precip24_pa(iofp)*sec_per_day
+    rainfall  = bc_in%precip24_pa(iofp)*sec_per_day
     rh        = bc_in%relhumid24_pa(iofp)
     wind      = bc_in%wind24_pa(iofp)
     t_check   = (temp_in_C - SF_val_rxfire_tplw)*(temp_in_C - SF_val_rxfire_tpup)
     rh_check  = (rh - SF_val_rxfire_rhlw)*(rh - SF_val_rxfire_rhup)
     wd_check  = (wind - SF_val_rxfire_wdlw)*(wind - SF_val_rxfire_wdup)
 
-  !  if(rainfall > 3.0_r8)then
-  !     currentSite%rx_flag = 0.0_r8 !when it rains no Rx fire
-    if(t_check.le.0.0_r8 .and. rh_check.le.0.0_r8 .and. wd_check.le.0.0_r8)then
-       currentSite%rx_flag = 1
+    if(rainfall > 3.0_r8)then
+       currentSite%rx_flag = 0.0_r8 !when it rains no Rx fire
+    else if(t_check.le.0.0_r8 .and. rh_check.le.0.0_r8 .and. wd_check.le.0.0_r8)then
+       currentSite%rx_flag = 1.0_r8
     else
-       currentSite%rx_flag = 0
+       currentSite%rx_flag = 0.0_r8
     endif
    
-  end subroutine  rxfire_burn_window
+end subroutine  rxfire_burn_window
 
 
   !*****************************************************************
@@ -667,14 +667,13 @@ contains
          SF_val_mid_moisture_Coeff, SF_val_mid_moisture_Slope
 
     type(ed_site_type) , intent(in), target :: currentSite
-    type(fates_patch_type), pointer         :: currentPatch
-    type(litter_type), pointer              :: litt_c           ! carbon 12 litter pool
+    type(fates_patch_type), pointer    :: currentPatch
+    type(litter_type), pointer      :: litt_c           ! carbon 12 litter pool
     
     real(r8) :: moist           !effective fuel moisture
-!    real(r8) :: tau_b(nfsc)     !lethal heating rates for each fuel class (min) 
+    real(r8) :: tau_b(nfsc)     !lethal heating rates for each fuel class (min) 
     real(r8) :: fc_ground(nfsc) !total amount of fuel consumed per area of burned ground (kg C / m2 of burned area)
 
-    
     integer  :: c
 
     currentPatch => currentSite%oldest_patch;  
@@ -730,14 +729,13 @@ contains
        ! taul is the duration of the lethal heating.  
        ! The /10 is to convert from kgC/m2 into gC/cm2, as in the Peterson and Ryan paper #Rosie,Jun 2013
         
-!       do c = 1,nfsc  
-!          tau_b(c)   =  39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
-!               (1.0_r8-((1.0_r8-currentPatch%burnt_frac_litter(c))**0.5_r8))  
-!       enddo
-!       tau_b(tr_sf)   =  0.0_r8   
-       
+       do c = 1,nfsc  
+          tau_b(c)   =  39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
+               (1.0_r8-((1.0_r8-currentPatch%burnt_frac_litter(c))**0.5_r8))  
+       enddo
+       tau_b(tr_sf)   =  0.0_r8
        ! Cap the residence time to 8mins, as suggested by literature survey by P&R (1986).
-!       currentPatch%tau_l = min(8.0_r8,sum(tau_b)) 
+       currentPatch%tau_l = min(8.0_r8,sum(tau_b)) 
 
        !---calculate overall fuel consumed by spreading fire --- 
        ! ignore 1000hr fuels. Just interested in fuels affecting ROS   
@@ -768,8 +766,6 @@ contains
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
     use EDParamsMod,       only : lethal_heating_model !how to calculate lethal heating duration
     use FatesConstantsMod, only : years_per_day
-    use FatesConstantsMod, only : tfrz => t_water_freeze_k_1atm
-    use FatesConstantsMod, only : pr_lh, merweb_lh
     use SFParamsMod,       only : SF_val_fdi_alpha,SF_val_fuel_energy, &
          SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold, &
          SF_val_rxfire_AB, SF_val_rxfire_minthreshold, &
@@ -806,21 +802,10 @@ contains
     real(r8) cloud_to_ground_strikes  ! [fraction] depends on hlm_spitfire_mode
     real(r8) anthro_ign_count  ! anthropogenic ignition count/km2/day
     integer :: iofp  ! index of oldest fates patch
-    integer :: c
-    
     real(r8), parameter :: pot_hmn_ign_counts_alpha = 0.0035_r8  ! Potential human ignition counts (alpha in Li et al. 2012) (#/person/month)
     real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
     real(r8), parameter :: m_per_min__to__km_per_hour = 0.06_r8  ! convert wind speed from m/min to km/hr
     real(r8), parameter :: forest_grassland_lengthtobreadth_threshold = 0.55_r8 ! tree canopy cover below which to use grassland length-to-breadth eqn
-
-    ! some constants in Mercer & Weber 2001 'Fire Plumes' to estimate lethal heating duration
-    ! this calculation is based on location above the fire source and fire intensity
-    
-    real(r8), parameter :: z = 1.0_r8     !vertical distance from the fire, set to 1m
-    real(r8), parameter :: k = 4.47_r8    !see Eq. 1, 2, and 18 in Mercer & Weber 2001
-    real(r8), parameter :: r = 0.016_r8   !fuel type specific constant, influencing how fast a fire cools down
-                                          !once pass the max. temp. larger value leads to faster cooling process thus shorter heating duration
-    real(r8), parameter :: beta = 0.16_r8 ! see Eq. 3 in Mercer & Weber 2001
 
     !  ---initialize site parameters to zero--- 
     currentSite%NF_successful = 0._r8
@@ -977,42 +962,7 @@ contains
              currentPatch%rxfire_FI = 0.0_r8
           endif
 
-
-         !There are two ways to calculate lethal heating duration:
-         !1) lethal heating duration is a function of litter burned fraction, which is determined by FMC and associated params (Peterson & Ryan (1986)
-         !2) lethal heating duration is a function of fire intensity (Eq. 18 in Mercer & Weber 2001)
-
-         case_lethal_heating: select case (lethal_heating_model)
-
-         case (pr_lh)
-         !Following used for determination of cambial kill follows from Peterson & Ryan (1986) scheme
-         !less empirical cf current scheme used in SPITFIRE which attempts to mesh Rothermel
-         !and P&R, and while solving potential inconsistencies, actually results in BIG values for
-         !fire residence time, thus lots of vegetation death!
-         !taul is the duration of the lethal heating.
-         !The /10 is to convert from kgC/m2 into gC/cm2, as in the Peterson and Ryan paper #Rosie,Jun 2013 
-            do c = 1,nfsc
-               tau_b(c) = 39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
-                    (1.0_r8-((1.0_r8-currentPatch%burnt_frac_litter(c))**0.5_r8))
-            enddo
-            tau_b(tr_sf)   =  0.0_r8
-            currentPatch%tau_l = min(8.0_r8,sum(tau_b))
-
-         case (merweb_lh)
-            ambient_t = currentPatch%tveg24%GetMean() - tfrz
-            delta_t   = 60.0_r8 - ambient_t
-            ln_base   = (k * (currentPatch%FI**0.667_r8)) / (z * delta_t)
-            l_tot     = (beta * z * (log(ln_base))**0.5_r8) + (1.0_r8 / r) * log(ln_base) ! in sec
-            currentPatch%tau_l = min(8.0_r8, (l_tot / 60.0_r8))  !in min, and cap it to 8 min, as suggested by literature survey by P&R (1986).
-
-         case DEFAULT
-            write(fates_log(),*) 'An undefined lethal heating calculation was specified: ',lethal_heating_model
-            write(fates_log(),*) 'Aborting'
-            call endrun(msg=errMsg(sourcefile, __LINE__))
-
-         end select case_lethal_heating
-         
-    
+       
          if(write_sf == itrue)then
             if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
             if( hlm_masterproc == itrue ) write(fates_log(),*) 'lethal_heating_duration', currentPatch%tau_l
@@ -1366,6 +1316,9 @@ contains
                 endif                
              endif !trees
              
+                endif
+             endif !trees 
+
              currentCohort => currentCohort%shorter;
 
           enddo !end cohort loop
@@ -1393,8 +1346,6 @@ contains
     type(fates_patch_type),  pointer :: currentPatch
     type(fates_cohort_type), pointer :: currentCohort
 
-    real(r8) :: link_fun  ! link function for post-fire grass survival probability, using data from Gao and Schwilk, 2022
-
     currentPatch => currentSite%oldest_patch
 
     do while(associated(currentPatch)) 
@@ -1415,10 +1366,7 @@ contains
                 currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.
              else
-                link_fun = -0.193_r8 + 0.233_r8 * currentCohort%dbh - 0.926_r8 * currentPatch%tau_l + &
-                     0.106_r8 * currentCohort%dbh * currentPatch%tau_l                  ! using data from Gao & Schwilk 2022, in which grass survival accounts for reprouting prob
-                                                                                        ! heating duration measured in Gao & Schwilk is at 0.1m above the ground, set z to be PFT specific?
-                currentCohort%fire_mort = 1.0_r8 - (1.0_r8 / (1.0_r8 + exp(-link_fun))) ! Oops, we kill grasses in fire :] 
+                currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees
 
              ! if it is rx fire, pass calculated mortality rates to rxfire and zero them for wildfire to track them separately

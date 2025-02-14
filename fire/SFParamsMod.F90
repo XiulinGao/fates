@@ -1,5 +1,6 @@
 module SFParamsMod
    !
+   !
    ! module that deals with reading the SF parameter file
    !
    use FatesConstantsMod , only: r8 => fates_r8
@@ -30,7 +31,7 @@ module SFParamsMod
    real(r8),protected, public :: SF_val_durat_slope
    real(r8),protected, public :: SF_val_drying_ratio
    real(r8),protected, public :: SF_val_fire_threshold    ! threshold for fires that spread or go out. kW/m (Pyne 1996)
-   real(r8),protected, public :: SF_val_CWD_frac(ncwd)    ! case 2 calculation using fire intensity, Eq.18 in Mercer & Weber 2001 'Fire Plumes'
+   real(r8),protected, public :: SF_val_CWD_frac(ncwd)
    real(r8),protected, public :: SF_val_max_decomp(NFSC)
    real(r8),protected, public :: SF_val_SAV(NFSC)
    real(r8),protected, public :: SF_val_FBD(NFSC)
@@ -40,7 +41,6 @@ module SFParamsMod
    real(r8),protected, public :: SF_val_low_moisture_Slope(NFSC)
    real(r8),protected, public :: SF_val_mid_moisture_Coeff(NFSC)
    real(r8),protected, public :: SF_val_mid_moisture_Slope(NFSC)
-   
 
    ! Prescribed fire relevant parameters
    real(r8),protected, public :: SF_val_rxfire_tpup   ! temprature upper threshold for conducting RX fire
@@ -159,6 +159,7 @@ contains
          write(fates_log(),*) 'Please provide a reasonable value, aborting.'
          call endrun(msg=errMsg(sourcefile, __LINE__))
      end if
+
 
      return
   end subroutine SpitFireCheckParams
@@ -337,9 +338,6 @@ contains
     call fates_params%RetrieveParameter(name=SF_name_fdi_alpha, &
          data=SF_val_fdi_alpha)
 
-   ! call fates_params%RetrieveParameter(name=SF_name_lh_mod, &
-   !      data=SF_val_lh_mod)
-    
     call fates_params%RetrieveParameter(name=SF_name_miner_total, &
          data=SF_val_miner_total)
 
