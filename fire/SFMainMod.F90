@@ -386,6 +386,8 @@ contains
     use EDParamsMod,       only : ED_val_nignitions
     use EDParamsMod,       only : cg_strikes    ! fraction of cloud-to-ground ligtning strikes
     use FatesConstantsMod, only : years_per_day
+    use FatesConstantsMod, only : tfrz => t_water_freeze_k_1atm
+    use FatesConstantsMod, only : pr_lh, merweb_lh
     use SFParamsMod,       only : SF_val_fdi_alpha,SF_val_fuel_energy, &
          SF_val_max_durat, SF_val_durat_slope, SF_val_fire_threshold
     
