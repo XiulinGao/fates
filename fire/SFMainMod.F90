@@ -302,7 +302,6 @@ contains
     type(litter_type), pointer      :: litt_c           ! carbon 12 litter pool
     
     real(r8) :: moist           !effective fuel moisture
-    real(r8) :: tau_b(num_fuel_classes)     !lethal heating rates for each fuel class (min) 
     real(r8) :: fc_ground(num_fuel_classes) !total amount of fuel consumed per area of burned ground (kg C / m2 of burned area)
     integer :: tr_sf, tw_sf, dl_sf, lg_sf
     integer  :: c
