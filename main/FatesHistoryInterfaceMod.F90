@@ -737,6 +737,7 @@ module FatesHistoryInterfaceMod
 
   ! indices to (patch age x fuel size class) variables
   integer :: ih_fuel_amount_age_fuel
+  integer :: ih_fuel_eff_moist_age_fuel
 
   ! The number of variable dim/kind types we have defined (static)
 
@@ -2468,6 +2469,7 @@ end subroutine flush_hvars
                hio_burnt_frac_litter_si_fuel      => this%hvars(ih_burnt_frac_litter_si_fuel)%r82d, &
                hio_fuel_amount_si_fuel            => this%hvars(ih_fuel_amount_si_fuel)%r82d, &
                hio_fuel_amount_age_fuel            => this%hvars(ih_fuel_amount_age_fuel)%r82d, &
+               hio_fuel_eff_moist_age_fuel        => this%hvars(ih_fuel_eff_moist_age_fuel)%r82d, &
                hio_canopy_height_dist_si_height   => this%hvars(ih_canopy_height_dist_si_height)%r82d, &
                hio_leaf_height_dist_si_height     => this%hvars(ih_leaf_height_dist_si_height)%r82d, &
                hio_litter_moisture_si_fuel        => this%hvars(ih_litter_moisture_si_fuel)%r82d, &
@@ -3699,7 +3701,10 @@ end subroutine flush_hvars
 
             i_agefuel = get_agefuel_class_index(cpatch%age,i_fuel)
             hio_fuel_amount_age_fuel(io_si,i_agefuel) = hio_fuel_amount_age_fuel(io_si,i_agefuel) + &
-               cpatch%fuel_frac(i_fuel) * cpatch%sum_fuel * cpatch%area * AREA_INV
+                 cpatch%fuel_frac(i_fuel) * cpatch%sum_fuel * cpatch%area * AREA_INV
+
+            hio_fuel_eff_moist_age_fuel(io_si,i_agefuel) = hio_fuel_eff_moist_age_fuel(io_si,i_agefuel) + &
+                 cpatch%litter_moisture(i_fuel) * cpatch%area * AREA_INV
 
             hio_litter_moisture_si_fuel(io_si, i_fuel) = hio_litter_moisture_si_fuel(io_si, i_fuel) + &
                cpatch%litter_moisture(i_fuel) * cpatch%area * AREA_INV
@@ -5806,6 +5811,12 @@ end subroutine update_history_hifrq
          use_default='inactive', avgflag='A', vtype=site_agefuel_r8,           &
          hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables, &
          index = ih_fuel_amount_age_fuel)
+
+    call this%set_history_var(vname='FATES_FUEL_EFF_MOIST_APFC', units='m3 m-3', &
+         long='spitfire fuel moisture (volumetric) in each age x fuel class', &
+         use_default='inactive', avgflag='A', vtype=site_agefuel_r8,          &
+         hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
+         index = ih_fuel_eff_moist_age_fuel)
 
     call this%set_history_var(vname='FATES_BURNFRAC_AP', units='s-1',          &
          long='spitfire fraction area burnt (per second) by patch age',        &
