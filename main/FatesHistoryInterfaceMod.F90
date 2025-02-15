@@ -5815,7 +5815,7 @@ end subroutine update_history_hifrq
     call this%set_history_var(vname='FATES_FUEL_EFF_MOIST_APFC', units='m3 m-3', &
          long='spitfire fuel moisture (volumetric) in each age x fuel class', &
          use_default='inactive', avgflag='A', vtype=site_agefuel_r8,          &
-         hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables, &
          index = ih_fuel_eff_moist_age_fuel)
 
     call this%set_history_var(vname='FATES_BURNFRAC_AP', units='s-1',          &
