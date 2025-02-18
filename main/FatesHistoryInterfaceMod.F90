@@ -181,6 +181,8 @@ module FatesHistoryInterfaceMod
   integer :: ih_fnrtc_sl
   integer :: ih_reproc_si
   integer :: ih_totvegc_si
+  integer :: ih_sapwc_abg_si
+  integer :: ih_deadc_abg_si
 
   ! Nutrient relevant diagnostics (CNP)
   ! ---------------------------------------------------------------
@@ -2284,6 +2286,8 @@ end subroutine flush_hvars
                hio_bdead_si            => this%hvars(ih_bdead_si)%r81d, &
                hio_balive_si           => this%hvars(ih_balive_si)%r81d, &
                hio_agb_si              => this%hvars(ih_agb_si)%r81d, &
+               hio_sapwc_abg_si        => this%hvars(ih_sapwc_abg_si)%r81d, &
+               hio_deadc_abg_si        => this%hvars(ih_deadc_abg_si)%r81d, &
                hio_canopy_biomass_si   => this%hvars(ih_canopy_biomass_si)%r81d, &
                hio_understory_biomass_si   => this%hvars(ih_understory_biomass_si)%r81d, &
                hio_primaryland_fusion_error_si    => this%hvars(ih_primaryland_fusion_error_si)%r81d, &
@@ -2905,6 +2909,11 @@ end subroutine flush_hvars
 
                   hio_agb_si(io_si) = hio_agb_si(io_si) + n_perm2 *            &
                   ( leaf_m + (sapw_m + struct_m + store_m) * prt_params%allom_agb_frac(ccohort%pft) )
+
+                  hio_sapwc_abg_si(io_si) = hio_sapwc_abg_si(io_si) + n_perm2 *   &
+                  sapw_m * prt_params%allom_agb_frac(ccohort%pft)
+                  hio_deadc_abg_si(io_si) = hio_deadc_abg_si(io_si) + n_perm2 *   &
+                  struct_m * prt_params%allom_agb_frac(ccohort%pft)
 
 
                   ! Update PFT partitioned biomass components
@@ -6325,6 +6334,18 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index = ih_agb_si)
+     
+     call this%set_history_var(vname='FATES_SAPWC_ABOVEGROUND', units='kg m-2',&
+          long='abovegorund sapwood biomass in kg carbon per m2 land area',    &
+          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',    &
+          upfreq=1, ivar=ivar, initialize=initialize_variables,                &
+          index = ih_sapwc_abg_si)
+     
+     call this%set_history_var(vname='FATES_STRUC_ABOVEGROUND', units='kg m-2',&
+          long='abovegorund dead biomass in kg carbon per m2 land area',       &
+          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',    &
+          upfreq=1, ivar=ivar, initializ=initialize_variables,                 &
+          index = ih_deadc_abg_si)
 
     call this%set_history_var(vname='FATES_CANOPY_VEGC', units='kg m-2',       &
          long='biomass of canopy plants in kg carbon per m2 land area',        &
