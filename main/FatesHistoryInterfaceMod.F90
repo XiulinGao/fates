@@ -605,6 +605,10 @@ module FatesHistoryInterfaceMod
   integer :: ih_npatches_si_age
   integer :: ih_zstar_si_age
   integer :: ih_biomass_si_age
+  integer :: ih_leafc_si_age
+  integer :: ih_woodc_agb_si_age
+  integer :: ih_sapwc_agb_si_age
+  integer :: ih_struc_agb_si_age
   integer :: ih_c_stomata_si_age
   integer :: ih_c_lblayer_si_age
   integer :: ih_agesince_anthrodist_si_age
@@ -2461,6 +2465,10 @@ end subroutine flush_hvars
                hio_npatches_si_age     => this%hvars(ih_npatches_si_age)%r82d, &
                hio_zstar_si_age        => this%hvars(ih_zstar_si_age)%r82d, &
                hio_biomass_si_age        => this%hvars(ih_biomass_si_age)%r82d, &
+               hio_woodc_agb_si_age      => this%hvars(ih_woodc_agb_si_age)%r82d, &
+               hio_sapwc_agb_si_age      => this%hvars(ih_sapwc_agb_si_age)%r82d, &
+               hio_struc_agb_si_age      => this%hvars(ih_struc_agb_si_age)%r82d, &
+               hio_leafc_si_age      => this%hvars(ih_leafc_si_age)%r82d, &
                hio_fraction_secondary_forest_si   => this%hvars(ih_fraction_secondary_forest_si)%r81d, &
                hio_biomass_secondary_forest_si    => this%hvars(ih_biomass_secondary_forest_si)%r81d, &
                hio_woodproduct_si                 => this%hvars(ih_woodproduct_si)%r81d, &
@@ -2942,6 +2950,16 @@ end subroutine flush_hvars
                   ! update total biomass per age bin
                   hio_biomass_si_age(io_si,cpatch%age_class) = hio_biomass_si_age(io_si,cpatch%age_class) &
                      + total_m * ccohort%n * AREA_INV
+                  
+                  ! track organ level biomass per age bin for calculating live biomass fuels
+                  hio_leafc_si_age(io_si,cpatch%age_class) = hio_leafc_si_age(io_si,cpatch%age_class) &
+                     + leaf_m * ccohort%n * AREA_INV
+                  hio_sapwc_agb_si_age(io_si,cpatch%age_class) = hio_sawpc_agb_si_age(io_si,cpatch%age_class) &
+                     + (sapw_m * ccohort%n * prt_params%allom_agb_frac(ccohort%pft)) * AREA_INV
+                  hio_struc_agb_si_age(io_si,cpatch%age_class) = hio_struc_agb_si_age(io_si,cpatch%age_class) &
+                     + (struct_m * ccohort%n * prt_params%allom_agb_frac(ccohort%pft)) * AREA_INV
+                  hio_woodc_agb_si_age(io_si,cpatch%age_class) = hio_woodc_agb_si_age(io_si,cpatch%age_class) &
+                     + ((sapw_m + struct_m) * ccohort%n * prt_params%allom_agb_frac(ccohort%pft)) * AREA_INV
 
                   ! track the total biomass on all secondary lands
                   if ( cpatch%anthro_disturbance_label .eq. secondaryforest ) then
@@ -5673,6 +5691,30 @@ end subroutine update_history_hifrq
          use_default='inactive', avgflag='A', vtype=site_age_r8,               &
          hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables, &
          index=ih_biomass_si_age)
+
+    call this%set_history_var(vname='FATES_LEAFC_AP', units='kg m-2',         &
+         long='total leaf biomass within a given patch age bin in kg carbon per m2 land area', &
+         use_default='inactive', avgflag='A', vtype=site_age_r8,              &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables, &
+         index=ih_leafc_si_age)
+
+    call this%set_history_var(vname='FATES_SAPWC_ABOVEGROUND_AP', units='kg m-2', &
+         long='total sapwood biomass withtin a given patch age bin in kg carbon per m2 land area', &
+         use_default='inactive', avgflag='A', vtype=site_age_r8,              &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables, &
+         index=ih_sapwc_agb_si_age)
+     
+    call this%set_history_var(vname='FATES_STRUC_ABOVEGROUND_AP', units='kg m-2', &
+         long='total structural biomass withtin a given patch age bin in kg carbon per m2 land area', &
+         use_default='inactive', avgflag='A', vtype=site_age_r8,               &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables,  &
+         index=ih_struc_agb_si_age)
+
+    call this%set_history_var(vname='FATES_WOODC_ABOVEGROUND_AP', units='kg m-2', &
+         long='total woody biomass (struc + sapwood) within a given patch age bin in kg C per m2 land area', &
+         use_default='inactive', avgflag='A', vtype=site_age_r8,              &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables,&
+         index=ih_woodc_agb_si_age)
 
     ! Secondary forest area and age diagnostics
 
