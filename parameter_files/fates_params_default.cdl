@@ -886,8 +886,8 @@ variables:
                fates_rxfire_wind_lwthreshold:units = "m/s";
                fates_rxfire_wind_lwthreshold:long_name= "minimum wind speed threshold for conducting prescribeb fire";
         double fates_rxfire_AB ;
-               fates_rxfire_AB:units = "m2/(km2*day)";
-               fates_rxfire_AB:long_name= "daily burn capacity of prescribed fire";
+               fates_rxfire_AB:units = "m2/m2";
+               fates_rxfire_AB:long_name= "daily burn capacity of prescribed fire in fraction";
         double fates_rxfire_min_threshold ;
                fates_rxfire_min_threshold:units = "kJ/m/s or kW/s";
                fates_rxfire_min_threshold:long_name= "minimum energy threshold for conducting prescribeb fire, meant to control for management outcomes not for fire spreading";
@@ -1775,7 +1775,7 @@ data:
 
  fates_rxfire_wind_lwthreshold = 2 ;
 
- fates_rxfire_AB = 250000 ;
+ fates_rxfire_AB = 0.01 ;
 
  fates_rxfire_min_threshold = 50 ;
 
