@@ -2954,7 +2954,7 @@ end subroutine flush_hvars
                   ! track organ level biomass per age bin for calculating live biomass fuels
                   hio_leafc_si_age(io_si,cpatch%age_class) = hio_leafc_si_age(io_si,cpatch%age_class) &
                      + leaf_m * ccohort%n * AREA_INV
-                  hio_sapwc_agb_si_age(io_si,cpatch%age_class) = hio_sawpc_agb_si_age(io_si,cpatch%age_class) &
+                  hio_sapwc_agb_si_age(io_si,cpatch%age_class) = hio_sapwc_agb_si_age(io_si,cpatch%age_class) &
                      + (sapw_m * ccohort%n * prt_params%allom_agb_frac(ccohort%pft)) * AREA_INV
                   hio_struc_agb_si_age(io_si,cpatch%age_class) = hio_struc_agb_si_age(io_si,cpatch%age_class) &
                      + (struct_m * ccohort%n * prt_params%allom_agb_frac(ccohort%pft)) * AREA_INV
@@ -5695,19 +5695,19 @@ end subroutine update_history_hifrq
     call this%set_history_var(vname='FATES_LEAFC_AP', units='kg m-2',         &
          long='total leaf biomass within a given patch age bin in kg carbon per m2 land area', &
          use_default='inactive', avgflag='A', vtype=site_age_r8,              &
-         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables, &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables, &
          index=ih_leafc_si_age)
 
     call this%set_history_var(vname='FATES_SAPWC_ABOVEGROUND_AP', units='kg m-2', &
          long='total sapwood biomass withtin a given patch age bin in kg carbon per m2 land area', &
          use_default='inactive', avgflag='A', vtype=site_age_r8,              &
-         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables, &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables, &
          index=ih_sapwc_agb_si_age)
      
     call this%set_history_var(vname='FATES_STRUC_ABOVEGROUND_AP', units='kg m-2', &
          long='total structural biomass withtin a given patch age bin in kg carbon per m2 land area', &
          use_default='inactive', avgflag='A', vtype=site_age_r8,               &
-         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables,  &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables,  &
          index=ih_struc_agb_si_age)
 
     call this%set_history_var(vname='FATES_WOODC_ABOVEGROUND_AP', units='kg m-2', &
