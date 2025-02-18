@@ -1060,7 +1060,7 @@ end subroutine  rxfire_burn_window
  
     !use FatesInterfaceTypesMod, only : hlm_current_month
     use FatesInterfaceTypesMod, only : hlm_current_year
-    use SFParamsMod,            only : SF_val_rxfire_AB !user defined prescribed fire area in m2 per day to reflect burning capacity
+    use SFParamsMod,            only : SF_val_rxfire_AB !user defined prescribed fire area in fraction to reflect burning capacity
  
     type(ed_site_type), intent(inout), target :: currentSite
     type(bc_in_type), intent(in) :: bc_in
