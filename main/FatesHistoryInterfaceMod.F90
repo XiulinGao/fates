@@ -6344,7 +6344,7 @@ end subroutine update_history_hifrq
      call this%set_history_var(vname='FATES_STRUC_ABOVEGROUND', units='kg m-2',&
           long='abovegorund dead biomass in kg carbon per m2 land area',       &
           use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',    &
-          upfreq=1, ivar=ivar, initializ=initialize_variables,                 &
+          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
           index = ih_deadc_abg_si)
 
     call this%set_history_var(vname='FATES_CANOPY_VEGC', units='kg m-2',       &
