@@ -260,7 +260,7 @@ contains
       real(r8), parameter :: cap_targ1   = 0.75_r8   !max. harvesting fraction for plants < ref_dbh1 
       real(r8), parameter :: cap_targ2   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
       real(r8), parameter :: cap_targ3   = 0.20_r8   !max. harvesting fraction for plants > ref_dbh3
-      real(r8), parameter :: log_err     = 0.0001_r8   !error allowed for achieving target basal area 
+      real(r8), parameter :: ba_targ_precision  = 1.0E-4_r8 !precision allowed for achieving target basal area 
       integer , parameter :: target_harvest = 1       !switch for turnning on target harvesting
 
       ! todo: probably lower the dbhmin default value to 30 cm
@@ -373,7 +373,7 @@ contains
             
             ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
             ! call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
-            if(delta_BA > log_err) then
+            if(delta_BA > ba_targ_precision) then
                target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
             else
                target_num = 0.0_r8
