@@ -597,6 +597,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_area_si_age
   integer :: ih_lai_si_age
   integer :: ih_canopy_area_si_age
+  integer :: ih_ba_si_age
   integer :: ih_gpp_si_age
   integer :: ih_npp_si_age
   integer :: ih_ncl_si_age
@@ -2452,6 +2453,7 @@ end subroutine flush_hvars
                hio_lai_si_age          => this%hvars(ih_lai_si_age)%r82d, &
                hio_lai_secondary_si          => this%hvars(ih_lai_secondary_si)%r81d, &
                hio_canopy_area_si_age  => this%hvars(ih_canopy_area_si_age)%r82d, &
+               hio_ba_si_age           => this%hvars(ih_ba_si_age)%r82d, &
                hio_ncl_si_age          => this%hvars(ih_ncl_si_age)%r82d, &
                hio_npatches_si_age     => this%hvars(ih_npatches_si_age)%r82d, &
                hio_zstar_si_age        => this%hvars(ih_zstar_si_age)%r82d, &
@@ -3152,6 +3154,9 @@ end subroutine flush_hvars
                   hio_ba_si_scls(io_si,scls) = hio_ba_si_scls(io_si,scls) + &
                      0.25_r8*pi_const*((dbh/100.0_r8)**2.0_r8)*       &
                      ccohort%n / m2_per_ha
+                 ! also by patch age only
+                     hio_ba_si_age(io_si,cpatch%age_class) = hio_ba_si_age(io_si,cpatch%age_class) + &
+                     0.25_r8*pi_const*((dbh/100.0_r8)**2.0_r8)*ccohort%n / m2_per_ha
 
                   ! growth increment
                   hio_ddbh_si_scpf(io_si,scpf) = hio_ddbh_si_scpf(io_si,scpf) + &
@@ -5596,6 +5601,13 @@ end subroutine update_history_hifrq
     endif nocomp_if
 
     ! patch age class variables
+
+    call this%set_history_var(vname='FATES_BASALAREA_AP', units='m2 m-2',     &
+         long='woody PFT basal area by age bin per m2 land area',             &
+         use_default='inactive',avgflag='A', vtype=site_age_r8,               &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables, &
+         index=ih_ba_si_age)
+
     call this%set_history_var(vname='FATES_PATCHAREA_AP', units='m2 m-2',      &
          long='patch area by age bin per m2 land area', use_default='active',  &
          avgflag='A', vtype=site_age_r8, hlms='CLM:ALM', upfreq=1, ivar=ivar,  &
