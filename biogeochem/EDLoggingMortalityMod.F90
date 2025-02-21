@@ -250,7 +250,7 @@ contains
       real(r8), parameter :: cap_targ1   = 0.75_r8   !max. harvesting fraction for plants < ref_dbh1 
       real(r8), parameter :: cap_targ2   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
       real(r8), parameter :: cap_targ3   = 0.20_r8   !max. harvesting fraction for plants > ref_dbh3
-      real(r8), parameter :: log_err     = 0.0001_r8   !error allowed for achieving target basal area 
+      real(r8), parameter :: targ_ba_precision= 1.0E-4_r8   !error allowed for achieving target basal area 
       integer , parameter :: target_harvest = 1       !switch for turnning on target harvesting 
 
       ! todo: probably lower the dbhmin default value to 30 cm
@@ -329,7 +329,7 @@ contains
             
             ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
             ! call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
-            if(delta_BA > log_err) then
+            if(delta_BA > targ_ba_precision) then
                target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
             else
                target_num = 0.0_r8
@@ -341,7 +341,7 @@ contains
                target_frac = 0.0_r8
             end if
             
-            final_frac_logged = min(cap_frac, target_frac)
+            final_frac_logged = min(harvest_rate,min(cap_frac, target_frac))
          end if
 
          if (fates_global_verbose()) then
@@ -411,11 +411,9 @@ contains
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
          if (canopy_layer .eq. 1 ) then
-            if(target_harvest == 1) then
-               l_degrad = final_frac_logged - (lmort_direct + lmort_infra + lmort_collateral)
-            else
-               l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
-            end if
+            
+            l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
+         
          else
             l_degrad = 0._r8
          endif
@@ -854,9 +852,6 @@ contains
       integer  :: el                     ! elemend loop index
       real(r8) :: SF_val_CWD_frac_adj(4) !Updated wood partitioning to CWD based on dbh
 
-      ! Test parameter for targeted harvesting
-
-      integer, parameter :: target_harvest = 1
 
       nlevsoil = currentSite%nlevsoil
 
