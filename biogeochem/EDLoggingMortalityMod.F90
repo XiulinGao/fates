@@ -905,7 +905,7 @@ contains
             store_m  = currentCohort%prt%GetState(store_organ, element_id)
             repro_m  = currentCohort%prt%GetState(repro_organ, element_id)
          
-            if(currentCohort%canopy_layer == 1 .or. target_harvest == itrue)then
+            if(currentCohort%canopy_layer == 1)then
                direct_dead   = currentCohort%n * currentCohort%lmort_direct
                indirect_dead = currentCohort%n * &
                      (currentCohort%lmort_collateral + currentCohort%lmort_infra)
