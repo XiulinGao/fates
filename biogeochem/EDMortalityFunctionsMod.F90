@@ -12,7 +12,11 @@ module EDMortalityFunctionsMod
    use FatesCohortMod        , only : fates_cohort_type
    use EDTypesMod            , only : ed_site_type
    use EDParamsMod,            only : maxpft
+   use EDParamsMod           , only : mort_cstarvation_model
    use FatesConstantsMod     , only : itrue,ifalse
+   use FatesConstantsMod     , only : cstarvation_model_lin
+   use FatesConstantsMod     , only : cstarvation_model_exp
+   use FatesConstantsMod     , only : nearzero
    use FatesAllometryMod     , only : bleaf
    use FatesAllometryMod     , only : storage_fraction_of_target
    use FatesInterfaceTypesMod     , only : bc_in_type
@@ -176,14 +180,33 @@ contains
           store_c = cohort_in%prt%GetState(store_organ,carbon12_element)
 
           call storage_fraction_of_target(target_leaf_c, store_c, frac)
-          if( frac .lt. 1._r8) then
-             cmort = max(0.0_r8,EDPftvarcon_inst%mort_scalar_cstarvation(cohort_in%pft) * &
-                  (1.0_r8 - frac))
-          else
-             cmort = 0.0_r8
-          endif
+          
+          ! Select the mortality model.
+          select case (mort_cstarvation_model)
+          case (cstarvation_model_lin)
+            ! Linear model, with maximum mortality occurring when frac = 0
+            cmort = EDPftvarcon_inst%mort_scalar_cstarvation(cohort_in%pft) * &
+                max(0.0_r8, (EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft)-frac) / &
+                EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft) )
+          case (cstarvation_model_exp)
+            ! Exponential model.  Maximum carbon starvation mortality 
+            ! (mort_scalar_cstarvation) occurs when frac=0. Parameter 
+            ! mort_upthresh_cstarvation controls the the e-folding factor for frac. The
+            ! smaller the mort_upthresh_cstarvation, the faster the mortality will decay.
+            cmort = EDPftvarcon_inst%mort_scalar_cstarvation(cohort_in%pft) * &
+                    exp(- frac / EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft))
+         
+          case default
+             write(fates_log(),*) &
+             'Invalid carbon starvation model (',mort_cstarvation_model,').'
+             call endrun(msg=errMsg(sourcefile, __LINE__))
+          end select
 
-    
+          ! Make sure the mortality is set to zero when tiny.
+          if (cmort <= nearzero) then
+            cmort = 0.0_r8
+          end if
+
        else
           write(fates_log(),*) 'dbh problem in mortality_rates', &
                cohort_in%dbh,cohort_in%pft,cohort_in%n,cohort_in%canopy_layer
