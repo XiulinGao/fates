@@ -551,6 +551,7 @@ contains
     !if yes, calculate burned fraction as (user defined frac / total burnable frac)
 
     use SFParamsMod,       only : SF_val_rxfire_AB !user defined prescribed fire area in fraction per day to reflect burning capacity
+    use SFParamsMod,       only : SF_val_rxfire_min_frac !user defind minimum burnable fraction for conducting rx fire
 
     ! ARGUMENTS
     type(ed_site_type), intent(inout), target :: currentSite
