@@ -239,11 +239,15 @@ module FatesRestartInterfaceMod
   integer :: ir_recrate_sift
   integer :: ir_use_this_pft_sift
   integer :: ir_area_pft_sift
+  integer :: ir_fmortrate_cano_siscpf
+  integer :: ir_fmortrate_usto_siscpf
   integer :: ir_nonrx_fmortrate_cano_siscpf
   integer :: ir_nonrx_fmortrate_usto_siscpf
   integer :: ir_rx_fmortrate_cano_siscpf
   integer :: ir_rx_fmortrate_usto_siscpf
   integer :: ir_imortrate_siscpf
+  integer :: ir_fmortrate_crown_siscpf
+  integer :: ir_fmortrate_cambi_siscpf
   integer :: ir_nonrx_fmortrate_crown_siscpf
   integer :: ir_nonrx_fmortrate_cambi_siscpf
   integer :: ir_rx_fmortrate_crown_siscpf
@@ -257,6 +261,8 @@ module FatesRestartInterfaceMod
   integer :: ir_termcarea_usto_si
 
   integer :: ir_imortcarea_si
+  integer :: ir_fmortcarea_cano_si
+  integer :: ir_fmortcarea_usto_si
   integer :: ir_nonrx_fmortcarea_cano_si
   integer :: ir_nonrx_fmortcarea_usto_si
   integer :: ir_rx_fmortcarea_cano_si
@@ -266,12 +272,15 @@ module FatesRestartInterfaceMod
   integer :: ir_democflux_si
   integer :: ir_promcflux_si
   integer :: ir_imortcflux_sipft
+  integer :: ir_fmortcflux_cano_sipft
+  integer :: ir_fmortcflux_usto_sipft
   integer :: ir_nonrx_fmortcflux_cano_sipft
   integer :: ir_nonrx_fmortcflux_usto_sipft
   integer :: ir_rx_fmortcflux_cano_sipft
   integer :: ir_rx_fmortcflux_usto_sipft
   integer :: ir_abg_term_flux_siscpf
   integer :: ir_abg_imort_flux_siscpf
+  integer :: ir_abg_fmort_flux_siscpf
   integer :: ir_abg_nonrx_fmort_flux_siscpf
   integer :: ir_abg_rx_fmort_flux_siscpf
 
@@ -299,6 +308,8 @@ module FatesRestartInterfaceMod
   integer :: ir_imortrate_sicdpf
   integer :: ir_termnindiv_cano_sicdpf
   integer :: ir_termnindiv_usto_sicdpf
+  integer :: ir_fmortrate_cano_sicdpf
+  integer :: ir_fmortrate_usto_sicdpf
   integer :: ir_nonrx_fmortrate_cano_sicdpf
   integer :: ir_nonrx_fmortrate_usto_sicdpf
   integer :: ir_rx_fmortrate_cano_sicdpf
@@ -306,6 +317,8 @@ module FatesRestartInterfaceMod
   integer :: ir_imortcflux_sicdsc
   integer :: ir_termcflux_cano_sicdsc
   integer :: ir_termcflux_usto_sicdsc
+  integer :: ir_fmortcflux_cano_sicdsc
+  integer :: ir_fmortcflux_usto_sicdsc
   integer :: ir_nonrx_fmortcflux_cano_sicdsc
   integer :: ir_nonrx_fmortcflux_usto_sicdsc
   integer :: ir_rx_fmortcflux_cano_sicdsc
@@ -1389,6 +1402,16 @@ contains
          units='kg', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_seed_out_sift )
 
+    call this%set_restart_var(vname='fates_fmortrate_canopy', vtype=cohort_r8, &
+         long_name='fates diagnostics on total fire mortality canopy', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_cano_siscpf)
+
+    call this%set_restart_var(vname='fates_fmortrate_ustory', vtype=cohort_r8, &
+         long_name='fates diagnostics on total fire mortality ustory', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_usto_siscpf)
+
     call this%set_restart_var(vname='fates_nonrx_fmortrate_canopy', vtype=cohort_r8, &
          long_name='fates diagnostics on wildfire mortality canopy', &
          units='indiv/ha/year', flushval = flushzero, &
@@ -1413,6 +1436,16 @@ contains
          long_name='fates diagnostics on impact mortality', &
          units='indiv/ha/year', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_imortrate_siscpf)
+
+    call this%set_restart_var(vname='fates_fmortrate_crown', vtype=cohort_r8, &
+         long_name='fates diagnostics on total crown fire mortality', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_crown_siscpf)
+
+    call this%set_restart_var(vname='fates_fmortrate_cambi', vtype=cohort_r8, &
+         long_name='fates diagnostics on total fire cambial mortality', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_cambi_siscpf)
     
     call this%set_restart_var(vname='fates_nonrx_fmortrate_crown', vtype=cohort_r8, &
          long_name='fates diagnostics on crown fire mortality for wildfire', &
@@ -1469,6 +1502,16 @@ contains
          units='m2/ha/day', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_imortcarea_si)
 
+    call this%set_restart_var(vname='fates_fmortcflux_canopy', vtype=cohort_r8, &
+         long_name='fates diagnostic biomass of canopy fire', &
+         units='gC/m2/sec', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_cano_sipft)
+
+    call this%set_restart_var(vname='fates_fmortcflux_ustory', vtype=cohort_r8, &
+         long_name='fates diagnostic biomass of understory fire', &
+         units='gC/m2/sec', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_usto_sipft)
+
     call this%set_restart_var(vname='fates_nonrx_fmortcflux_canopy', vtype=cohort_r8, &
          long_name='fates diagnostic biomass of canopy wildfire', &
          units='gC/m2/sec', flushval = flushzero, &
@@ -1509,6 +1552,11 @@ contains
          units='', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_abg_imort_flux_siscpf )
 
+    call this%set_restart_var(vname='fates_abg_fmort_flux', vtype=cohort_r8, &
+         long_name='fates aboveground biomass loss from fire mortality', &
+         units='', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_abg_fmort_flux_siscpf )
+
     call this%set_restart_var(vname='fates_abg_nonrx_fmort_flux', vtype=cohort_r8, &
          long_name='fates aboveground biomass loss from wildfire mortality', &
          units='', flushval = flushzero, &
@@ -1528,6 +1576,16 @@ contains
          long_name='fates diagnostic promotion carbon flux ', &
          units='', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index =   ir_promcflux_si )
+
+    call this%set_restart_var(vname='fates_fmortcarea_canopy', vtype=site_r8, &
+         long_name='fates diagnostic crownarea of canopy fire', &
+         units='m2/sec', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcarea_cano_si)
+
+    call this%set_restart_var(vname='fates_fmortcarea_ustory', vtype=site_r8, &
+         long_name='fates diagnostic crownarea of understory fire', &
+         units='m2/sec', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcarea_usto_si)
 
     call this%set_restart_var(vname='fates_nonrx_fmortcarea_canopy', vtype=site_r8, &
          long_name='fates diagnostic crownarea of canopy wildfire', &
@@ -1575,6 +1633,16 @@ contains
          units='indiv/ha/year', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_termnindiv_usto_sicdpf)
 
+    call this%set_restart_var(vname='fates_fmortrate_cano_dam', vtype=cohort_r8, &
+         long_name='fates diagnostics on wildfire mortality by damage class', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_cano_sicdpf)
+
+    call this%set_restart_var(vname='fates_fmortrate_usto_dam', vtype=cohort_r8, &
+         long_name='fates diagnostics on wildfire mortality by damage class', &
+         units='indiv/ha/year', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortrate_usto_sicdpf)
+
     call this%set_restart_var(vname='fates_nonrx_fmortrate_cano_dam', vtype=cohort_r8, &
          long_name='fates diagnostics on wildfire mortality by damage class', &
          units='indiv/ha/year', flushval = flushzero, &
@@ -1609,6 +1677,16 @@ contains
          long_name='biomass of indivs killed due to termination  mort by damage class', &
          units='kgC/ha/day', flushval = flushzero, &
          hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_termcflux_usto_sicdsc)
+
+    call this%set_restart_var(vname='fates_fmortcflux_cano_dam', vtype=cohort_r8, &
+         long_name='biomass of indivs killed due to fire mort by damage class', &
+         units='kgC/ha/day', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_cano_sicdsc)
+    
+    call this%set_restart_var(vname='fates_fmortcflux_usto_dam', vtype=cohort_r8, &
+         long_name='biomass of indivs killed due to fire mort by damage class', &
+         units='kgC/ha/day', flushval = flushzero, &
+         hlms='CLM:ALM', initialize=initialize_variables, ivar=ivar, index = ir_fmortcflux_usto_sicdsc)
 
     call this%set_restart_var(vname='fates_nonrx_fmortcflux_cano_dam', vtype=cohort_r8, &
          long_name='biomass of indivs killed due to wildfire mort by damage class', &
@@ -2250,11 +2328,15 @@ contains
            rio_area_pft_sift           => this%rvars(ir_area_pft_sift)%r81d, &
            rio_seed_in_sift            => this%rvars(ir_seed_in_sift)%r81d, &
            rio_seed_out_sift            => this%rvars(ir_seed_out_sift)%r81d, &
+           rio_fmortrate_cano_siscpf   => this%rvars(ir_fmortrate_cano_siscpf)%r81d, &
+           rio_fmortrate_usto_siscpf   => this%rvars(ir_fmortrate_usto_siscpf)%r81d, &
            rio_nonrx_fmortrate_cano_siscpf   => this%rvars(ir_nonrx_fmortrate_cano_siscpf)%r81d, &
            rio_nonrx_fmortrate_usto_siscpf   => this%rvars(ir_nonrx_fmortrate_usto_siscpf)%r81d, &
            rio_rx_fmortrate_cano_siscpf => this%rvars(ir_rx_fmortrate_cano_siscpf)%r81d, &
            rio_rx_fmortrate_usto_siscpf => this%rvars(ir_rx_fmortrate_usto_siscpf)%r81d, &
            rio_imortrate_siscpf        => this%rvars(ir_imortrate_siscpf)%r81d, &
+           rio_fmortrate_crown_siscpf  => this%rvars(ir_fmortrate_crown_siscpf)%r81d, &
+           rio_fmortrate_cambi_siscpf  => this%rvars(ir_fmortrate_cambi_siscpf)%r81d, &
            rio_nonrx_fmortrate_crown_siscpf  => this%rvars(ir_nonrx_fmortrate_crown_siscpf)%r81d, &
            rio_nonrx_fmortrate_cambi_siscpf  => this%rvars(ir_nonrx_fmortrate_cambi_siscpf)%r81d, &
            rio_rx_fmortrate_crown_siscpf => this%rvars(ir_rx_fmortrate_crown_siscpf)%r81d, &
@@ -2268,6 +2350,8 @@ contains
            rio_termcarea_usto_si       => this%rvars(ir_termcarea_usto_si)%r81d, &
            
            rio_imortcarea_si           => this%rvars(ir_imortcarea_si)%r81d, &
+           rio_fmortcarea_cano_si      => this%rvars(ir_fmortcarea_cano_si)%r81d, &
+           rio_fmortcarea_usto_si      => this%rvars(ir_fmortcarea_usto_si)%r81d, &
            rio_nonrx_fmortcarea_cano_si      => this%rvars(ir_nonrx_fmortcarea_cano_si)%r81d, &
            rio_nonrx_fmortcarea_usto_si      => this%rvars(ir_nonrx_fmortcarea_usto_si)%r81d, &
            rio_rx_fmortcarea_cano_si    => this%rvars(ir_rx_fmortcarea_cano_si)%r81d, &
@@ -2277,11 +2361,14 @@ contains
            rio_democflux_si            => this%rvars(ir_democflux_si)%r81d, &
            rio_promcflux_si            => this%rvars(ir_promcflux_si)%r81d, &
            rio_imortcflux_sipft        => this%rvars(ir_imortcflux_sipft)%r81d, &
+           rio_fmortcflux_cano_sipft   => this%rvars(ir_fmortcflux_cano_sipft)%r81d, &
+           rio_fmortcflux_usto_sipft   => this%rvars(ir_fmortcflux_usto_sipft)%r81d, &
            rio_nonrx_fmortcflux_cano_sipft   => this%rvars(ir_nonrx_fmortcflux_cano_sipft)%r81d, &
            rio_nonrx_fmortcflux_usto_sipft   => this%rvars(ir_nonrx_fmortcflux_usto_sipft)%r81d, &
            rio_rx_fmortcflux_cano_sipft => this%rvars(ir_rx_fmortcflux_cano_sipft)%r81d, &
            rio_rx_fmortcflux_usto_sipft => this%rvars(ir_rx_fmortcflux_usto_sipft)%r81d, &
            rio_abg_imort_flux_siscpf => this%rvars(ir_abg_imort_flux_siscpf)%r81d, &
+           rio_abg_fmort_flux_siscpf => this%rvars(ir_abg_fmort_flux_siscpf)%r81d, &
            rio_abg_nonrx_fmort_flux_siscpf => this%rvars(ir_abg_nonrx_fmort_flux_siscpf)%r81d, &
            rio_abg_rx_fmort_flux_siscpf => this%rvars(ir_abg_rx_fmort_flux_siscpf)%r81d, &
            rio_abg_term_flux_siscpf  => this%rvars(ir_abg_term_flux_siscpf)%r81d, &
@@ -2294,6 +2381,10 @@ contains
            rio_termnindiv_cano_sicdpf  => this%rvars(ir_termnindiv_cano_sicdpf)%r81d, &
            rio_termcflux_usto_sicdsc   => this%rvars(ir_termcflux_usto_sicdsc)%r81d, &
            rio_termnindiv_usto_sicdpf  => this%rvars(ir_termnindiv_usto_sicdpf)%r81d, &
+           rio_fmortrate_cano_sicdpf   => this%rvars(ir_fmortrate_cano_sicdpf)%r81d, &
+           rio_fmortrate_usto_sicdpf   => this%rvars(ir_fmortrate_usto_sicdpf)%r81d, &
+           rio_fmortcflux_cano_sicdsc  => this%rvars(ir_fmortcflux_cano_sicdsc)%r81d, &
+           rio_fmortcflux_usto_sicdsc  => this%rvars(ir_fmortcflux_usto_sicdsc)%r81d, &
            rio_nonrx_fmortrate_cano_sicdpf   => this%rvars(ir_nonrx_fmortrate_cano_sicdpf)%r81d, &
            rio_nonrx_fmortrate_usto_sicdpf   => this%rvars(ir_nonrx_fmortrate_usto_sicdpf)%r81d, &
            rio_nonrx_fmortcflux_cano_sicdsc  => this%rvars(ir_nonrx_fmortcflux_cano_sicdsc)%r81d, &
@@ -2375,9 +2466,13 @@ contains
 
           do i_scls = 1, nlevsclass
              do i_pft = 1, numpft
+                rio_fmortrate_cano_siscpf(io_idx_si_scpf)  = sites(s)%fmort_rate_canopy(i_scls, i_pft)
+                rio_fmortrate_usto_siscpf(io_idx_si_scpf)  = sites(s)%fmort_rate_ustory(i_scls, i_pft)
                 rio_nonrx_fmortrate_cano_siscpf(io_idx_si_scpf)  = sites(s)%nonrx_fmort_rate_canopy(i_scls, i_pft)
                 rio_nonrx_fmortrate_usto_siscpf(io_idx_si_scpf)  = sites(s)%nonrx_fmort_rate_ustory(i_scls, i_pft)
                 rio_imortrate_siscpf(io_idx_si_scpf)       = sites(s)%imort_rate(i_scls, i_pft)
+                rio_fmortrate_crown_siscpf(io_idx_si_scpf) = sites(s)%fmort_rate_crown(i_scls, i_pft)
+                rio_fmortrate_cambi_siscpf(io_idx_si_scpf) = sites(s)%fmort_rate_cambial(i_scls, i_pft)
                 rio_nonrx_fmortrate_crown_siscpf(io_idx_si_scpf) = sites(s)%nonrx_fmort_rate_crown(i_scls, i_pft)
                 rio_nonrx_fmortrate_cambi_siscpf(io_idx_si_scpf) = sites(s)%nonrx_fmort_rate_cambial(i_scls, i_pft)
                 rio_rx_fmortrate_cano_siscpf(io_idx_si_scpf)  = sites(s)%rx_fmort_rate_canopy(i_scls, i_pft)
@@ -2387,6 +2482,7 @@ contains
                 rio_growflx_fusion_siscpf(io_idx_si_scpf)  = sites(s)%growthflux_fusion(i_scls, i_pft)
                 rio_abg_term_flux_siscpf(io_idx_si_scpf) = sites(s)%term_abg_flux(i_scls, i_pft)
                 rio_abg_imort_flux_siscpf(io_idx_si_scpf) = sites(s)%imort_abg_flux(i_scls, i_pft)
+                rio_abg_fmort_flux_siscpf(io_idx_si_scpf) = sites(s)%fmort_abg_flux(i_scls, i_pft)
                 rio_abg_nonrx_fmort_flux_siscpf(io_idx_si_scpf) = sites(s)%nonrx_fmort_abg_flux(i_scls, i_pft)
                 rio_abg_rx_fmort_flux_siscpf(io_idx_si_scpf) = sites(s)%rx_fmort_abg_flux(i_scls, i_pft)
                 io_idx_si_scpf = io_idx_si_scpf + 1
@@ -2404,6 +2500,8 @@ contains
                 rio_termcflux_usto_sipft(io_idx_si_pft_term)  = sites(s)%term_carbonflux_ustory(i_term_type,i_pft)
                 io_idx_si_pft_term = io_idx_si_pft_term + 1
              end do
+             rio_fmortcflux_cano_sipft(io_idx_si_pft) = sites(s)%fmort_carbonflux_canopy(i_pft)
+             rio_fmortcflux_usto_sipft(io_idx_si_pft) = sites(s)%fmort_carbonflux_ustory(i_pft)
              rio_nonrx_fmortcflux_cano_sipft(io_idx_si_pft) = sites(s)%nonrx_fmort_carbonflux_canopy(i_pft)
              rio_nonrx_fmortcflux_usto_sipft(io_idx_si_pft) = sites(s)%nonrx_fmort_carbonflux_ustory(i_pft)
              rio_rx_fmortcflux_cano_sipft(io_idx_si_pft) = sites(s)%rx_fmort_carbonflux_canopy(i_pft)
@@ -2794,6 +2892,10 @@ contains
                       rio_imortcflux_sicdsc(io_idx_si_cdsc)      = sites(s)%imort_cflux_damage(i_cdam, i_scls)
                       rio_termcflux_cano_sicdsc(io_idx_si_cdsc)  = sites(s)%term_cflux_canopy_damage(i_cdam, i_scls)
                       rio_termcflux_usto_sicdsc(io_idx_si_cdsc)  = sites(s)%term_cflux_ustory_damage(i_cdam, i_scls)
+                      rio_fmortrate_cano_sicdpf(io_idx_si_cdpf)  = sites(s)%fmort_rate_canopy_damage(i_cdam, i_scls, i_pft)
+                      rio_fmortrate_usto_sicdpf(io_idx_si_cdpf)  = sites(s)%fmort_rate_ustory_damage(i_cdam, i_scls, i_pft)
+                      rio_fmortcflux_cano_sicdsc(io_idx_si_cdsc) = sites(s)%fmort_cflux_canopy_damage(i_cdam, i_scls)
+                      rio_fmortcflux_usto_sicdsc(io_idx_si_cdsc) = sites(s)%fmort_cflux_ustory_damage(i_cdam, i_scls)
                       rio_nonrx_fmortrate_cano_sicdpf(io_idx_si_cdpf)  = sites(s)%nonrx_fmort_rate_canopy_damage(i_cdam, i_scls, i_pft)
                       rio_nonrx_fmortrate_usto_sicdpf(io_idx_si_cdpf)  = sites(s)%nonrx_fmort_rate_ustory_damage(i_cdam, i_scls, i_pft)
                       rio_nonrx_fmortcflux_cano_sicdsc(io_idx_si_cdsc) = sites(s)%nonrx_fmort_cflux_canopy_damage(i_cdam, i_scls)
@@ -2818,6 +2920,8 @@ contains
           rio_promcflux_si(io_idx_si)       = sites(s)%promotion_carbonflux
 
           rio_imortcarea_si(io_idx_si)      = sites(s)%imort_crownarea
+          rio_fmortcarea_cano_si(io_idx_si) = sites(s)%fmort_crownarea_canopy
+          rio_fmortcarea_usto_si(io_idx_si) = sites(s)%fmort_crownarea_ustory
           rio_nonrx_fmortcarea_cano_si(io_idx_si) = sites(s)%nonrx_fmort_crownarea_canopy
           rio_nonrx_fmortcarea_usto_si(io_idx_si) = sites(s)%nonrx_fmort_crownarea_ustory
           rio_rx_fmortcarea_cano_si(io_idx_si) = sites(s)%rx_fmort_crownarea_canopy
@@ -3279,11 +3383,15 @@ contains
           rio_area_pft_sift           => this%rvars(ir_area_pft_sift)%r81d,&
           rio_seed_in_sift            => this%rvars(ir_seed_in_sift)%r81d, &
           rio_seed_out_sift            => this%rvars(ir_seed_out_sift)%r81d, &
+          rio_fmortrate_cano_siscpf   => this%rvars(ir_fmortrate_cano_siscpf)%r81d, &
+          rio_fmortrate_usto_siscpf   => this%rvars(ir_fmortrate_usto_siscpf)%r81d, &
           rio_nonrx_fmortrate_cano_siscpf   => this%rvars(ir_nonrx_fmortrate_cano_siscpf)%r81d, &
           rio_nonrx_fmortrate_usto_siscpf   => this%rvars(ir_nonrx_fmortrate_usto_siscpf)%r81d, &
           rio_rx_fmortrate_cano_siscpf   => this%rvars(ir_rx_fmortrate_cano_siscpf)%r81d, &
           rio_rx_fmortrate_usto_siscpf   => this%rvars(ir_rx_fmortrate_usto_siscpf)%r81d, &
           rio_imortrate_siscpf        => this%rvars(ir_imortrate_siscpf)%r81d, &
+          rio_fmortrate_crown_siscpf  => this%rvars(ir_fmortrate_crown_siscpf)%r81d, &
+          rio_fmortrate_cambi_siscpf  => this%rvars(ir_fmortrate_cambi_siscpf)%r81d, &
           rio_nonrx_fmortrate_crown_siscpf  => this%rvars(ir_nonrx_fmortrate_crown_siscpf)%r81d, &
           rio_nonrx_fmortrate_cambi_siscpf  => this%rvars(ir_nonrx_fmortrate_cambi_siscpf)%r81d, &
           rio_rx_fmortrate_crown_siscpf => this%rvars(ir_rx_fmortrate_crown_siscpf)%r81d, &
@@ -3301,6 +3409,8 @@ contains
           rio_termcarea_cano_si       => this%rvars(ir_termcarea_cano_si)%r81d, &
           rio_termcarea_usto_si       => this%rvars(ir_termcarea_usto_si)%r81d, &
           rio_imortcarea_si           => this%rvars(ir_imortcarea_si)%r81d, &
+          rio_fmortcarea_cano_si      => this%rvars(ir_fmortcarea_cano_si)%r81d, &
+          rio_fmortcarea_usto_si      => this%rvars(ir_fmortcarea_usto_si)%r81d, &
           rio_nonrx_fmortcarea_cano_si      => this%rvars(ir_nonrx_fmortcarea_cano_si)%r81d, &
           rio_nonrx_fmortcarea_usto_si      => this%rvars(ir_nonrx_fmortcarea_usto_si)%r81d, &
           rio_rx_fmortcarea_cano_si    => this%rvars(ir_rx_fmortcarea_cano_si)%r81d, &
@@ -3311,6 +3421,10 @@ contains
           rio_imortcflux_sicdsc       => this%rvars(ir_imortcflux_sicdsc)%r81d, &
           rio_termcflux_cano_sicdsc   => this%rvars(ir_termcflux_cano_sicdsc)%r81d, &
           rio_termcflux_usto_sicdsc   => this%rvars(ir_termcflux_usto_sicdsc)%r81d, &
+          rio_fmortrate_cano_sicdpf   => this%rvars(ir_fmortrate_cano_sicdpf)%r81d, &
+          rio_fmortrate_usto_sicdpf   => this%rvars(ir_fmortrate_usto_sicdpf)%r81d, &
+          rio_fmortcflux_cano_sicdsc  => this%rvars(ir_fmortcflux_cano_sicdsc)%r81d, &
+          rio_fmortcflux_usto_sicdsc  => this%rvars(ir_fmortcflux_usto_sicdsc)%r81d, &
           rio_nonrx_fmortrate_cano_sicdpf   => this%rvars(ir_nonrx_fmortrate_cano_sicdpf)%r81d, &
           rio_nonrx_fmortrate_usto_sicdpf   => this%rvars(ir_nonrx_fmortrate_usto_sicdpf)%r81d, &
           rio_nonrx_fmortcflux_cano_sicdsc  => this%rvars(ir_nonrx_fmortcflux_cano_sicdsc)%r81d, &
@@ -3325,10 +3439,13 @@ contains
           rio_crownarea_usto_damage_si=> this%rvars(ir_crownarea_usto_si)%r81d, &
           rio_emanpp_si               => this%rvars(ir_emanpp_si)%r81d, &
           rio_imortcflux_sipft        => this%rvars(ir_imortcflux_sipft)%r81d, &
+          rio_fmortcflux_cano_sipft   => this%rvars(ir_fmortcflux_cano_sipft)%r81d, &
+          rio_fmortcflux_usto_sipft   => this%rvars(ir_fmortcflux_usto_sipft)%r81d, &
           rio_nonrx_fmortcflux_cano_sipft   => this%rvars(ir_nonrx_fmortcflux_cano_sipft)%r81d, &
           rio_nonrx_fmortcflux_usto_sipft   => this%rvars(ir_nonrx_fmortcflux_usto_sipft)%r81d, &
           rio_abg_term_flux_siscpf   => this%rvars(ir_abg_term_flux_siscpf)%r81d, &
           rio_abg_imort_flux_siscpf  => this%rvars(ir_abg_imort_flux_siscpf)%r81d, &
+          rio_abg_fmort_flux_siscpf  => this%rvars(ir_abg_fmort_flux_siscpf)%r81d, &
           rio_abg_nonrx_fmort_flux_siscpf  => this%rvars(ir_abg_nonrx_fmort_flux_siscpf)%r81d, &
           rio_abg_rx_fmort_flux_siscpf => this%rvars(ir_abg_rx_fmort_flux_siscpf)%r81d )
 
@@ -3391,11 +3508,15 @@ contains
 
           do i_scls = 1,nlevsclass
              do i_pft = 1, numpft
+                sites(s)%fmort_rate_canopy(i_scls, i_pft)  = rio_fmortrate_cano_siscpf(io_idx_si_scpf)
+                sites(s)%fmort_rate_ustory(i_scls, i_pft)  = rio_fmortrate_usto_siscpf(io_idx_si_scpf)
                 sites(s)%nonrx_fmort_rate_canopy(i_scls, i_pft)  = rio_nonrx_fmortrate_cano_siscpf(io_idx_si_scpf)
                 sites(s)%nonrx_fmort_rate_ustory(i_scls, i_pft)  = rio_nonrx_fmortrate_usto_siscpf(io_idx_si_scpf)
                 sites(s)%rx_fmort_rate_canopy(i_scls, i_pft)  = rio_rx_fmortrate_cano_siscpf(io_idx_si_scpf)
                 sites(s)%rx_fmort_rate_ustory(i_scls, i_pft)  = rio_rx_fmortrate_usto_siscpf(io_idx_si_scpf)
                 sites(s)%imort_rate(i_scls, i_pft)         = rio_imortrate_siscpf(io_idx_si_scpf)
+                sites(s)%fmort_rate_crown(i_scls, i_pft)   = rio_fmortrate_crown_siscpf(io_idx_si_scpf)
+                sites(s)%fmort_rate_cambial(i_scls, i_pft) = rio_fmortrate_cambi_siscpf(io_idx_si_scpf)
                 sites(s)%nonrx_fmort_rate_crown(i_scls, i_pft)   = rio_nonrx_fmortrate_crown_siscpf(io_idx_si_scpf)
                 sites(s)%nonrx_fmort_rate_cambial(i_scls, i_pft) = rio_nonrx_fmortrate_cambi_siscpf(io_idx_si_scpf)
                 sites(s)%rx_fmort_rate_crown(i_scls, i_pft) = rio_rx_fmortrate_crown_siscpf(io_idx_si_scpf)
@@ -3403,6 +3524,7 @@ contains
                 sites(s)%growthflux_fusion(i_scls, i_pft)  = rio_growflx_fusion_siscpf(io_idx_si_scpf)
                 sites(s)%term_abg_flux(i_scls,i_pft) = rio_abg_term_flux_siscpf(io_idx_si_scpf)
                 sites(s)%imort_abg_flux(i_scls,i_pft) = rio_abg_imort_flux_siscpf(io_idx_si_scpf)
+                sites(s)%fmort_abg_flux(i_scls,i_pft) = rio_abg_fmort_flux_siscpf(io_idx_si_scpf)
                 sites(s)%nonrx_fmort_abg_flux(i_scls,i_pft) = rio_abg_nonrx_fmort_flux_siscpf(io_idx_si_scpf)
                 sites(s)%rx_fmort_abg_flux(i_scls,i_pft) = rio_abg_rx_fmort_flux_siscpf(io_idx_si_scpf)
                 io_idx_si_scpf = io_idx_si_scpf + 1
@@ -3420,6 +3542,8 @@ contains
                 sites(s)%term_carbonflux_ustory(i_term_type,i_pft)   = rio_termcflux_usto_sipft(io_idx_si_pft_term)
                 io_idx_si_pft_term = io_idx_si_pft_term + 1
              end do
+             sites(s)%fmort_carbonflux_canopy(i_pft)  = rio_fmortcflux_cano_sipft(io_idx_si_pft)
+             sites(s)%fmort_carbonflux_ustory(i_pft)  = rio_fmortcflux_usto_sipft(io_idx_si_pft)
              sites(s)%nonrx_fmort_carbonflux_canopy(i_pft)  = rio_nonrx_fmortcflux_cano_sipft(io_idx_si_pft)
              sites(s)%nonrx_fmort_carbonflux_ustory(i_pft)  = rio_nonrx_fmortcflux_usto_sipft(io_idx_si_pft)
              sites(s)%rx_fmort_carbonflux_canopy(i_pft)  = rio_rx_fmortcflux_cano_sipft(io_idx_si_pft)
@@ -3848,6 +3972,10 @@ contains
                       sites(s)%imort_cflux_damage(i_cdam, i_scls)         = rio_imortcflux_sicdsc(io_idx_si_cdsc)
                       sites(s)%term_cflux_canopy_damage(i_cdam, i_scls)   = rio_termcflux_cano_sicdsc(io_idx_si_cdsc)
                       sites(s)%term_cflux_ustory_damage(i_cdam, i_scls)   = rio_termcflux_usto_sicdsc(io_idx_si_cdsc)
+                      sites(s)%fmort_rate_canopy_damage(i_cdam, i_scls, i_pft)   = rio_fmortrate_cano_sicdpf(io_idx_si_cdpf)
+                      sites(s)%fmort_rate_ustory_damage(i_cdam, i_scls, i_pft)   = rio_fmortrate_usto_sicdpf(io_idx_si_cdpf)
+                      sites(s)%fmort_cflux_canopy_damage(i_cdam, i_scls)  = rio_fmortcflux_cano_sicdsc(io_idx_si_cdsc)
+                      sites(s)%fmort_cflux_ustory_damage(i_cdam, i_scls)  = rio_fmortcflux_usto_sicdsc(io_idx_si_cdsc)
                       sites(s)%nonrx_fmort_rate_canopy_damage(i_cdam, i_scls, i_pft)   = rio_nonrx_fmortrate_cano_sicdpf(io_idx_si_cdpf)
                       sites(s)%nonrx_fmort_rate_ustory_damage(i_cdam, i_scls, i_pft)   = rio_nonrx_fmortrate_usto_sicdpf(io_idx_si_cdpf)
                       sites(s)%nonrx_fmort_cflux_canopy_damage(i_cdam, i_scls)  = rio_nonrx_fmortcflux_cano_sicdsc(io_idx_si_cdsc)
@@ -3872,6 +4000,8 @@ contains
           sites(s)%term_crownarea_canopy    = rio_termcarea_cano_si(io_idx_si)
           sites(s)%term_crownarea_ustory    = rio_termcarea_usto_si(io_idx_si)
           sites(s)%imort_crownarea          = rio_imortcarea_si(io_idx_si)
+          sites(s)%fmort_crownarea_canopy  = rio_fmortcarea_cano_si(io_idx_si)
+          sites(s)%fmort_crownarea_ustory  = rio_fmortcarea_usto_si(io_idx_si)
           sites(s)%nonrx_fmort_crownarea_canopy  = rio_nonrx_fmortcarea_cano_si(io_idx_si)
           sites(s)%nonrx_fmort_crownarea_ustory  = rio_nonrx_fmortcarea_usto_si(io_idx_si)
           sites(s)%rx_fmort_crownarea_canopy  = rio_rx_fmortcarea_cano_si(io_idx_si)
