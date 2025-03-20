@@ -330,7 +330,7 @@ contains
     site_in%term_crownarea_canopy = 0._r8
     site_in%term_crownarea_ustory = 0._r8
     site_in%imort_crownarea = 0._r8
-    site_in%monrx_fmort_crownarea_canopy = 0._r8
+    site_in%nonrx_fmort_crownarea_canopy = 0._r8
     site_in%nonrx_fmort_crownarea_ustory = 0._r8
     site_in%rx_fmort_crownarea_canopy = 0._r8
     site_in%rx_fmort_crownarea_ustory = 0._r8
@@ -1037,9 +1037,12 @@ contains
           currentPatch%ros_back                   = 0._r8
           currentPatch%scorch_ht(:)               = 0._r8
           currentPatch%frac_burnt                 = 0._r8
-          currentPatch%rxfire                     = 0
-          currentPatch%rxfire_fi                  = 0._r8
-          currentPatch%rxfire_frac_burnt          = 0._r8
+          currentPatch%nonrx_frac_burnt           = 0._r8
+          currentPatch%nonrx_fire                 = 0
+          currentPatch%nonrx_fi                   = 0._r8
+          currentPatch%rx_fire                    = 0
+          currentPatch%rx_fi                      = 0._r8
+          currentPatch%rx_frac_burnt              = 0._r8
           
           currentPatch => currentPatch%older
        enddo
