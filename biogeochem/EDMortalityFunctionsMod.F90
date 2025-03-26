@@ -276,7 +276,7 @@ contains
     integer,          intent(in)               :: anthro_disturbance_label
     real(r8),         intent(in)               :: age_since_anthro_disturbance
     real(r8),         intent(in)               :: frac_site_primary 
-    real(r8),         intent(in)               :: delta_BA
+    real(r8),         intent(inout)            :: delta_BA
     real(r8),         intent(in)               :: area 
 
     real(r8), intent(in) :: harvestable_forest_c(:)   ! total carbon available for logging, kgC site-1
@@ -306,6 +306,7 @@ contains
     !if trees are in the canopy, then their death is 'disturbance'. This probably needs a different terminology
     call mortality_rates(currentCohort,bc_in,btran_ft, mean_temp,              &
       cmort,hmort,bmort,frmort, smort, asmort, dgmort)
+   
     call LoggingMortality_frac(ipft, currentCohort%dbh, area, &
                                currentCohort%n, &
                                delta_BA, &
