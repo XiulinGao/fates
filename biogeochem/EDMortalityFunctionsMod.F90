@@ -306,6 +306,10 @@ contains
     !if trees are in the canopy, then their death is 'disturbance'. This probably needs a different terminology
     call mortality_rates(currentCohort,bc_in,btran_ft, mean_temp,              &
       cmort,hmort,bmort,frmort, smort, asmort, dgmort)
+
+    write(fates_log(),*) 'EDMort before lmort_direct is:', currentCohort%lmort_direct
+    write(fates_log(),*) 'EDMort before l_degrad is:', currentCohort%l_degrad
+    write(fates_log(),*) 'EDMort delta_BA before is:', delta_BA
    
     call LoggingMortality_frac(ipft, currentCohort%dbh, area, &
                                currentCohort%n, &
@@ -322,6 +326,10 @@ contains
                                age_since_anthro_disturbance, &
                                frac_site_primary, harvestable_forest_c, &
                                harvest_tag)
+
+    write(fates_log(),*) 'EDMort after lmort_direct is:', currentCohort%lmort_direct
+    write(fates_log(),*) 'EDMort after l_degrad is:', currentCohort%l_degrad
+    write(fates_log(),*) 'EDMort delta_BA after is:', delta_BA
 
     if (currentCohort%canopy_layer > 1)then 
        ! Include understory logging mortality rates not associated with disturbance

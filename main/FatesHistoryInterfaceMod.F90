@@ -3179,6 +3179,10 @@ end subroutine flush_hvars
                hio_m7_si_scpf(io_si,scpf) = hio_m7_si_scpf(io_si,scpf) +       &
                   (ccohort%lmort_direct + ccohort%lmort_collateral +           &
                   ccohort%lmort_infra) * ccohort%n / m2_per_ha
+               
+               write(fates_log(),*) 'Hist lmort_direct is:', ccohort%lmort_direct
+               write(fates_log(),*) 'Hist l_degrad is:', ccohort%l_degrad
+               
 
                hio_m8_si_scpf(io_si,scpf) = hio_m8_si_scpf(io_si,scpf) +       &
                   ccohort%frmort*ccohort%n / m2_per_ha
