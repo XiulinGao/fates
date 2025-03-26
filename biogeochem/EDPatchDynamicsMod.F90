@@ -274,15 +274,15 @@ contains
                 harvestable_forest_c, &
                 harvest_tag)
 
-          write(fates_log(),*) 'lmort_direct is:', lmort_direct
-          write(fates_log(),*) 'lmort_collateral is:', lmort_collateral
-          write(fates_log(),*) 'lmort_infra is:', lmort_infra
-          write(fates_log(),*) 'l_degrad is:', l_degrad
-
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
+
+          write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
+          write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
+          write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
+          write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
           !update delta_BA by subtracting basal area from trees that died in logging, excluding degradation
           deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &
