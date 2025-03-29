@@ -26,6 +26,7 @@ module FatesFuelMod
     real(r8) :: canopy_fuel_load                     ! patch level total canopy fuel load [kg biomass]
     real(r8) :: canopy_base_height                   ! patch level canopy base height at which biomass density > minimum density required for canopy fire spread [m]
     real(r8) :: canopy_bulk_density                  ! patch level canopy fuel bulk density [kg biomass m-3]
+    real(r8) :: canopy_water_content                 ! patch level canopy water content [%]
 
 
     contains
@@ -42,6 +43,7 @@ module FatesFuelMod
       procedure :: CalculateCanopyBulkDensity
       procedure :: CalculateFuelBurnt
       procedure :: CalculateResidenceTime
+      procedure :: NonHydroCanopyWaterContent
 
   end type fuel_type
   
@@ -67,6 +69,7 @@ module FatesFuelMod
       this%canopy_fuel_load = 0.0_r8
       this%canopy_base_height = 0.0_r8
       this%canopy_bulk_density = 0.0_r8
+      this%canopy_water_content = 0.0_r8
 
     end subroutine Init 
     
@@ -115,6 +118,8 @@ module FatesFuelMod
         donor_fuel%canopy_base_height*donor_weight
       this%canopy_bulk_density = this%canopy_bulk_density*self_weight +    &
         donor_fuel%canopy_bulk_density*donor_weight
+      this%canopy_water_content = this%canopy_water_content*self_weight +    &
+        donor_fuel%canopy_water_content*donor_weight
       
     end subroutine Fuse
 
@@ -486,6 +491,22 @@ module FatesFuelMod
       
 
     end subroutine CalculateCanopyBulkDensity
+
+ !---------------------------------------------------------------------------------------
+
+    subroutine NonHydroCanopyWaterContent(this, co_lfmc, co_fuel)
+      ! DESCRIPTION:
+      ! Calculates live canopy water content  
+      ! as sum of fuel load weighted cohort level live fuel moisture content
+      !
+      ! ARGUMENTS
+      class(fuel_type), intent(inout) :: this                  ! fuel class
+
+      this%canopy_water_content = this%canopy_water_content + &
+      co_lfmc * co_fuel/this%canopy_fuel_load
+      
+
+    end subroutine NonHydroCanopyWaterContent
 
  !---------------------------------------------------------------------------------------
 
