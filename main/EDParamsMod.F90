@@ -190,11 +190,9 @@ integer, parameter, public :: maxpft = 16      ! maximum number of PFTs allowed
    character(len=param_string_length),parameter,public :: ED_name_canopy_closure_thresh= "fates_canopy_closure_thresh"      
    character(len=param_string_length),parameter,public :: ED_name_stomatal_model= "fates_leaf_stomatal_model"
    character(len=param_string_length),parameter,public :: ED_name_regeneration_model= "fates_regeneration_model"
-<<<<<<< HEAD
-=======
-   character(len=param_string_length),parameter,public :: ED_name_lethal_heating_model= "fates_fire_lh_mod"
+
    character(len=param_string_length),parameter,public :: fates_name_rxfire_switch= "fates_rxfire_switch"
->>>>>>> ec89d802 (add rxfire switch)
+
 
    character(len=param_string_length),parameter,public :: name_theta_cj_c3 = "fates_leaf_theta_cj_c3"
    character(len=param_string_length),parameter,public :: name_theta_cj_c4 = "fates_leaf_theta_cj_c4"
