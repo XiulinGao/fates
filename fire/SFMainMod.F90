@@ -193,6 +193,7 @@ contains
 
     use SFParamsMod, only  : SF_val_rxfire_tpup, SF_val_rxfire_tplw, SF_val_rxfire_rhup, &
                              SF_val_rxfire_rhlw, SF_val_rxfire_wdup, SF_val_rxfire_wdlw
+    use EDParamsMod, only  : rxfire_switch
     use FatesConstantsMod , only : tfrz => t_water_freeze_k_1atm
     use FatesConstantsMod , only : sec_per_day
 
@@ -1108,7 +1109,7 @@ end subroutine  rxfire_burn_window
  
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
           currentPatch%rxfire_frac_burnt = 0.0_r8
-          if(currentPatch%rxfire == 1 .and. total_burnable_area >= min_burnable_area. and. &
+          if(currentPatch%rxfire == 1 .and. total_burnable_area >= min_burnable_area .and. &
           currentSite%rx_burn_accum < AREA)then
              currentSite%rxfire_area_final = currentSite%rxfire_area_final + currentPatch%area
              currentPatch%rxfire_frac_burnt = min(0.99_r8, (prescribed_burnt_area / total_burnable_area))
@@ -1348,7 +1349,7 @@ end subroutine  rxfire_burn_window
              currentCohort%fire_mort = 0.0_r8
              currentCohort%rxfire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
-             currentCohort%rx_crownfire_mort = 0.0_r8
+             currentCohort%rxcrownfire_mort = 0.0_r8
              if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
@@ -1360,20 +1361,9 @@ end subroutine  rxfire_burn_window
              endif !trees
 
              ! if it is rx fire, pass calculated mortality rates to rxfire and zero them for wildfire to track them separately
-<<<<<<< HEAD
-             if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0)then
-                currentCohort%rxfire_mort = currentCohort%fire_mort
-                currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
-                currentCohort%rxcambial_mort = currentCohort%cambial_mort
-                currentCohort%fire_mort = 0.0_r8
-                currentCohort%crownfire_mort = 0.0_r8
-                currentCohort%cambial_mort = 0.0_r8
-             else
-=======
              ! but only apply rxfire-caused mortality to cohort with DBH <= 10 cm 
              
             if (currentPatch%rxfire == 1 .and. currentPatch%fire == 0) then
-
                currentCohort%rxfire_mort = currentCohort%fire_mort
                currentCohort%rxcrownfire_mort = currentCohort%crownfire_mort
                currentCohort%rxcambial_mort = currentCohort%cambial_mort
@@ -1381,12 +1371,10 @@ end subroutine  rxfire_burn_window
                currentCohort%crownfire_mort = 0.0_r8
                currentCohort%cambial_mort = 0.0_r8
             else
->>>>>>> 09a64b44 (add subroutine to calculate rx fire burnt fraction)
                 currentCohort%rxfire_mort = 0.0_r8
                 currentCohort%rxcrownfire_mort = 0.0_r8
                 currentCohort%rxcambial_mort = 0.0_r8
-
-             endif
+            endif
                     
              currentCohort => currentCohort%shorter
 

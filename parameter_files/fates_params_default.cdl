@@ -866,6 +866,9 @@ variables:
 	double fates_regeneration_model ;
 		fates_regeneration_model:units = "-" ;
 		fates_regeneration_model:long_name = "switch for choosing between FATES\'s: 1) default regeneration scheme , 2) the Tree Recruitment Scheme (Hanbury-Brown et al., 2022), or (3) the Tree Recruitment Scheme without seedling dynamics" ;
+	double fates_rxfire_switch ;
+	    fates_rxfire_switch:units = "unitless" ;
+		fates_rxfire_switch:long_name = "management fire mode, 1 = use management fire, 0 = turn off management fire";
         double fates_rxfire_temp_upthreshold ;
 	       fates_rxfire_temp_upthreshold:units = "degree C";
 	       fates_rxfire_temp_upthreshold:long_name= "maximum temprature threshold for conducting prescribed fire";
