@@ -327,6 +327,8 @@ module EDTypesMod
      real(r8) ::  rxfire_area_fuel                             ! daily total burnable area when burn window present and fuel condition met [m2]
      real(r8) ::  rxfire_area_fi                               ! daily total burnable area when burn window present, fuel and fire intensity met [m2]
      real(r8) ::  rxfire_area_final                            ! daily total burnable area when all conditions met [m2]   
+     real(r8) ::  rx_burn_accum                                ! cumulative burned area at site by prescribed fire [m2]
+     real(r8) ::  next_rx_year                                 ! next calendar year when prescribed fire should happen again 
 
      ! PLANT HYDRAULICS
      type(ed_site_hydr_type), pointer :: si_hydr
