@@ -779,8 +779,6 @@ contains
                                        (nc%n * ED_val_understorey_death / hlm_freq_day ) * &
                                        total_c * days_per_sec * years_per_day * ha_per_m2
 
-<<<<<<< HEAD
-
                                   currentSite%imort_abg_flux(currentCohort%size_class, currentCohort%pft) = &
                                        currentSite%imort_abg_flux(currentCohort%size_class, currentCohort%pft) + &
                                        (nc%n * ED_val_understorey_death / hlm_freq_day ) * &
@@ -799,18 +797,7 @@ contains
                                   ! for diagnostics.  But think of it this way, the rates are weighted by
                                   ! number density in EDCLMLink, and the number density of this new patch is donated
                                   ! so with the number density must come the effective mortality rates.
-=======
-                                  currentSite%rxfmort_rate_cambial(currentCohort%size_calss, currentCohort%pft) = &
-                                       currentSite%rxfmort_rate_cambial(currentCohort%size_calss, currentCohort%pft) + &
-                                       nc%n * currentCohort%rxcambial_mort / hlm_freq_day
-                                  currentSite%rxfmort_rate_crown(currentCohort%size_calss, currentCohort%pft) = &
-                                       currentSite%rxfmort_rate_crown(currentCohort%size_calss, currentCohort%pft) + &
-                                       nc%n * currentCohort%rxcrownfire_mort / hlm_freq_day
 
-                                  ! loss of individual from fire in new patch.
-                                  ! add loss of indivs from prescribed fire 
-                                  nc%n = nc%n * (1.0_r8 - ( currentCohort%fire_mort + currentCohort%rxfire_mort) )
->>>>>>> 5c9ce74e (track crown scroch and cambial kill mortality and fire intensity separately for rx fire)
 
                                   nc%cmort            = currentCohort%cmort
                                   nc%hmort            = currentCohort%hmort
@@ -2551,7 +2538,6 @@ contains
     rp%tfc_ros              = (dp%tfc_ros*dp%area + rp%tfc_ros*rp%area) * inv_sum_area
     rp%fi                   = (dp%fi*dp%area + rp%fi*rp%area) * inv_sum_area
     rp%fd                   = (dp%fd*dp%area + rp%fd*rp%area) * inv_sum_area
-    rp%rxfire_fd            = (dp%rxfire_fd*dp%area + rp%rxfire_fd*rp%area) * inv_sum_area
     rp%ros_back             = (dp%ros_back*dp%area + rp%ros_back*rp%area) * inv_sum_area
     rp%scorch_ht(:)         = (dp%scorch_ht(:)*dp%area + rp%scorch_ht(:)*rp%area) * inv_sum_area
     rp%frac_burnt           = (dp%frac_burnt*dp%area + rp%frac_burnt*rp%area) * inv_sum_area

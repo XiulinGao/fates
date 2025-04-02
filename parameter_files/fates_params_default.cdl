@@ -1760,6 +1760,8 @@ data:
 
  fates_regeneration_model = 1 ;
 
+ fates_rxfire_switch = 0 ;
+
  fates_rxfire_temp_upthreshold = 30 ;
 
  fates_rxfire_temp_lwthreshold = 5 ;
