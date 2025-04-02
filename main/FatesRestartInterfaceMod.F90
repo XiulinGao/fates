@@ -2200,7 +2200,7 @@ contains
            rio_abg_fmort_flux_siscpf   => this%rvars(ir_abg_fmort_flux_siscpf)%r81d, &
            rio_abg_rxfmort_flux_siscpf => this%rvars(ir_abg_rxfmort_flux_siscpf)%r81d, &
            rio_abg_term_flux_siscpf    => this%rvars(ir_abg_term_flux_siscpf)%r81d, &
-           rio_disturbance_rates_siluludi => this%rvars(ir_disturbance_rates_siluludi)%r81d, &
+           
 
 
            rio_imortrate_sicdpf        => this%rvars(ir_imortrate_sicdpf)%r81d, &
@@ -3146,7 +3146,6 @@ contains
           rio_rxfmortrate_crown_siscpf => this%rvars(ir_rxfmortrate_crown_siscpf)%r81d, &
           rio_fmortrate_cambi_siscpf  => this%rvars(ir_fmortrate_cambi_siscpf)%r81d, &
           rio_rxfmortrate_cambi_siscpf => this%rvars(ir_rxfmortrate_cambi_siscpf)%r81d, &
-          rio_disturbance_rates_siluludi => this%rvars(ir_disturbance_rates_siluludi)%r81d, &
           rio_termnindiv_cano_siscpf  => this%rvars(ir_termnindiv_cano_siscpf)%r81d, &
           rio_termnindiv_usto_siscpf  => this%rvars(ir_termnindiv_usto_siscpf)%r81d, &
           rio_growflx_fusion_siscpf   => this%rvars(ir_growflx_fusion_siscpf)%r81d,  &
