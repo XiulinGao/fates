@@ -374,6 +374,8 @@ end subroutine  rxfire_burn_window
           currentPatch%litter_moisture(tr_sf)       = fuel_moisture(tr_sf)/MEF(tr_sf)
           currentPatch%litter_moisture(dl_sf)       = fuel_moisture(dl_sf)/MEF(dl_sf)
           currentPatch%litter_moisture(lg_sf)       = fuel_moisture(lg_sf)/MEF(lg_sf)
+
+          currentPatch%sum_fuel = currentPatch%sum_fuel - litt_c%ag_cwd(tr_sf)
           
        else
 
