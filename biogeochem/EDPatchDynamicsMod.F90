@@ -279,10 +279,10 @@ contains
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
 
-          write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
-          write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
-          write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
-          write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
+         ! write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
+         ! write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
+         ! write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
+         ! write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
           !update delta_BA by subtracting basal area from trees that died in logging, excluding degradation
           deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &

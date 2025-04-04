@@ -581,11 +581,11 @@ end subroutine  rxfire_burn_window
            
 
            deallocate(biom_matrix)
-           
-           if(write_SF == itrue)then
-            if ( hlm_masterproc == itrue ) write(fates_log(),*) 'canopy fuel characteristics', currentPatch%canopy_fuel_load, &
-            currentPatch%canopy_bulk_density,currentPatch%canopy_base_height
-           endif
+
+           write(fates_log(),*) 'canopy fuel load is ', currentPatch%canopy_fuel_load
+           write(fates_log(),*) 'canopy fuel bulk density is ', currentPatch%canopy_bulk_density
+           write(fates_log(),*) 'canopy base height is ', currentPatch%canopy_base_height
+           write(fates_log(),*) 'canopy top height is ', canopy_top_height
 
  !      endif  !active crown fire?
  
@@ -1224,6 +1224,9 @@ end subroutine  rxfire_burn_window
        call endrun(msg=errMsg(sourcefile, __LINE__))
 
     endif
+
+    if(currentPatch%rxfire == 1) then
+      write(fates_log(),*) 'Rx fire FI is ',currentPatch%rxfire_FI
        
     currentPatch => currentPatch%younger
 
