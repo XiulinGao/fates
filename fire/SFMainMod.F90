@@ -506,7 +506,6 @@ end subroutine  rxfire_burn_window
               crown_fuel_per_m                     = 0.0_r8
               height_cbb                           = 0.0_r8
               crown_depth                          = 0.0_r8
-              SF_val_CWD_frac_adj(ncwd) = 0.0_r8
  
               ! Calculate crown 1hr fuel biomass (leaf, twig sapwood, twig structural biomass)
               if ( int(prt_params%woody(currentCohort%pft)) == itrue) then !trees
@@ -558,7 +557,7 @@ end subroutine  rxfire_burn_window
          end do
 
            !loop from top to find height where total biomass density >= 0.011
-           do ih=max_height,0
+           do ih=max_height, 0, -1
             if (biom_matrix(ih) > min_density_canopy_fuel) then
                canopy_top_height = dble(ih) + 1.0_r8
                exit
