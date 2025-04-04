@@ -61,6 +61,7 @@
   public :: fire_danger_index
   public :: rxfire_burn_window
   public :: charecteristics_of_fuel
+  public :: characteristics_of_crown
   public :: rate_of_spread
   public :: ground_fuel_consumption
   public :: wind_effect
@@ -115,6 +116,7 @@ contains
        call rxfire_burn_window(currentSite, bc_in)
        call wind_effect(currentSite, bc_in) 
        call charecteristics_of_fuel(currentSite)
+       call characteristics_of_crown(currentSite)
        call rate_of_spread(currentSite)
        call ground_fuel_consumption(currentSite)
        call area_burnt_intensity(currentSite, bc_in)
@@ -412,6 +414,177 @@ end subroutine  rxfire_burn_window
     enddo !end patch loop
     
   end subroutine charecteristics_of_fuel
+
+  !****************************************************************
+  subroutine  characteristics_of_crown ( currentSite )
+   !****************************************************************.  
+ 
+     !returns the live crown fuel characteristics within each patch.
+     ! passive_crown_FI is minimum fire intensity to ignite canopy crown fuel
+     use FatesLitterMod,  only : ncwd
+     use SFParamsMod,    only : SF_VAL_CWD_FRAC
+     use FatesLitterMod,  only : adjust_SF_CWD_frac
+ 
+     type(ed_site_type), intent(inout), target :: currentSite
+ 
+     type(fates_patch_type) , pointer :: currentPatch
+     type(fates_cohort_type), pointer :: currentCohort
+ 
+     ! ARGUMENTS
+     !real(r8), intent(out) :: canopy_fuel_load     ! available canopy fuel load in patch (kg biomass)
+     !real(r8), intent(out) :: passive_crown_FI     ! min fire intensity to ignite canopy fuel (kW/m)
+ 
+     ! LOCAL
+     real(r8) ::  crown_depth          ! depth of crown (m)
+     real(r8) ::  height_cbb           ! clear branch bole height or crown base height (m)
+     real(r8) ::  max_height           ! max cohort on patch (m)
+     real(r8) ::  woody_c              ! above-ground tree struct and sap biomass in cohort (kgC)
+     real(r8) ::  leaf_c                  ! leaf carbon (kgC)
+     real(r8) ::  sapw_c                  ! sapwood carbon (kgC)
+     real(r8) ::  struct_c                ! structure carbon (kgC)
+     real(r8) ::  crown_fuel_biomass      ! biomass of crown fuel in cohort (kg biomass)
+     real(r8) ::  crown_fuel_per_m        ! crown fuel per 1m section in cohort
+     real(r8) ::  canopy_top_height       ! highest point of fuels in patch to carry fire in crown
+     real(r8) ::  SF_val_CWD_frac_adj(ncwd)  ! adjusted fractional allocation of woody biomass to coarse wood debris pool
+ 
+     integer  ::  ih                      ! counter
+ 
+     real(r8), dimension(:), allocatable :: biom_matrix   ! matrix to track biomass from bottom to top
+     real(r8),parameter :: min_density_canopy_fuel = 0.011_r8 !min canopy fuel density (kg/m3) sufficient to
+                                                              !propogate fire vertically through canopy
+                                                              !Scott and Reinhardt 2001 RMRS-RP-29
+     real(r8), parameter :: carbon_2_biomass = 0.45_r8
+ 
+ 
+     !returns the live crown fuel characteristics within each patch.
+     ! passive_crown_FI is the required minimum fire intensity to ignite canopy crown fuel
+ 
+     currentPatch => currentSite%oldest_patch
+ 
+     !! check to see if active_crown_fire is enabled? 
+ 
+     do while(associated(currentPatch))
+        !zero Patch level variables
+        max_height                           = 0.0_r8
+        currentPatch%canopy_fuel_load        = 0.0_r8
+        currentPatch%canopy_bulk_density     = 0.0_r8
+        currentPatch%canopy_base_height      = 0.0_r8
+ 
+ !       if (currentPatch%active_crown_fire == 1) then
+
+
+         ! find the max cohort height to set the upper bounds of biom_matrix
+           currentCohort=>currentPatch%tallest
+           do while(associated(currentCohort))
+            if ( int(prt_params%woody(currentCohort%pft)) == itrue) then !trees
+
+               !find patch max height for stand canopy fuel
+               if (currentCohort%height > max_height) then
+                  max_height = currentCohort%height
+               endif
+           endif !trees only
+ 
+           currentCohort => currentCohort%shorter;
+         enddo !end cohort loop
+
+         !allocate and initialize biom_matrix
+         allocate(biom_matrix(0:int(max_height)))
+         biom_matrix(:) = 0.0_r8
+
+
+       !loop across cohorts to calculate canopy fuel load by 1m height bin
+        currentCohort=>currentPatch%tallest
+           do while(associated(currentCohort))
+
+              !zero cohort level variables
+              woody_c                              = 0.0_r8
+              leaf_c                               = 0.0_r8
+              sapw_c                               = 0.0_r8
+              struct_c                             = 0.0_r8
+              crown_fuel_biomass                   = 0.0_r8
+              crown_fuel_per_m                     = 0.0_r8
+              height_cbb                           = 0.0_r8
+              crown_depth                          = 0.0_r8
+              SF_val_CWD_frac_adj(ncwd) = 0.0_r8
+ 
+              ! Calculate crown 1hr fuel biomass (leaf, twig sapwood, twig structural biomass)
+              if ( int(prt_params%woody(currentCohort%pft)) == itrue) then !trees
+ 
+                 call CrownDepth(currentCohort%height,currentCohort%pft,crown_depth)
+                 height_cbb   = currentCohort%height - crown_depth
+               
+                 leaf_c   = currentCohort%prt%GetState(leaf_organ, carbon12_element)
+                 sapw_c   = currentCohort%prt%GetState(sapw_organ, carbon12_element)
+                 struct_c = currentCohort%prt%GetState(struct_organ, carbon12_element)
+ 
+                 woody_c =  currentCohort%n * &
+                         (prt_params%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c))
+                 leaf_c   = currentCohort%n * leaf_c
+                 call adjust_SF_CWD_frac(currentCohort%dbh, ncwd, SF_val_CWD_frac, SF_val_CWD_frac_adj)
+                 woody_c =  woody_c * SF_val_CWD_frac_adj(1)   !only 1hr fuel 
+ 
+                 crown_fuel_biomass = （leaf_c + woody_c） / carbon_2_biomass           ! crown fuel (kg biomass)
+ 
+                 crown_fuel_per_m = crown_fuel_biomass / crown_depth    ! kg biomass per m
+ 
+                 !sort crown fuel into bins from bottom to top of crown
+                 !accumulate across cohorts to find density within canopy 1m sections
+                 do ih = int(height_cbb), int(currentCohort%height)
+                    biom_matrix(ih) = biom_matrix(ih) + crown_fuel_per_m
+                 end do
+ 
+                 !accumulate available canopy fuel for patch (kg biomass)
+                 ! use this in CFB (crown fraction burn) calculation and FI final
+                 currentPatch%canopy_fuel_load = currentPatch%canopy_fuel_load + crown_fuel_biomass  !canopy fuel in patch
+ 
+              endif !trees only
+ 
+              currentCohort => currentCohort%shorter;
+ 
+           enddo !end cohort loop
+ 
+           biom_matrix(:) = biom_matrix(:) / currentPatch%area    !kg biomass/m3
+ 
+           !loop from 1m to 70m to find bin with total density = 0.011 kg/m3
+           !min canopy fuel density to propogate fire vertically in canopy across patch
+           do ih=0,70
+            if (biom_matrix(ih) > min_density_canopy_fuel) then
+               currentPatch%canopy_base_height = dble(ih) + 1.0_r8 
+               exit
+            else
+               currentPatch%canopy_base_height = max_height
+            end if
+         end do
+
+           !loop from top to find height where total biomass density >= 0.011
+           do ih=max_height,0
+            if (biom_matrix(ih) > min_density_canopy_fuel) then
+               canopy_top_height = dble(in) + 1.0_r8
+               exit
+            else
+               canopy_top_height = max_height
+            end if
+         end do
+
+        
+           !XLG: calculate CBD excluding fuels below the height base canopy
+           currentPatch%canopy_bulk_density = sum(biom_matrix(int(currentPatch%canopy_base_height-1.0_r8):int(canopy_top_height-1.0_r8))) / &
+           (canopy_top_height - currentPatch%canopy_base_height)
+
+           deallocate(biom_matrix)
+           
+           if(write_SF == itrue)then
+            if ( hlm_masterproc == itrue ) write(fates_log(),*) 'canopy fuel characteristics', currentPatch%canopy_fuel_load, &
+            currentPatch%canopy_bulk_density,currentPatch%canopy_base_height
+           endif
+
+ !      endif  !active crown fire?
+ 
+       currentPatch => currentPatch%younger;
+ 
+     end do !end patch loop
+ 
+   end subroutine characteristics_of_crown
 
 
   !*****************************************************************

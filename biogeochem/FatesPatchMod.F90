@@ -196,6 +196,9 @@ module FatesPatchMod
     real(r8)              :: fuel_eff_moist          ! effective avearage fuel moisture content of the ground fuel 
                                                        ! (incl. live grasses. omits 1000hr fuels)
     real(r8)              :: litter_moisture(nfsc)   ! moisture of litter [m3/m3]
+    real(r8)              :: canopy_fuel_load        ! canopy fuel load including leaf and 1 hour woody biomass [kg/m2]
+    real(r8)              :: canopy_bulk_density     ! canopy fuel bulk density [kg/m3]
+    real(r8)              :: canopy_base_height      ! height at which biomass density > 0.011 kg/m3 [m]
 
     ! fire spread
     real(r8)              :: ros_front               ! rate of forward  spread of fire [m/min]
@@ -380,6 +383,9 @@ module FatesPatchMod
       this%fuel_mef                     = nan 
       this%fuel_eff_moist               = nan 
       this%litter_moisture(:)           = nan
+      this%canopy_fuel_load             = nan
+      this%canopy_bulk_density          = nan
+      this%canopy_base_height           = nan
       this%ros_front                    = nan
       this%ros_back                     = nan   
       this%effect_wspeed                = nan    
@@ -460,6 +466,9 @@ module FatesPatchMod
       this%fuel_mef                          = 0.0_r8
       this%fuel_eff_moist                    = 0.0_r8
       this%litter_moisture(:)                = 0.0_r8
+      this%canopy_fuel_load                  = 0.0_r8
+      this%canopy_bulk_density               = 0.0_r8
+      this%canopy_base_height                = 0.0_r8
       this%ros_front                         = 0.0_r8
       this%ros_back                          = 0.0_r8
       this%effect_wspeed                     = 0.0_r8
