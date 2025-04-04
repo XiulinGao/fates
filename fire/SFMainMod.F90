@@ -579,7 +579,7 @@ contains
            !loop from top to find height where total biomass density >= 0.011
            do ih=max_height,0
             if (biom_matrix(ih) > min_density_canopy_fuel) then
-               canopy_top_height = dble(in) + 1.0_r8
+               canopy_top_height = dble(ih) + 1.0_r8
                exit
             else
                canopy_top_height = max_height
