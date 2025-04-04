@@ -822,7 +822,7 @@ variables:
 		fates_maxpatch_secondary:units = "count" ;
 		fates_maxpatch_secondary:long_name = "maximum number of secondary vegetation patches per site" ;
 	double fates_mort_cstarvation_model ;
-		fates_mort_cstarvation_model:units = "unitless" ;
+	    fates_mort_cstarvation_model:units = "unitless" ;
 		fates_mort_cstarvation_model:long_name = "carbon starvation method. In both cases mortality is scaled with carbon storage relative to leaf biomass. (1) linear function; (2) exponential" ;
 	double fates_mort_disturb_frac ;
 		fates_mort_disturb_frac:units = "fraction" ;

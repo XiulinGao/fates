@@ -615,7 +615,11 @@ contains
   subroutine storage_fraction_of_target(c_store_target, c_store, frac)
 
     !--------------------------------------------------------------------------------
+<<<<<<< HEAD
     !    This subroutine returns the ratio between the storage pool and the target 
+=======
+    ! This subroutine returns the ratio between the storage pool and the target 
+>>>>>>> target-logging-api31
     ! storage.  This subroutine is used both the carbon starvation mortality scheme 
     ! and the optional respiration throttling. We impose checks so it cannot go negative
     ! due to truncation errors, but this function can return values greater than 1.
@@ -634,7 +638,6 @@ contains
     real(r8),intent(out)   :: frac
 
     frac = max(0._r8, c_store / max( c_store_target, nearzero) )
-
 
   end subroutine storage_fraction_of_target
 

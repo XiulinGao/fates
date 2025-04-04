@@ -366,6 +366,7 @@ contains
     real(r8) :: delta_dbh             ! correction for dbh
     real(r8) :: delta_height          ! correction for height
     real(r8) :: mean_temp
+    real(r8) :: delta_BA              ! difference between current patch basal area and the target basal area
 
     logical  :: newly_recovered       ! If the current loop is dealing with a newly created cohort, which
                                       ! was created because it is a clone of the previous cohort in
@@ -373,6 +374,7 @@ contains
                                       ! because it inherited them (such as daily carbon balance)
     real(r8) :: target_leaf_c
     real(r8) :: frac_site_primary
+
 
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
@@ -405,6 +407,7 @@ contains
     real(r8) :: cc_carbon
     
     integer,parameter :: leaf_c_id = 1
+    real(r8),parameter :: max_ba_targ = 0.004_r8
     
     !-----------------------------------------------------------------------
 
@@ -447,6 +450,9 @@ contains
        ! check to see if the patch has moved to the next age class
        currentPatch%age_class = get_age_class_index(currentPatch%age)
 
+       ! calculate delta_BA before recalculate logging mortality
+       delta_BA = currentPatch%total_basal_area - max_ba_targ
+
 
        ! Within this loop, we may be creating new cohorts, which
        ! are copies of pre-existing cohorts with reduced damage classes.
@@ -473,8 +479,12 @@ contains
              call Mortality_Derivative(currentSite, currentCohort, bc_in,      &
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%anthro_disturbance_label,                          &
-               currentPatch%age_since_anthro_disturbance, frac_site_primary,   &
-                 harvestable_forest_c, harvest_tag)
+               currentPatch%age_since_anthro_disturbance,                      &
+               delta_BA, currentPatch%area, frac_site_primary,                 &
+               harvestable_forest_c, harvest_tag)
+
+             write(fates_log(),*) 'EDMain lmort_direct is:', currentCohort%lmort_direct
+             write(fates_log(),*) 'EDMain l_degrad is:', currentCohort%l_degrad
 
              ! -----------------------------------------------------------------------------
              ! Apply Plant Allocation and Reactive Transport

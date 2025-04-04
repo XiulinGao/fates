@@ -28,6 +28,7 @@ module EDLoggingMortalityMod
    use FatesConstantsMod , only : dtype_ilog
    use FatesConstantsMod , only : dtype_ifall
    use FatesConstantsMod , only : dtype_ifire
+   use FatesConstantsMod , only : pi_const
    use EDPftvarcon       , only : EDPftvarcon_inst
    use EDPftvarcon       , only : GetDecompyFrac
    use PRTParametersMod  , only : prt_params
@@ -68,7 +69,7 @@ module EDLoggingMortalityMod
    use FatesConstantsMod , only : months_per_year, days_per_sec, years_per_day, g_per_kg
    use FatesConstantsMod , only : hlm_harvest_area_fraction
    use FatesConstantsMod , only : hlm_harvest_carbon
-   use FatesConstantsMod, only : fates_check_param_set
+   use FatesConstantsMod , only : fates_check_param_set
 
    implicit none
    private
@@ -195,7 +196,7 @@ contains
 
    ! ======================================================================================
 
-   subroutine LoggingMortality_frac( pft_i, dbh, canopy_layer, lmort_direct, &
+   subroutine LoggingMortality_frac( pft_i, dbh, area, n, delta_BA, canopy_layer, lmort_direct, &
                                      lmort_collateral,lmort_infra, l_degrad, &
                                      hlm_harvest_rates, hlm_harvest_catnames, &
                                      hlm_harvest_units, &
@@ -206,6 +207,9 @@ contains
       ! Arguments
       integer,  intent(in)  :: pft_i            ! pft index 
       real(r8), intent(in)  :: dbh              ! diameter at breast height (cm)
+      real(r8), intent(in)  :: area             ! current patch area [m2]
+      real(r8), intent(in)  :: n                ! number of plants in current cohort
+      real(r8), intent(inout)  :: delta_BA      ! difference between the current and the target basal area [m2/m2]
       integer,  intent(in)  :: canopy_layer     ! canopy layer of this cohort
       real(r8), intent(in) :: hlm_harvest_rates(:) ! annual harvest rate per hlm category
       character(len=64), intent(in) :: hlm_harvest_catnames(:) ! names of hlm harvest categories
@@ -215,6 +219,7 @@ contains
       real(r8), intent(in) :: harvestable_forest_c(:)  ! total harvestable forest carbon 
                                                        ! of all hlm harvest categories
       real(r8), intent(in) :: frac_site_primary
+     ! real(r8), intent(in) :: total_basal_area  ! site basal area limit for determining whether logging mortality should apply
       real(r8), intent(out) :: lmort_direct     ! direct (harvestable) mortality fraction
       real(r8), intent(out) :: lmort_collateral ! collateral damage mortality fraction
       real(r8), intent(out) :: lmort_infra      ! infrastructure mortality fraction
@@ -232,6 +237,21 @@ contains
       ! Local variables
       integer :: cur_harvest_tag ! the harvest tag of the cohort today
       real(r8) :: harvest_rate ! the final harvest rate to apply to this cohort today
+     ! real(r8) :: harvest_rate_scale_cohort  ! scaling factor after considering dbh size
+      real(r8) :: target_num   ! number of plants to harvest in order to achieve target basal area   
+      real(r8) :: target_frac
+      real(r8) :: cap_frac      ! max. fraction of plants can be harvested 
+      real(r8) :: final_frac_logged   ! final fraction of plants that need to be logged 
+
+      !real(r8), parameter :: max_ba_targ = 0.0034_r8 !target site max. basal area below which logging stops (m2/m2)
+      real(r8), parameter :: ref_dbh1    = 25.0_r8   !reference DBH size 1 for target logging (cm)
+      real(r8), parameter :: ref_dbh2    = 50.0_r8   !reference DBH size 2
+      real(r8), parameter :: ref_dbh3    = 75.0_r8   !reference DBH size 3
+      real(r8), parameter :: cap_targ1   = 0.75_r8   !max. harvesting fraction for plants < ref_dbh1 
+      real(r8), parameter :: cap_targ2   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
+      real(r8), parameter :: cap_targ3   = 0.20_r8   !max. harvesting fraction for plants > ref_dbh3
+      real(r8), parameter :: targ_ba_precision= 1.0E-5_r8   !error allowed for achieving target basal area 
+      integer , parameter :: target_harvest = 1       !switch for turnning on target harvesting 
 
       ! todo: probably lower the dbhmin default value to 30 cm
       ! todo: change the default logging_event_code to 1 september (-244)
@@ -290,54 +310,121 @@ contains
             
          endif
 
+         ! Inverse logistic to preserve large trees from harvesting 
+       !  harvest_rate_scale_cohort = 1._r8/(1._r8 + exp(0.1*(dbh-(logging_dbhmin+logging_dbhmax)/2._r8)))
+         ! also calculate delta basal area for achieving target basal area
+
+         ! get target logging fraction 
+         if(target_harvest == 1) then
+            ! first get max. fraction of trees to be logged 
+            if(dbh <= ref_dbh1) then
+               cap_frac    = cap_targ1  
+            else if(dbh > ref_dbh1 .and. dbh <= ref_dbh2) then
+               cap_frac    = cap_targ2 
+            else if(dbh > ref_dbh2 .and. dbh <= ref_dbh3) then
+               cap_frac    = cap_targ3
+            else 
+               cap_frac    = 0.0_r8
+            end if
+            
+            ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
+            ! call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
+            if(delta_BA > targ_ba_precision) then
+               target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
+            else
+               target_num = 0.0_r8
+            end if
+
+            if(n > 0.0_r8) then
+               target_frac = target_num / n
+            else
+               target_frac = 0.0_r8
+            end if
+            
+            final_frac_logged = min(harvest_rate,min(cap_frac, target_frac))
+         end if
+
+         if (fates_global_verbose()) then
+            write(fates_log(), *) 'final logging fraction for target logging is:', final_frac_logged
+         end if
+
+
          ! transfer of area to secondary land is based on overall area affected, not just logged crown area
          ! l_degrad accounts for the affected area between logged crowns
          if(prt_params%woody(pft_i) == itrue)then ! only set logging rates for trees
-            if (cur_harvest_tag == 0) then
+            if (cur_harvest_tag == 0 .or. cur_harvest_tag == 2) then
                ! direct logging rates, based on dbh min and max criteria
+
                if (dbh >= logging_dbhmin .and. .not. &
-                  ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax )) ) then
+                  ((logging_dbhmax < fates_check_param_set) .and. (dbh >= logging_dbhmax ))) then
+
                   ! the logic of the above line is a bit unintuitive but allows turning off the dbhmax comparison entirely.
                   ! since there is an .and. .not. after the first conditional, the dbh:dbhmax comparison needs to be 
-                  ! the opposite of what would otherwise be expected...
-                  lmort_direct = harvest_rate * logging_direct_frac
+                  ! the opposite of what would otherwise be expected..
+                  if(target_harvest == 1) then
+                     lmort_direct = final_frac_logged * logging_direct_frac
+                  else
+                     lmort_direct = harvest_rate * logging_direct_frac
+                  end if ! end target harvest check
+
                else
                   lmort_direct = 0.0_r8
-               end if
+               end if ! end dbh check 
             else
                 lmort_direct = 0.0_r8
-            end if
+            end if ! end if (cur_harvest_tag == 0)
 
             ! infrastructure (roads, skid trails, etc) mortality rates
             if (dbh >= logging_dbhmax_infra) then
                lmort_infra      = 0.0_r8
-            else
-               lmort_infra      = harvest_rate * logging_mechanical_frac
+            else 
+               if (target_harvest == 1) then
+                  lmort_infra      =  final_frac_logged * logging_mechanical_frac 
+               else
+                  lmort_infra      =  harvest_rate * logging_mechanical_frac
+               end if
             end if
 
             ! Collateral damage to smaller plants below the direct logging size threshold
             ! will be applied via "understory_death" via the disturbance algorithm
-            if (canopy_layer .eq. 1) then
-               lmort_collateral = harvest_rate * logging_collateral_frac
+            if (canopy_layer .eq. 1 ) then
+               if (target_harvest == 1) then
+                  lmort_collateral = final_frac_logged * logging_collateral_frac 
+               else
+                  lmort_collateral = harvest_rate * logging_collateral_frac
+               end if
+
             else
                lmort_collateral = 0._r8
             endif
 
+            ! update delta_BA
+            delta_BA = delta_BA - (0.25_r8 * pi_const * &
+            ((dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
+            lmort_infra)*n/area)
+
          else  ! non-woody plants still killed by infrastructure
             lmort_direct    = 0.0_r8
             lmort_collateral = 0.0_r8
-            lmort_infra      = harvest_rate * logging_mechanical_frac
+            if (target_harvest == 1) then
+               lmort_infra      =   final_frac_logged * logging_mechanical_frac 
+            else
+               lmort_infra      =   harvest_rate * logging_mechanical_frac
+            end if
+
          end if
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
-         if (canopy_layer .eq. 1) then
+         if (canopy_layer .eq. 1 ) then
+            
             l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
+         
          else
             l_degrad = 0._r8
          endif
          
       else 
-         lmort_direct    = 0.0_r8
+         lmort_direct     = 0.0_r8
          lmort_collateral = 0.0_r8
          lmort_infra      = 0.0_r8
          l_degrad         = 0.0_r8
@@ -679,6 +766,8 @@ contains
 
    end subroutine get_harvest_rate_carbon
 
+
+
    ! ============================================================================
 
    subroutine logging_litter_fluxes(currentSite, currentPatch, newPatch, patch_site_areadis, bc_in)
@@ -767,6 +856,7 @@ contains
       integer  :: ilyr                   ! soil layer loop index
       integer  :: el                     ! elemend loop index
       real(r8) :: SF_val_CWD_frac_adj(4) !Updated wood partitioning to CWD based on dbh
+
 
       nlevsoil = currentSite%nlevsoil
 

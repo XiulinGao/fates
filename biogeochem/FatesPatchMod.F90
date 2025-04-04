@@ -5,6 +5,9 @@ module FatesPatchMod
   use FatesConstantsMod,   only : fates_unset_int
   use FatesConstantsMod,   only : primaryforest, secondaryforest
   use FatesConstantsMod,   only : TRS_regeneration
+  use FatesConstantsMod,   only : itrue
+  use FatesConstantsMod,   only : pi_const
+  use FatesConstantsMod,   only : nocomp_bareground
   use FatesGlobals,        only : fates_log
   use FatesGlobals,        only : endrun => fates_endrun
   use FatesUtilsMod,       only : check_hlm_list
@@ -16,6 +19,7 @@ module FatesPatchMod
   use PRTGenericMod,       only : num_elements
   use PRTGenericMod,       only : element_list
   use EDParamsMod,         only : maxSWb, nlevleaf, nclmax, maxpft
+  use PRTParametersMod,    only : prt_params
   use FatesConstantsMod,   only : n_dbh_bins, n_dist_types
   use FatesConstantsMod,   only : n_rad_stream_types
   use FatesConstantsMod,   only : t_water_freeze_k_1atm
@@ -95,6 +99,8 @@ module FatesPatchMod
                                                               !   used to determine attenuation of parameters during photosynthesis
     real(r8) :: total_canopy_area                           ! area that is covered by vegetation [m2]
     real(r8) :: total_tree_area                             ! area that is covered by woody vegetation [m2]
+    real(r8) :: total_basal_area                            ! total tree basal area at each patch [m2/m2]
+    real(r8) :: delta_BA                                    ! difference between current patch basal area and target basal area for targeted logging
     real(r8) :: zstar                                       ! height of smallest canopy tree, only meaningful in "strict PPA" mode [m]
     real(r8) :: elai_profile(nclmax,maxpft,nlevleaf)        ! exposed leaf area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
     real(r8) :: esai_profile(nclmax,maxpft,nlevleaf)        ! exposed stem area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
@@ -232,6 +238,7 @@ module FatesPatchMod
       procedure :: InitRunningMeans
       procedure :: InitLitter
       procedure :: Create
+      procedure :: UpdateTreeBasalArea
       procedure :: FreeMemory
       procedure :: Dump
       procedure :: CheckVars
@@ -311,6 +318,8 @@ module FatesPatchMod
       this%canopy_layer_tlai(:)         = nan               
       this%total_canopy_area            = nan
       this%total_tree_area              = nan 
+      this%total_basal_area             = nan
+      this%delta_BA                     = nan
       this%zstar                        = nan 
       this%elai_profile(:,:,:)          = nan 
       this%esai_profile(:,:,:)          = nan   
@@ -419,6 +428,7 @@ module FatesPatchMod
       ! LEAF ORGANIZATION
       this%canopy_layer_tlai(:)              = 0.0_r8
       this%total_tree_area                   = 0.0_r8  
+      this%total_basal_area                  = 0.0_r8
       this%zstar                             = 0.0_r8
       this%elai_profile(:,:,:)               = 0.0_r8
       this%c_stomata                         = 0.0_r8 
@@ -453,6 +463,7 @@ module FatesPatchMod
       ! DISTURBANCE 
       this%disturbance_rates(:)              = 0.0_r8 
       this%fract_ldist_not_harvested         = 0.0_r8
+      this%delta_BA                          = 0.0_r8
 
       ! LITTER AND COARSE WOODY DEBRIS
       this%fragmentation_scaler(:)           = 0.0_r8
@@ -625,6 +636,37 @@ module FatesPatchMod
 
     !===========================================================================
 
+    subroutine UpdateTreeBasalArea(this)
+      !
+      ! DESCRIPTION:
+      ! calculate patch level tree basal area [m2/m2]
+      !
+
+      ! Arguments:
+      class(fates_patch_type), intent(inout) :: this  !patch object
+
+      ! Locals:
+      type(fates_cohort_type), pointer :: currentCohort
+
+      if(this%nocomp_pft_label .ne. nocomp_bareground) then
+        this%total_basal_area = 0.0_r8
+
+        currentCohort => this%tallest
+        do while(associated(currentCohort))
+          if(prt_params%woody(currentCohort%pft) == itrue) then
+            this%total_basal_area = this%total_basal_area + 0.25_r8 * pi_const * &
+            ((currentCohort%dbh / 100.0_r8)**2.0_r8) * currentCohort%n / &
+            this%area
+          end if
+          currentCohort => currentCohort%shorter 
+        end do
+      end if
+
+      end subroutine UpdateTreeBasalArea
+
+
+    !===========================================================================
+
     subroutine FreeMemory(this, regeneration_model, numpft)
       !
       ! DESCRIPTION:
@@ -744,6 +786,8 @@ module FatesPatchMod
       write(fates_log(),*) 'pa%ncl_p              = ',this%ncl_p
       write(fates_log(),*) 'pa%total_canopy_area  = ',this%total_canopy_area
       write(fates_log(),*) 'pa%total_tree_area    = ',this%total_tree_area
+      write(fates_log(),*) 'pa%total_basal_area   = ',this%total_basal_area
+      write(fates_log(),*) 'pa%delta_BA           = ',this%delta_BA      
       write(fates_log(),*) 'pa%zstar              = ',this%zstar
       write(fates_log(),*) 'pa%solar_zenith_flag  = ',this%solar_zenith_flag
       write(fates_log(),*) 'pa%solar_zenith_angle = ',this%solar_zenith_angle
