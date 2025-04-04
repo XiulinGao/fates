@@ -523,9 +523,9 @@ end subroutine  rxfire_burn_window
                  call adjust_SF_CWD_frac(currentCohort%dbh, ncwd, SF_val_CWD_frac, SF_val_CWD_frac_adj)
                  woody_c =  woody_c * SF_val_CWD_frac_adj(1)   !only 1hr fuel 
  
-                 crown_fuel_biomass = （leaf_c + woody_c） / carbon_2_biomass           ! crown fuel (kg biomass)
+                 crown_fuel_biomass = (leaf_c + woody_c)/carbon_2_biomass           ! crown fuel (kg biomass)
  
-                 crown_fuel_per_m = crown_fuel_biomass / crown_depth    ! kg biomass per m
+                 crown_fuel_per_m = crown_fuel_biomass/crown_depth    ! kg biomass per m
  
                  !sort crown fuel into bins from bottom to top of crown
                  !accumulate across cohorts to find density within canopy 1m sections
