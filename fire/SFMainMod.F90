@@ -377,8 +377,6 @@ end subroutine  rxfire_burn_window
           currentPatch%litter_moisture(tr_sf)       = fuel_moisture(tr_sf)/MEF(tr_sf)
           currentPatch%litter_moisture(dl_sf)       = fuel_moisture(dl_sf)/MEF(dl_sf)
           currentPatch%litter_moisture(lg_sf)       = fuel_moisture(lg_sf)/MEF(lg_sf)
-
-          currentPatch%sum_fuel = currentPatch%sum_fuel - litt_c%ag_cwd(tr_sf)
           
        else
 
@@ -1179,21 +1177,21 @@ end subroutine  rxfire_burn_window
                   currentPatch%frac_burnt = 0.0_r8      ! zero burned fraction classified as wildfire
                   currentPatch%FD         = 0.0_r8      ! zero wildfire duration
 
-            else if (is_wildfire) then
-               currentPatch%fire = 1         !wildfire happens before start the rx fire
-               currentSite%NF_successful = currentSite%NF_successful + &
+               else if (is_wildfire) then
+                  currentPatch%fire = 1         !wildfire happens before start the rx fire
+                  currentSite%NF_successful = currentSite%NF_successful + &
                        currentSite%NF * currentSite%FDI * currentPatch%area / area
-               currentPatch%rxfire = 0
-               currentPatch%rxfire_frac_burnt = 0.0_r8 !zero rx fire variables
-               currentPatch%rxfire_FI = 0.0_r8
-            else
-               currentPatch%rxfire = 0
-               currentPatch%rxfire_frac_burnt = 0.0_r8
-               currentPatch%rxfire_FI = 0.0_r8
-               currentPatch%fire = 0
-               currentPatch%FD = 0.0_r8
-               currentPatch%frac_burnt = 0.0_r8  !no rx fire no wildfire
-            endif
+                  currentPatch%rxfire = 0
+                  currentPatch%rxfire_frac_burnt = 0.0_r8 !zero rx fire variables
+                  currentPatch%rxfire_FI = 0.0_r8
+               else
+                  currentPatch%rxfire = 0
+                  currentPatch%rxfire_frac_burnt = 0.0_r8
+                  currentPatch%rxfire_FI = 0.0_r8
+                  currentPatch%fire = 0
+                  currentPatch%FD = 0.0_r8
+                  currentPatch%frac_burnt = 0.0_r8  !no rx fire no wildfire
+               endif
             
          else           ! not a patch that is suitable for conducting rx fire 
             currentPatch%rxfire            = 0
@@ -1222,7 +1220,6 @@ end subroutine  rxfire_burn_window
        write(fates_log(),*) 'rxfire =',currentPatch%rxfire
        write(fates_log(),*) 'fire =',currentPatch%fire
        call endrun(msg=errMsg(sourcefile, __LINE__))
-
     endif
 
     if(currentPatch%rxfire == 1) then
