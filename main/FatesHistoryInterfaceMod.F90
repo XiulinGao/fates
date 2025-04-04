@@ -31,6 +31,7 @@ module FatesHistoryInterfaceMod
   use FatesConstantsMod        , only : dtype_ifall
   use FatesConstantsMod        , only : dtype_ifire
   use FatesConstantsMod        , only : dtype_ilog
+  use FatesConstantsMod        , only : mass_2_carbon
   use FatesIODimensionsMod     , only : fates_io_dimension_type
   use FatesIOVariableKindMod   , only : fates_io_variable_kind_type
   use FatesIOVariableKindMod   , only : site_int
@@ -415,6 +416,9 @@ module FatesHistoryInterfaceMod
   integer :: ih_rxfire_area_fuel_si
   integer :: ih_rxfire_area_fi_si
   integer :: ih_rxfire_area_final_si
+  integer :: ih_sum_canopy_fuel_si
+  integer :: ih_canopy_fuel_bulkd_si
+  integer :: ih_canopy_base_height_si
   integer :: ih_fragmentation_scaler_sl
 
   integer :: ih_nplant_si_scpf
@@ -2292,6 +2296,9 @@ end subroutine flush_hvars
                hio_fire_fuel_sav_si    => this%hvars(ih_fire_fuel_sav_si)%r81d, &
                hio_fire_fuel_mef_si    => this%hvars(ih_fire_fuel_mef_si)%r81d, &
                hio_sum_fuel_si         => this%hvars(ih_sum_fuel_si)%r81d,  &
+               hio_sum_canopy_fuel_si  => this%hvars(ih_sum_canopy_fuel_si)%r81d, &
+               hio_canopy_fuel_bulkd_si     => this%hvars(ih_canopy_fuel_bulkd_si)%r81d, &
+               hio_canopy_base_height_si     => this%hvars(ih_canopy_base_height_si)%r81d, &
                hio_fragmentation_scaler_sl  => this%hvars(ih_fragmentation_scaler_sl)%r82d,  &
                hio_litter_in_si        => this%hvars(ih_litter_in_si)%r81d, &
                hio_litter_out_si       => this%hvars(ih_litter_out_si)%r81d, &
@@ -3767,6 +3774,10 @@ end subroutine flush_hvars
          hio_fire_fuel_sav_si(io_si)        = hio_fire_fuel_sav_si(io_si) + cpatch%fuel_sav * cpatch%area * AREA_INV / m_per_cm
          hio_fire_fuel_mef_si(io_si)        = hio_fire_fuel_mef_si(io_si) + cpatch%fuel_mef * cpatch%area * AREA_INV
          hio_sum_fuel_si(io_si)             = hio_sum_fuel_si(io_si) + cpatch%sum_fuel * cpatch%area * AREA_INV
+         hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%canopy_fuel_load * AREA_INV * mass_2_carbon
+         hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
+         hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%canopy_base_height * cpatch%area * AREA_INV 
+
 
          do ilyr = 1,sites(s)%nlevsoil
             hio_fragmentation_scaler_sl(io_si,ilyr) = hio_fragmentation_scaler_sl(io_si,ilyr) + cpatch%fragmentation_scaler(ilyr) * cpatch%area * AREA_INV
@@ -5968,6 +5979,24 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index = ih_sum_fuel_si)
+
+    call this%set_history_var(vname='FATES_CANOPY_FUEL_AMOUNT', units='kg m-2',       &
+         long='total canopy 1h woody plus leaf biomass for crown fire in kg C per m2 land area',   &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_sum_canopy_fuel_si)
+
+    call this%set_history_var(vname='FATES_CANOPY_FUEL_BULKD', units='kg m-3',       &
+         long='canopy fuel bulk density (only 1hr woody plus leaf biomss) in kg C per m3',   &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_canopy_fuel_bulkd_si)
+
+    call this%set_history_var(vname='FATES_CANOPY_BASE_HEIGHT', units='kg m-3',       &
+         long='canopy base height in m, at which biomass density is enough to propogate fire', &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_canopy_base_height_si)
 
     call this%set_history_var(vname='FATES_FRAGMENTATION_SCALER_SL', units='', &
          long='factor (0-1) by which litter/cwd fragmentation proceeds relative to max rate by soil layer',  &
