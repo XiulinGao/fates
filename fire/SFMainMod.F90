@@ -1227,6 +1227,7 @@ end subroutine  rxfire_burn_window
 
     if(currentPatch%rxfire == 1) then
       write(fates_log(),*) 'Rx fire FI is ',currentPatch%rxfire_FI
+    end if
        
     currentPatch => currentPatch%younger
 
