@@ -9,6 +9,7 @@
   use FatesConstantsMod     , only : itrue, ifalse
   use FatesConstantsMod     , only : pi_const
   use FatesConstantsMod     , only : nocomp_bareground
+  use FatesConstantsMod     , only : nearzero
   use FatesInterfaceTypesMod     , only : hlm_masterproc ! 1= master process, 0=not master process
   use EDTypesMod            , only : numWaterMem
   use FatesGlobals          , only : fates_log
