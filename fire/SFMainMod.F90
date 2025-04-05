@@ -1309,6 +1309,11 @@ end subroutine  rxfire_burn_window
              currentPatch%rxfire_frac_burnt = 0.0_r8  
              currentPatch%rxfire_FI = 0.0_r8
           endif
+          if(currentPatch%rxfire = 1) then
+            write(fates_log(),*) 'Rx fire bunrt fraction is ', currentPatch%rxfire_frac_burnt 
+            write(fates_log(),*) 'cumulative rx burned area is  ',currentSite%rx_burn_accum
+          end if
+          
        endif
        currentPatch => currentPatch%younger;
     enddo !end patch loop
