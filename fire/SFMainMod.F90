@@ -1323,7 +1323,7 @@ contains
    ! local variables
    real(r8) :: total_burnable_frac    ! total fractional land area that can apply prescribed fire after condition checks at site level
 
-   !integer,  parameter :: rx_freq = 10 ! Rx fire return interval 
+   integer,  parameter :: rx_freq = 8 ! Rx fire return interval 
    real(r8), parameter :: min_frac_site = 0.1_r8  ! min. burnable fraction for Rx fire to happen
 
    ! zero current site total burnable area and fraction before loop through patches
@@ -1341,16 +1341,14 @@ contains
 
       if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
          currentPatch%rxfire_frac_burnt = 0.0_r8
-         if(currentPatch%rxfire == 1 .and. total_burnable_frac .ge. min_frac_site)then ! .and. &
-!         currentSite%rx_burn_accum .lt. AREA)then
+         if(currentPatch%rxfire == 1 .and. total_burnable_frac .ge. min_frac_site .and. &
+         currentSite%rx_burn_accum .lt. (0.95_r8 * AREA))then
             currentSite%rxfire_area_final = currentSite%rxfire_area_final + currentPatch%area
             currentPatch%rxfire_frac_burnt = min(0.99_r8, SF_val_rxfire_AB/total_burnable_frac)
-!            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
- !           if(currentSite%rx_burn_accum .ge. AREA)then
-               !currentSite%lst_rx_year = hlm_current_year
-               !currentSite%lst_rx_month = hlm_current_month
-  !             currentSite%next_rx_year = hlm_current_year + rx_freq
-   !         endif
+            currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
+            if(currentSite%rx_burn_accum .ge. (0.95_r8*AREA))then
+               currentSite%next_rx_year = hlm_current_year + rx_freq
+            endif
          else
             currentPatch%rxfire = 0 !update rxfire tag when fraction burnable area is less then 50% of grid area, so we do not apply rx fire  
             currentPatch%rxfire_frac_burnt = 0.0_r8  
@@ -1361,11 +1359,10 @@ contains
    enddo !end patch loop
 
    !flush cumulative burnt area once it's time for the next cycle of Rx fire
-   !if(currentSite%rx_burn_accum .ge. AREA)then
-   !   if(hlm_current_year .eq. currentSite%next_rx_year)then
-    !     currentSite%rx_burn_accum = 0.0_r8
-    !  endif
-   !endif
+   if(currentSite%rx_burn_accum .ge. (0.95_r8*AREA) .and. &
+      hlm_current_year .eq. currentSite%next_rx_year)then
+         currentSite%rx_burn_accum = 0.0_r8
+   endif
 
 end subroutine rxfire_area
 
