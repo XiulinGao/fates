@@ -49,10 +49,9 @@ module EDParamsMod
                                                       ! 1=non-acclimating, 2=Kumarathunge et al., 2019
 
    integer,protected, public :: radiation_model       ! Switch betrween Norman (1) and Two-stream (2) radiation models
-
    integer,protected, public :: mort_cstarvation_model ! Switch for carbon starvation mortality:
                                                        ! 1 -- Linear model
-                                                       ! 2 -- Exponential model
+                                                       ! 2 -- Exponential model        
    
    real(r8),protected, public :: fates_mortality_disturbance_fraction ! the fraction of canopy mortality that results in disturbance
    real(r8),protected, public :: ED_val_comp_excln                    ! weighting factor for canopy layer exclusion and promotion
@@ -696,6 +695,10 @@ contains
 
     call fates_params%RetrieveParameter(name=ED_name_mort_cstarvation_model, &
          data=tmpreal)
+    mort_cstarvation_model = nint(tmpreal)
+
+    call fates_params%RetrieveParameter(name=ED_name_mort_cstarvation_model, &
+          data=tmpreal)
     mort_cstarvation_model = nint(tmpreal)
 
     call fates_params%RetrieveParameter(name=ED_name_comp_excln, &

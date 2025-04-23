@@ -782,7 +782,7 @@ contains
             '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14)'
 
 
-      read(pss_file_unit,fmt=*,iostat=ios) p_time, p_name, p_trk, p_age, p_area
+      read(pss_file_unit,fmt=*,iostat=ios) p_time, p_name, p_trk, p_age, p_area 
 
       if (ios/=0) return
 
@@ -793,7 +793,7 @@ contains
          write(*,fmt=hd_fmt) &
                ' time','               patch',' trk','  age','             area'
          write(*,fmt=wr_fmt) &
-               p_time, p_name, p_trk, p_age, p_area
+               p_time, p_name, p_trk, p_age, p_area 
       end if
 
       ! Fill in the patch's memory structures
@@ -920,16 +920,17 @@ contains
       real(r8) :: stem_drop_fraction ! Stem abscission fraction
       integer  :: i_pft, ncohorts_to_create
      
+
       character(len=35),parameter    :: hd_fmt = &
-           '(A7,2X,A20,2X,A5,2X,A6,2X,A4,2X,A9)'
+      '(A7,2X,A20,2X,A5,2X,A6,2X,A4,2X,A9)'
       character(len=43),parameter    :: wr_fmt = &
-           '(F7.1,2X,A20,2X,F5.2,2X,F6.2,2X,I4,2X,F9.6)'
+      '(F7.1,2X,A20,2X,F5.2,2X,F6.2,2X,I4,2X,F9.6)'
 
       real(r8), parameter :: abnormal_large_nplant = 1000.0_r8  ! Used to catch bad values
       real(r8), parameter :: abnormal_large_dbh    = 500.0_r8   ! I've never heard of a tree > 3m
       integer,  parameter :: recruitstatus = 0
       logical, parameter :: old_type1_override = .false.
-
+     
       if(old_type1_override) then
          ! time patch cohort dbh hite pft nplant bdead alive Avgrg 
          read(css_file_unit,fmt=*,iostat=ios) c_time, p_name, c_name, c_dbh, &
@@ -939,11 +940,10 @@ contains
               c_height, c_pft, c_nplant
       end if
 
-
       if( debug_inv) then
          write(*,fmt=wr_fmt) &
               c_time, p_name, c_name, c_dbh, c_height, &
-              c_pft, c_nplant
+              c_pft, c_nplant !, c_bdead, c_balive, c_avgRG
       end if
 
       if (ios/=0) return
@@ -962,7 +962,8 @@ contains
          write(fates_log(),fmt=hd_fmt) &
             '   time','               patch','  dbh','height',' pft','   nplant'
          write(fates_log(),fmt=wr_fmt) &
-               c_time, p_name, c_dbh, c_height, c_pft, c_nplant
+               c_time, p_name, c_name, c_dbh, c_height, &
+               c_pft, c_nplant !, c_bdead, c_balive, c_avgRG
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 

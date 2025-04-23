@@ -180,34 +180,33 @@ contains
           store_c = cohort_in%prt%GetState(store_organ,carbon12_element)
 
           call storage_fraction_of_target(target_leaf_c, store_c, frac)
-
+          
           ! Select the mortality model.
           select case (mort_cstarvation_model)
           case (cstarvation_model_lin)
-             ! Linear model, with maximum mortality occurring when frac = 0
-             cmort = EDPftvarcon_inst%mort_scalar_cstarvation(cohort_in%pft) * &
-                  max(0.0_r8, (EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft)-frac) / &
-                  EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft) )
-
+            ! Linear model, with maximum mortality occurring when frac = 0
+            cmort = EDPftvarcon_inst%mort_scalar_cstarvation(cohort_in%pft) * &
+                max(0.0_r8, (EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft)-frac) / &
+                EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft) )
           case (cstarvation_model_exp)
-             ! Exponential model.  Maximum carbon starvation mortality 
-             ! (mort_scalar_cstarvation) occurs when frac=0. Parameter 
-             ! mort_upthresh_cstarvation controls the the e-folding factor for frac. The
-             ! smaller the mort_upthresh_cstarvation, the faster the mortality will decay.
-             cmort = EDPftvarcon_inst%mort_scalar_cstarvation(cohort_in%pft) * &
-                     exp(- frac / EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft))
-             
+            ! Exponential model.  Maximum carbon starvation mortality 
+            ! (mort_scalar_cstarvation) occurs when frac=0. Parameter 
+            ! mort_upthresh_cstarvation controls the the e-folding factor for frac. The
+            ! smaller the mort_upthresh_cstarvation, the faster the mortality will decay.
+            cmort = EDPftvarcon_inst%mort_scalar_cstarvation(cohort_in%pft) * &
+                    exp(- frac / EDPftvarcon_inst%mort_upthresh_cstarvation(cohort_in%pft))
+         
           case default
-              write(fates_log(),*) &
-                 'Invalid carbon starvation model (',mort_cstarvation_model,').'
-              call endrun(msg=errMsg(sourcefile, __LINE__))
+             write(fates_log(),*) &
+             'Invalid carbon starvation model (',mort_cstarvation_model,').'
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end select
 
-           ! Make sure the mortality is set to zero when tiny.
+          ! Make sure the mortality is set to zero when tiny.
           if (cmort <= nearzero) then
-             cmort = 0.0_r8
+            cmort = 0.0_r8
           end if
-    
+
        else
           write(fates_log(),*) 'dbh problem in mortality_rates', &
                cohort_in%dbh,cohort_in%pft,cohort_in%n,cohort_in%canopy_layer
@@ -256,8 +255,8 @@ contains
  ! ============================================================================
 
  subroutine Mortality_Derivative( currentSite, currentCohort, bc_in, btran_ft, &
-      mean_temp, anthro_disturbance_label, age_since_anthro_disturbance,       &
-      frac_site_primary, harvestable_forest_c, harvest_tag)
+      mean_temp, anthro_disturbance_label, age_since_anthro_disturbance, delta_BA, &
+      area, frac_site_primary, harvestable_forest_c, harvest_tag)
 
     !
     ! !DESCRIPTION:
@@ -276,7 +275,9 @@ contains
     real(r8),         intent(in)               :: mean_temp
     integer,          intent(in)               :: anthro_disturbance_label
     real(r8),         intent(in)               :: age_since_anthro_disturbance
-    real(r8),         intent(in)               :: frac_site_primary
+    real(r8),         intent(in)               :: frac_site_primary 
+    real(r8),         intent(inout)            :: delta_BA
+    real(r8),         intent(in)               :: area 
 
     real(r8), intent(in) :: harvestable_forest_c(:)   ! total carbon available for logging, kgC site-1
     integer, intent(out) :: harvest_tag(:)    ! tag to record the harvest status
@@ -305,7 +306,15 @@ contains
     !if trees are in the canopy, then their death is 'disturbance'. This probably needs a different terminology
     call mortality_rates(currentCohort,bc_in,btran_ft, mean_temp,              &
       cmort,hmort,bmort,frmort, smort, asmort, dgmort)
-    call LoggingMortality_frac(ipft, currentCohort%dbh, currentCohort%canopy_layer, &
+
+    write(fates_log(),*) 'EDMort before lmort_direct is:', currentCohort%lmort_direct
+    write(fates_log(),*) 'EDMort before l_degrad is:', currentCohort%l_degrad
+    write(fates_log(),*) 'EDMort delta_BA before is:', delta_BA
+   
+    call LoggingMortality_frac(ipft, currentCohort%dbh, area, &
+                               currentCohort%n, &
+                               delta_BA, &
+                               currentCohort%canopy_layer, &
                                currentCohort%lmort_direct,                       &
                                currentCohort%lmort_collateral,                    &
                                currentCohort%lmort_infra,                        &
@@ -315,7 +324,12 @@ contains
                                bc_in%hlm_harvest_units, &
                                anthro_disturbance_label, &
                                age_since_anthro_disturbance, &
-                               frac_site_primary, harvestable_forest_c, harvest_tag)
+                               frac_site_primary, harvestable_forest_c, &
+                               harvest_tag)
+
+    write(fates_log(),*) 'EDMort after lmort_direct is:', currentCohort%lmort_direct
+    write(fates_log(),*) 'EDMort after l_degrad is:', currentCohort%l_degrad
+    write(fates_log(),*) 'EDMort delta_BA after is:', delta_BA
 
     if (currentCohort%canopy_layer > 1)then 
        ! Include understory logging mortality rates not associated with disturbance

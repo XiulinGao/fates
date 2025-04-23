@@ -18,6 +18,8 @@ module EDPatchDynamicsMod
   use FatesLitterMod       , only : ndcmpy
   use FatesLitterMod       , only : litter_type
   use FatesConstantsMod    , only : n_dbh_bins 
+  use FatesConstantsMod    , only : m2_per_ha
+  use FatesConstantsMod    , only : pi_const
   use FatesLitterMod       , only : adjust_SF_CWD_frac
   use EDTypesMod           , only : homogenize_seed_pfts
   use EDTypesMod           , only : area
@@ -212,29 +214,45 @@ contains
                                  ! degradation (i.e. they are moved to newly-anthro-disturbed 
                                  ! secondary forest patch)
     real(r8) :: dist_rate_ldist_notharvested
+    real(r8) :: deltaBA_update
     integer  :: threshold_sizeclass
     integer  :: i_dist
     integer  :: h_index
     real(r8) :: frac_site_primary
-    real(r8) :: harvest_rate
+    real(r8) :: harvest_rate 
     real(r8) :: tempsum
     real(r8) :: mean_temp
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
     integer  :: harvest_tag(hlm_num_lu_harvest_cats)
+
+    !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
+    real(r8), parameter :: max_ba_targ = 0.004_r8   ! max. target basal area after logging
+    integer , parameter :: target_harvest = 1  
 
     !----------------------------------------------------------------------------------------------
     ! Calculate Mortality Rates (these were previously calculated during growth derivatives)
     ! And the same rates in understory plants have already been applied to %dndt
     !----------------------------------------------------------------------------------------------
     
-    ! first calculate the fractino of the site that is primary land
+    ! first calculate the fraction of the site that is primary land
     call get_frac_site_primary(site_in, frac_site_primary)
 
     ! get available biomass for harvest for all patches
     call get_harvestable_carbon(site_in, bc_in%site_area, bc_in%hlm_harvest_catnames, harvestable_forest_c)
- 
+
     currentPatch => site_in%oldest_patch
-    do while (associated(currentPatch))   
+    do while (associated(currentPatch)) 
+      ! first update patch basal area 
+      if(currentPatch%nocomp_pft_label /= nocomp_bareground) then
+         call currentPatch%UpdateTreeBasalArea()
+      end if 
+      ! difference between current patch and target basal area
+      !currentPatch%delta_BA = 0.0_r8 
+      currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
+
+      write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
+      write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
+
 
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))        
@@ -246,6 +264,7 @@ contains
           currentCohort%dmort  = cmort+hmort+bmort+frmort+smort+asmort+dgmort
           call carea_allom(currentCohort%dbh,currentCohort%n,site_in%spread,currentCohort%pft, &
                currentCohort%crowndamage,currentCohort%c_area)
+          
 
           ! Initialize diagnostic mortality rates
           currentCohort%cmort = cmort
@@ -255,9 +274,11 @@ contains
           currentCohort%smort = smort
           currentCohort%asmort = asmort
           currentCohort%dgmort = dgmort
-          
-          call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentCohort%canopy_layer, &
-                lmort_direct,lmort_collateral,lmort_infra,l_degrad,&
+
+          call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentPatch%area, &
+                currentCohort%n, currentPatch%delta_BA, &
+                currentCohort%canopy_layer, &
+                lmort_direct,lmort_collateral,lmort_infra,l_degrad, &
                 bc_in%hlm_harvest_rates, &
                 bc_in%hlm_harvest_catnames, &
                 bc_in%hlm_harvest_units, &
@@ -266,11 +287,25 @@ contains
                 frac_site_primary, &
                 harvestable_forest_c, &
                 harvest_tag)
-         
+
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
+
+          write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
+          write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
+          write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
+          write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
+
+          !update delta_BA by subtracting basal area from trees that died in logging, excluding degradation
+          deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &
+          ((currentCohort%dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
+          lmort_infra)*currentCohort%n /currentPatch%area)
+          currentPatch%delta_BA = deltaBA_update
+
+          write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
+
 
           currentCohort => currentCohort%taller
        end do
@@ -313,6 +348,7 @@ contains
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort))   
 
+
           if(currentCohort%canopy_layer == 1)then
 
              ! Treefall Disturbance Rate.  Only count this for trees, not grasses
@@ -338,7 +374,7 @@ contains
              ! Non-harvested part of the logging disturbance rate
              dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + currentCohort%l_degrad * &
                   currentCohort%c_area/currentPatch%area
-             
+  
           endif
           currentCohort => currentCohort%taller
        enddo !currentCohort
@@ -358,12 +394,14 @@ contains
                   bc_in%hlm_harvest_rates, frac_site_primary, currentPatch%age_since_anthro_disturbance, harvest_rate)
           end if
 
-          currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
-               (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
+         
+         currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
+            (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
+            ! Non-harvested part of the logging disturbance rate
+         dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + &
+            (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
 
-          ! Non-harvested part of the logging disturbance rate
-          dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + &
-               (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
+
        endif
 
        ! For nocomp mode, we need to prevent producing too small patches, which may produce small patches
@@ -3224,5 +3262,6 @@ contains
    end do
 
  end subroutine get_frac_site_primary
+
 
  end module EDPatchDynamicsMod
