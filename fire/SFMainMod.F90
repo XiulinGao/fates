@@ -1331,10 +1331,6 @@ contains
    
    total_burnable_frac = currentSite%rxfire_area_fi/AREA
 
-
-   min_burnable_area = min_frac_site * AREA
-   prescribed_burnt_area = SF_val_rxfire_AB * AREA
-
    currentPatch => currentSite%oldest_patch;
 
    do while(associated(currentPatch))
