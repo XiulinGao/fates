@@ -373,6 +373,7 @@ contains
     real(r8) :: delta_dbh             ! correction for dbh
     real(r8) :: delta_height          ! correction for height
     real(r8) :: mean_temp
+    real(r8) :: delta_BA              ! difference between current patch basal area and the target basal area
 
     logical  :: newly_recovered       ! If the current loop is dealing with a newly created cohort, which
                                       ! was created because it is a clone of the previous cohort in
@@ -412,6 +413,7 @@ contains
     real(r8) :: cc_carbon
     
     integer,parameter :: leaf_c_id = 1
+    real(r8),parameter :: max_ba_targ = 0.004_r8
     
     !-----------------------------------------------------------------------
 
@@ -454,6 +456,9 @@ contains
        ! check to see if the patch has moved to the next age class
        currentPatch%age_class = get_age_class_index(currentPatch%age)
 
+       ! calculate delta_BA before recalculate logging mortality
+       delta_BA = currentPatch%total_basal_area - max_ba_targ
+
 
        ! Within this loop, we may be creating new cohorts, which
        ! are copies of pre-existing cohorts with reduced damage classes.
@@ -481,7 +486,7 @@ contains
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%land_use_label,                                    &
                currentPatch%age_since_anthro_disturbance,                      &
-               currentPatch%delta_BA, currentPatch%area,                       &
+               delta_BA, currentPatch%area,                                    &
                current_fates_landuse_state_vector,                             &
                  harvestable_forest_c, harvest_tag)
 

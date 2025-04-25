@@ -304,7 +304,7 @@ contains
     real(r8),         intent(in)               :: age_since_anthro_disturbance
     real(r8),         intent(in)               :: current_fates_landuse_state_vector(n_landuse_cats)
    
-    real(r8),         intent(in)               :: delta_BA
+    real(r8),         intent(inout)               :: delta_BA
     real(r8),         intent(in)               :: area 
 
 

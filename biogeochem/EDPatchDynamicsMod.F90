@@ -204,7 +204,6 @@ contains
     real(r8) :: l_degrad         ! fraction of trees that are not killed but suffer from forest 
                                  ! degradation (i.e. they are moved to newly-anthro-disturbed 
                                  ! secondary forest patch)
-    real(r8) :: deltaBA_update
     real(r8) :: dist_rate_ldist_notharvested
     integer  :: threshold_sizeclass
     integer  :: i_dist
@@ -291,23 +290,16 @@ contains
                 current_fates_landuse_state_vector, &
                 harvestable_forest_c, &
                 harvest_tag)
-
-          write(fates_log(),*) 'lmort_direct is:', lmort_direct
-          write(fates_log(),*) 'lmort_collateral is:', lmort_collateral
-          write(fates_log(),*) 'lmort_infra is:', lmort_infra
-          write(fates_log(),*) 'l_degrad is:', l_degrad
          
           currentCohort%lmort_direct     = lmort_direct
           currentCohort%lmort_collateral = lmort_collateral
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
 
-          !update delta_BA by subtracting basal area from trees that died in logging, excluding degradation
-          deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &
-          ((currentCohort%dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
-          lmort_infra)*currentCohort%n /currentPatch%area)
-          currentPatch%delta_BA = deltaBA_update
-
+          write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
+          write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
+          write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
+          write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
           write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
 
           currentCohort => currentCohort%taller

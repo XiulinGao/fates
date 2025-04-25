@@ -220,7 +220,7 @@ contains
       real(r8), intent(in)  :: dbh              ! diameter at breast height (cm)
       real(r8), intent(in)  :: area             ! current patch area [m2]
       real(r8), intent(in)  :: n                ! number of plants in current cohort
-      real(r8), intent(in)  :: delta_BA         ! difference between the current and the target basal area [m2/m2]
+      real(r8), intent(inout)  :: delta_BA         ! difference between the current and the target basal area [m2/m2]
       integer,  intent(in)  :: canopy_layer     ! canopy layer of this cohort
       real(r8), intent(in) :: hlm_harvest_rates(:) ! annual harvest rate per hlm category
       character(len=64), intent(in) :: hlm_harvest_catnames(:) ! names of hlm harvest categories
@@ -258,7 +258,7 @@ contains
       real(r8), parameter :: cap_targ1   = 0.75_r8   !max. harvesting fraction for plants < ref_dbh1 
       real(r8), parameter :: cap_targ2   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
       real(r8), parameter :: cap_targ3   = 0.20_r8   !max. harvesting fraction for plants > ref_dbh3
-      real(r8), parameter :: ba_targ_precision  = 1.0E-4_r8 !precision allowed for achieving target basal area 
+      real(r8), parameter :: ba_targ_precision  = 1.0E-6_r8 !precision allowed for achieving target basal area 
       integer , parameter :: target_harvest = 1       !switch for turnning on target harvesting
 
       ! todo: probably lower the dbhmin default value to 30 cm
@@ -441,6 +441,11 @@ contains
             else
                lmort_collateral = 0._r8
             endif
+
+            ! update delta_BA
+            delta_BA = delta_BA - (0.25_r8 * pi_const * &
+            ((dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
+            lmort_infra)*n/area)
 
          else  ! non-woody plants still killed by infrastructure
             lmort_direct    = 0.0_r8
