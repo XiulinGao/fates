@@ -71,6 +71,7 @@ module EDPhysiologyMod
   use EDParamsMod         , only : nlevleaf
   use EDTypesMod          , only : num_vegtemp_mem
   use EDParamsMod         , only : maxpft
+  use EDParamsMod         , only : maxpatch_total
   use EDTypesMod          , only : ed_site_type
   use FatesPatchMod,        only : fates_patch_type
   use FatesCohortMod,       only : fates_cohort_type
@@ -2408,9 +2409,14 @@ contains
        if_tfs_or_def: if ( regeneration_model == default_regeneration .or. &
             regeneration_model == TRS_no_seedling_dyn .or. & 
             prt_params%allom_dbh_maxheight(pft) < min_max_dbh_for_trees ) then
-
-          litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft), &  
-               max_germination)*years_per_day
+       ! Disturbance sensitive germination for shrubs. -ahb
+          if (currentPatch%age < 20.0_r8) then
+            litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft) * &  
+            EDPftvarcon_inst%disturbance_germ(pft), max_germination)*years_per_day
+          else
+            litt%seed_germ_in(pft) =  min(litt%seed(pft) * EDPftvarcon_inst%germination_rate(pft), &
+            max_germination)*years_per_day
+          end if
 
           ! If TRS seedling dynamics is switched on we calculate seedling emergence (i.e. germination)
           ! as a pft-specific function of understory light and soil moisture.
