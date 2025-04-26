@@ -116,6 +116,12 @@ module EDParamsMod
    real(r8), public :: dlower_vai(nlevleaf) = fates_unset_r8 ! lower edges of VAI bins
  
    integer, parameter, public :: maxpft = 16      ! maximum number of PFTs allowed
+
+   !resprout parameters
+   real(r8), parameter, public :: init_recruit_trim = 0.8_r8    ! This is the initial trimming value that  
+                                                                !  new recruits start with
+   real(r8), parameter, public :: store_c_ratio_ag2bg = 0.54_r8 !Storage carbon concentration ratio between 
+                                                                ! above-ground and below-ground organs  in resprouters
    
    real(r8),protected,public  :: q10_mr     ! Q10 for respiration rate (for soil fragmenation and plant respiration)    (unitless)
    real(r8),protected,public  :: q10_froz   ! Q10 for frozen-soil respiration rates (for soil fragmentation)            (unitless)

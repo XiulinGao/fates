@@ -118,6 +118,7 @@ module FatesCohortMod
                                         !   performing size diagnostics at high-frequency calls
     integer  :: coage_by_pft_class      ! index that indicates the cohorts position of the join cohort age class x PFT 
     integer  :: size_class_lasttimestep ! size class of the cohort at the last time step
+    integer  :: resprout                ! resprout flag
 
     !---------------------------------------------------------------------------
 
@@ -278,6 +279,7 @@ module FatesCohortMod
     real(r8) ::  rx_cambial_mort       ! cambial kill mortality due to prescribed fire
     real(r8) ::  rx_crown_mort         ! crown fire mortality due to prescribed fire
     real(r8) ::  rx_mort               ! post-fire mortality due to prescribed fire
+    real(r8) ::  frac_resprout         ! post-fire fraction resprout for resprouter
 
     !---------------------------------------------------------------------------
 
@@ -383,6 +385,7 @@ module FatesCohortMod
       this%size_by_pft_class       = fates_unset_int
       this%coage_by_pft_class      = fates_unset_int
       this%size_class_lasttimestep = fates_unset_int
+      this%resprout                = fates_unset_int
    
       ! CARBON AND NUTRIENT FLUXES 
       this%gpp_tstep               = nan
@@ -462,6 +465,7 @@ module FatesCohortMod
       this%rx_cambial_mort         = nan
       this%rx_crown_mort           = nan
       this%rx_mort                 = nan
+      this%frac_resprout           = nan
 
 
     end subroutine NanValues
@@ -555,6 +559,7 @@ module FatesCohortMod
       this%rx_cambial_mort         = 0._r8
       this%rx_crown_mort           = 0._r8
       this%rx_mort                 = 0._r8
+      this%frac_resprout           = 0._r8
     
     end subroutine ZeroValues
    
@@ -723,6 +728,7 @@ module FatesCohortMod
       copyCohort%size_by_pft_class       = this%size_by_pft_class
       copyCohort%coage_by_pft_class      = this%coage_by_pft_class
       copyCohort%size_class_lasttimestep = this%size_class_lasttimestep
+      copyCohort%resprout                = this%resprout
 
       ! CARBON AND NUTRIENT FLUXES
       copyCohort%gpp_tstep               = this%gpp_tstep
@@ -806,6 +812,7 @@ module FatesCohortMod
       copyCohort%rx_cambial_mort         = this%rx_cambial_mort
       copyCohort%rx_crown_mort           = this%rx_crown_mort
       copyCohort%rx_mort                 = this%rx_mort
+      copyCohort%frac_resprout           = this%frac_resprout
 
       ! HYDRAULICS
       if (hlm_use_planthydro .eq. itrue) then
@@ -1069,6 +1076,7 @@ module FatesCohortMod
       write(fates_log(),*) 'cohort%size_by_pft_class      = ', this%size_by_pft_class
       write(fates_log(),*) 'cohort%coage_class            = ', this%coage_class
       write(fates_log(),*) 'cohort%coage_by_pft_class     = ', this%coage_by_pft_class
+      write(fates_log(),*) 'cohort%resprout               = ', this%resprout
       write(fates_log(),*) 'cohort%gpp_acc_hold           = ', this%gpp_acc_hold
       write(fates_log(),*) 'cohort%gpp_acc                = ', this%gpp_acc
       write(fates_log(),*) 'cohort%gpp_tstep              = ', this%gpp_tstep
@@ -1112,6 +1120,7 @@ module FatesCohortMod
       write(fates_log(),*) 'cohort%rx_crown_mort          = ', this%rx_crown_mort
       write(fates_log(),*) 'cohort%rx_cambial_mort        = ', this%rx_cambial_mort
       write(fates_log(),*) 'cohort%rx_mort                = ', this%rx_mort
+      write(fates_log(),*) 'cohort%frac_resprout          = ', this%frac_resprout
       write(fates_log(),*) 'cohort%size_class             = ', this%size_class
       write(fates_log(),*) 'cohort%size_by_pft_class      = ', this%size_by_pft_class
    

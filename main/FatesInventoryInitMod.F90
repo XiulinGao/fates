@@ -957,6 +957,7 @@ contains
          temp_cohort%n           = c_nplant * cpatch%area / real(ncohorts_to_create,r8)
          
          temp_cohort%crowndamage = 1  ! assume undamaged 
+         temp_cohort%resprout    = 0  ! assume not a resprout
 
          if( c_dbh> 0._r8)then
             temp_cohort%dbh         = c_dbh

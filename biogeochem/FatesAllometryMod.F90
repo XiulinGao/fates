@@ -99,8 +99,8 @@ module FatesAllometryMod
   use FatesGlobals     , only : endrun => fates_endrun
   use FatesGlobals     , only : FatesWarn,N2S,A2S,I2S
   use EDParamsMod      , only : nlevleaf,dinc_vai,dlower_vai
-  use EDTypesMod       , only : init_recruit_trim
-  use EDTypesMod       , only : store_c_ratio_ag2bg
+  use EDParamsMod       , only : init_recruit_trim
+  use EDParamsMod       , only : store_c_ratio_ag2bg
   use DamageMainMod    , only : GetCrownReduction
 
   implicit none
