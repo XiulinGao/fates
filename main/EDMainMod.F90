@@ -37,6 +37,7 @@ module EDMainMod
   use EDCohortDynamicsMod      , only : count_cohorts
   use EDCohortDynamicsMod      , only : EvaluateAndCorrectDBH
   use EDCohortDynamicsMod      , only : DamageRecovery
+  use EDCohortDynamicsMod      , only : RefreshResproutFlag
   use EDPatchDynamicsMod       , only : disturbance_rates
   use EDPatchDynamicsMod       , only : fuse_patches
   use EDPatchDynamicsMod       , only : spawn_patches
@@ -586,6 +587,14 @@ contains
           ! with what is allometrically consistent with the stuctural biomass, then
           ! correct the dbh to match.
           call EvaluateAndCorrectDBH(currentCohort,delta_dbh,delta_height)
+
+          ! If current cohort is a resprout, check if it should no longer be flagged
+          ! as a resprout (for cohort fusion purposes). Resprout status is based on ratio 
+          ! of actual fine root to target fine root ratio.
+          if (currentCohort%resprout == 1) then
+            call RefreshResproutFlag(currentCohort)
+          end if
+          
           
           ! We want to save these values for the newly recovered cohort as well
           height_old = currentCohort%height

@@ -34,6 +34,14 @@ module SFMainMod
   use PRTGenericMod,          only : struct_organ
   use FatesInterfaceTypesMod, only : numpft
   use FatesAllometryMod,      only : CrownDepth
+  use FatesAllometryMod,      only : target_resprout_carbon_pools
+  use FatesAllometryMod,      only : h2d_allom
+  use FatesAllometryMod,      only : bleaf
+  use FatesAllometryMod,      only : blmax_allom
+  use FatesAllometryMod,      only : bsap_allom
+  use FatesAllometryMod,      only : bagw_allom
+  use FatesAllometryMod,      only : bbgw_allom
+  use FatesAllometryMod,      only : bdead_allom
   use FatesFuelClassesMod,    only : fuel_classes
 
   
@@ -811,6 +819,19 @@ contains
     type(fates_patch_type),  pointer :: currentPatch
     type(fates_cohort_type), pointer :: currentCohort
 
+    !Local variables
+    real(r8) :: fire_mort
+    real(r8) :: nrc_leaf_c                         ! Target leaf carbon pool of nrc [kg]  
+    real(r8) :: nrc_sapw_c                         ! Target sapw carbon pool of nrc [kg]
+    real(r8) :: nrc_struct_c                       ! Target struct carbon pool of nrc [kg]
+    real(r8) :: nrc_store_c                        ! Target storage carbon pool of nrc [kg]
+    real(r8) :: store_c                            ! Storage carbon of current cohort
+    real(r8) :: nrc_dbldd
+    real(r8) :: nrc_dbagwdd
+    real(r8) :: nrc_dbbgwdd
+    real(r8) :: nrc_dbdeaddd
+    real(r8) :: nrc_dbsapwdd
+
     currentPatch => currentSite%oldest_patch
 
     do while(associated(currentPatch)) 
@@ -828,13 +849,39 @@ contains
              currentCohort%rx_mort = 0.0_r8
              currentCohort%rx_crown_mort = 0.0_r8
              currentCohort%rx_cambial_mort = 0.0_r8
+             currentCohort%frac_resprout = 0.0_r8
              
              if ( prt_params%woody(currentCohort%pft) == itrue) then
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
                 ! Equation 18 in Thonicke et al. 2010. 
-                currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
+                fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.   
+                if_resprouter: if (EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. fire_mort > 0.0_r8) then
+                  !First check if the cohort has sufficient storage carbon to resprout.
+                  !Assumption: storage carbon is used to construct the resprout.
+
+                  !Calculate storage carbon of current cohort.
+                  store_c  = currentCohort%prt%GetState(store_organ, carbon12_element)
+                  !Calculate target carbon pools of the resprout and check that there is sufficient
+                  !storage to make the resprout.
+                  call target_resprout_carbon_pools(EDPftvarcon_inst%hgt_min(currentCohort%pft),currentCohort%pft,&
+                  store_c,nrc_leaf_c,nrc_sapw_c,nrc_struct_c,nrc_store_c,nrc_dbldd,nrc_dbagwdd,nrc_dbsapwdd,nrc_dbbgwdd,nrc_dbdeaddd)
+                  !Resprouting should only occur if there is sufficient storage carbon to
+                  !construct a resprout
+                  if_sufficient_storage: if (nrc_store_c > 0.0_r8) then
+                    currentCohort%frac_resprout = fire_mort * EDPftvarcon_inst%frac_resprout(currentCohort%pft) 
+                    currentCohort%fire_mort = fire_mort - currentCohort%frac_resprout
+                  else   !If there is not sufficient storage then no resprouting occurs
+                    currentCohort%frac_resprout = 0.0_r8
+                    currentCohort%fire_mort = fire_mort
+                  end if if_sufficient_storage
+
+                else   ! If the PFT is not a resprouter then no resprouting occurs
+                  currentCohort%frac_resprout = 0.0_r8
+                  currentCohort%fire_mort = fire_mort
+                end if if_resprouter
+
              else
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees

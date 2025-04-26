@@ -6,6 +6,7 @@ module EDPatchDynamicsMod
   use FatesGlobals         , only : FatesWarn,N2S,A2S
   use FatesInterfaceTypesMod, only : hlm_freq_day
   use FatesInterfaceTypesMod, only : hlm_current_tod
+  use FatesInterfaceTypesMod, only : nleafage
   use EDPftvarcon          , only : EDPftvarcon_inst
   use EDPftvarcon          , only : GetDecompyFrac
   use PRTParametersMod      , only : prt_params
@@ -32,6 +33,7 @@ module EDPatchDynamicsMod
   use EDTypesMod           , only : min_patch_area
   use EDTypesMod           , only : min_patch_area_forced
   use EDParamsMod          , only : regeneration_model
+  use EDParamsMod          , only : store_c_ratio_ag2bg
   use FatesInterfaceTypesMod, only : numpft
   use FatesConstantsMod     , only : dtype_ifall
   use FatesConstantsMod     , only : dtype_ilog
@@ -40,6 +42,7 @@ module EDPatchDynamicsMod
   use FatesConstantsMod    , only : ican_upper
   use PRTGenericMod        , only : num_elements
   use PRTGenericMod        , only : element_list
+  use PRTGenericMod        , only : SetState
   use FatesFuelClassesMod  , only : fuel_classes
   use FatesConstantsMod    , only : N_DIST_TYPES
   use EDTypesMod           , only : AREA_INV
@@ -76,6 +79,14 @@ module EDPatchDynamicsMod
   use EDParamsMod          , only : fates_mortality_disturbance_fraction
   use FatesAllometryMod    , only : carea_allom
   use FatesAllometryMod    , only : set_root_fraction
+  use FatesAllometryMod    , only : target_resprout_carbon_pools
+  use FatesAllometryMod    , only : h2d_allom
+  use FatesAllometryMod    , only : blmax_allom
+  use FatesAllometryMod    , only : bsap_allom
+  use FatesAllometryMod    , only : bagw_allom
+  use FatesAllometryMod    , only : bbgw_allom
+  use FatesAllometryMod    , only : bdead_allom
+  use FatesAllometryMod    , only : bleaf
   use FatesConstantsMod    , only : g_per_kg
   use FatesConstantsMod    , only : ha_per_m2
   use FatesConstantsMod    , only : days_per_sec
@@ -93,6 +104,8 @@ module EDPatchDynamicsMod
   use EDCohortDynamicsMod  , only : InitPRTObject
   use ChecksBalancesMod,      only : SiteMassStock
   use PRTGenericMod,          only : carbon12_element
+  use PRTGenericMod,          only : nitrogen_element
+  use PRTGenericMod,          only : phosphorus_element
   use PRTGenericMod,          only : leaf_organ
   use PRTGenericMod,          only : fnrt_organ
   use PRTGenericMod,          only : sapw_organ
@@ -544,8 +557,8 @@ contains
     type (fates_patch_type) , pointer :: currentPatch
     type (fates_cohort_type), pointer :: currentCohort
     type (fates_cohort_type), pointer :: nc
-    type (fates_cohort_type), pointer :: storesmallcohort
-    type (fates_cohort_type), pointer :: storebigcohort
+    !type (fates_cohort_type), pointer :: storesmallcohort
+    !type (fates_cohort_type), pointer :: storebigcohort
     real(r8) :: site_areadis_primary         ! total area disturbed (to primary forest) in m2 per site per day
     real(r8) :: site_areadis_secondary       ! total area disturbed (to secondary forest) in m2 per site per day
     real(r8) :: patch_site_areadis           ! total area disturbed in m2 per patch per day
@@ -588,10 +601,30 @@ contains
     integer  :: n_pfts_by_landuse
     integer  :: which_pft_allowed
     logical  :: buffer_patch_used
+
+    !Resprouting variables
+    type (fates_cohort_type), pointer :: nrc    ! The new resprouting cohort
+    real(r8) :: nrc_leaf_c                      ! Target leaf carbon pool of nrc [kg] 
+    real(r8) :: nrc_sapw_c                      ! Target sapw carbon pool of nrc [kg]
+    real(r8) :: nrc_struct_c                    ! Target struct carbon pool of nrc [kg]
+    real(r8) :: nrc_store_c                     ! Target storage carbon pool of nrc [kg]
+    real(r8) :: nrc_dbldd
+    real(r8) :: nrc_dbagwdd
+    real(r8) :: nrc_dbbgwdd
+    real(r8) :: nrc_dbdeaddd
+    real(r8) :: nrc_dbsapwdd
+    real(r8) :: f_store                      ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_struct                     ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_leaf                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_sapw                       ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_store                      ! carbon pool mass reduction for resprout [fraction]
+    real(r8) :: m_repro                      ! carbon pool mass reduction for resprout [fraction]
+    integer :: iage                          ! age loop counter for leaf age bins
+    integer  :: element_id                   ! parteh compatible global element index
     !---------------------------------------------------------------------
 
-    storesmallcohort => null() ! storage of the smallest cohort for insertion routine
-    storebigcohort   => null() ! storage of the largest cohort for insertion routine 
+   ! storesmallcohort => null() ! storage of the smallest cohort for insertion routine
+   ! storebigcohort   => null() ! storage of the largest cohort for insertion routine 
 
     if (hlm_use_nocomp .eq. itrue) then
        min_nocomp_pft = 0
@@ -1108,7 +1141,7 @@ contains
                                        nc%n * currentCohort%nonrx_crown_mort / hlm_freq_day
 
                                   ! loss of individual from fire in new patch.
-                                  nc%n = nc%n * (1.0_r8 - currentCohort%fire_mort)
+                                  nc%n = nc%n * (1.0_r8 - (currentCohort%fire_mort + currentCohort%frac_resprout))
 
                                   nc%cmort            = currentCohort%cmort
                                   nc%hmort            = currentCohort%hmort
@@ -1195,6 +1228,130 @@ contains
                                   currentCohort%fraction_crown_burned = 0.0_r8
                                   nc%fraction_crown_burned            = 0.0_r8
 
+                                  ! If the cohort is capable of post-fire resprouting we will create a 
+                                  ! resprouting cohort (nrc) and reduce above-ground biomass pools. 
+                                  ! This is tracked separately from the new non-resprouting cohort (nc).
+                                  ! Note: This routine only handles basal resprouting (not aerial / epicormic)
+                                  if_resprouter: if(EDPftvarcon_inst%resprouter(currentCohort%pft) == 1 .and. &
+                                  currentCohort%frac_resprout > 0.0_r8) then
+                                    ! Step 1 of 2. Create the new resprouting cohort (nrc)
+                                    ! This is copied in to the new patch from the doner cohort in the same way
+                                    ! as the new non-resprouting cohort (nc) above.
+                                    allocate(nrc)
+                                    if(hlm_use_planthydro.eq.itrue) call InitHydrCohort(CurrentSite,nrc)
+
+                                    ! Initialize the PARTEH object and point to the
+                                    ! correct boundary condition fields
+                                    nrc%prt => null()
+                                    call InitPRTObject(nrc%prt)
+                                    call nrc%InitPRTBoundaryConditions()
+                                    call nrc%ZeroValues()
+                                    call currentCohort%Copy(nrc)
+                                    nrc%canopy_layer = 1
+                                    nrc%canopy_layer_yesterday = 1._r8
+                                    nrc%resprout = 1 
+
+                                    ! Reduce number of resprouters in the new patch due to new patch area
+                                    ! and fraction of cohort resprouting. Note: the doner cohort number 
+                                    ! density is reduced after the resprouting routine.
+                                    nrc%n = currentCohort%n * patch_site_areadis/currentPatch%area * &
+                                    currentCohort%frac_resprout
+
+                                    ! Transfer over the mortality rates for diagnostics
+                                    ! Caution: absolute mortality numbers will change when cohort number
+                                    ! densities change
+                                    nrc%cmort            = currentCohort%cmort
+                                    nrc%hmort            = currentCohort%hmort
+                                    nrc%bmort            = currentCohort%bmort
+                                    nrc%frmort           = currentCohort%frmort
+                                    nrc%smort            = currentCohort%smort
+                                    nrc%asmort           = currentCohort%asmort
+                                    nrc%dgmort           = currentCohort%dgmort
+                                    nrc%dmort            = currentCohort%dmort
+                                    nrc%lmort_direct     = currentCohort%lmort_direct
+                                    nrc%lmort_collateral = currentCohort%lmort_collateral
+                                    nrc%lmort_infra      = currentCohort%lmort_infra
+
+                                    !Step 2 of 2. Set biomass pool sizes of the new resprouting cohort (nrc) 
+
+                                    !Reduce height of resprout to new recruit
+                                    nrc%height = EDPftvarcon_inst%hgt_min(currentCohort%pft)
+                                    !Set dbh of resprout
+                                    call h2d_allom(nrc%height,currentCohort%pft,nrc%dbh)
+                                    !Calcuate target above ground carbon pool sizes for nrc. 
+                                    !Carbon pools for leaf, struct, and sapw are based on the size of a new recruit.
+                                    !Carbon pools for fnrt and storage are preserved from the doner cohort.
+                                    call target_resprout_carbon_pools(nrc%height,nrc%pft,store_c,nrc_leaf_c,&
+                                    nrc_sapw_c,nrc_struct_c,nrc_store_c,nrc_dbldd,nrc_dbagwdd,nrc_dbsapwdd,nrc_dbbgwdd,nrc_dbdeaddd)
+
+                                    !Set the biomass pool sizes for nrc. Mass fluxes associated
+                                    !with the reduction in above-ground biomass pools were already sent to
+                                    !litter/atm in the fire_litter_fluxes subroutine.
+
+                                    element_loop: do el = 1,num_elements
+                                     element_id = element_list(el)
+                                     ! If this is carbon12, then the initialization is straight forward
+                                     ! otherwise, we use stoichiometric ratios
+                                     select case(element_id)
+                                     case(carbon12_element)
+                                       m_struct = nrc_struct_c
+                                       m_leaf   = nrc_leaf_c
+                                       m_sapw   = nrc_sapw_c
+                                       m_repro  = 0._r8
+
+                                     case(nitrogen_element)
+                                       m_struct = nrc_struct_c*prt_params%nitr_stoich_p1(currentCohort%pft,&
+                                       prt_params%organ_param_id(struct_organ))
+                                       m_leaf   = nrc_leaf_c*prt_params%nitr_stoich_p1(currentCohort%pft,&
+                                       prt_params%organ_param_id(leaf_organ))
+                                       m_sapw   = nrc_sapw_c*prt_params%nitr_stoich_p1(currentCohort%pft,&
+                                       prt_params%organ_param_id(sapw_organ))
+                                       m_repro  = 0._r8
+
+                                     case(phosphorus_element)
+                                       m_struct = nrc_struct_c*prt_params%phos_stoich_p1(currentCohort%pft,&
+                                       prt_params%organ_param_id(struct_organ))
+                                       m_leaf   = nrc_leaf_c*prt_params%phos_stoich_p1(currentCohort%pft,&
+                                       prt_params%organ_param_id(leaf_organ))
+                                       m_sapw   = nrc_sapw_c*prt_params%phos_stoich_p1(currentCohort%pft,&
+                                       prt_params%organ_param_id(sapw_organ))
+                                       m_repro  = 0._r8
+                                     end select
+
+                                     select case(hlm_parteh_mode)
+                                     case (prt_carbon_allom_hyp,prt_cnp_flex_allom_hyp )
+                                       ! Put all of the leaf mass into the first bin
+                                       call SetState(nrc%prt,leaf_organ, element_id,m_leaf,1)
+                                       do iage = 2,nleafage
+                                          call SetState(nrc%prt,leaf_organ, element_id,0._r8,iage)
+                                       end do
+
+                                       call SetState(nrc%prt,sapw_organ, element_id, m_sapw)
+                                       call SetState(nrc%prt,struct_organ, element_id, m_struct)
+                                       call SetState(nrc%prt,repro_organ, element_id, m_repro)
+
+                                     case default
+                                       write(fates_log(),*) 'Unspecified PARTEH module during create_cohort'
+                                       call endrun(msg=errMsg(sourcefile, __LINE__))
+                                     end select
+                                    end do element_loop
+
+                                    !Storage is reduced to account for the construction costs of the resprout
+                                    !Calculate the fraction to reduce the doner storage pool by so that
+                                    !we can use the PRTBurnLosses subroutine to make the reduction.
+                                    f_store = 1.0_r8 - nrc_store_c / store_c
+                                    call PRTBurnLosses(nrc%prt, store_organ, f_store)
+
+                                    !Add the new resprouting cohort into the linked list
+                                    if (nrc%n > 0.0_r8) then
+                                       call insert_cohort(newPatch,nrc,newPatch%tallest, newPatch%shortest,&
+                                       tnull, snull)
+                                    else
+                                       call nrc%FreeMemory()
+                                       deallocate(nrc)
+                                    end if
+
+                                 end if if_resprouter
 
 
                                ! Logging is the current disturbance
@@ -2307,6 +2464,7 @@ contains
     real(r8) :: repro_m              ! Reproductive mass (seeds/flowers) [kg]
     real(r8) :: num_dead_trees       ! total number of dead trees passed in with the burn area
     real(r8) :: num_live_trees       ! total number of live trees passed in with the burn area
+    real(r8) :: num_resprouts        ! total number of resprouting trees passed in with the burn area
     real(r8) :: donate_m2            ! area normalization for litter mass destined to new patch [m-2]
     real(r8) :: retain_m2            ! area normalization for litter mass staying in donor patch [m-2]
     real(r8) :: dcmpy_frac           ! fraction of mass going to each decomposability partition
@@ -2403,13 +2561,17 @@ contains
              ! Absolute number of dead trees being transfered in with the donated area
              num_dead_trees = (currentCohort%fire_mort  * &
                               currentCohort%n * patch_site_areadis/currentPatch%area)
+            
+             ! Absolute number of resprouting trees being transfered in with the donated area
+             num_resprouts = (currentCohort%frac_resprout*currentCohort%n * &
+                              patch_site_areadis/currentPatch%area)
 
              ! Contribution of dead trees to leaf litter
-             donatable_mass = num_dead_trees * (leaf_m+repro_m) * &
+             donatable_mass = (num_dead_trees + num_resprouts)* (leaf_m+repro_m) * &
                               (1.0_r8-currentCohort%fraction_crown_burned)
 
              ! Contribution of dead trees to leaf burn-flux
-             burned_mass  = num_dead_trees * (leaf_m+repro_m) * currentCohort%fraction_crown_burned
+             burned_mass  = (num_dead_trees + num_resprouts) * (leaf_m+repro_m) * currentCohort%fraction_crown_burned
 
              do dcmpy=1,ndcmpy
                  dcmpy_frac = GetDecompyFrac(pft,leaf_organ,dcmpy)
@@ -2441,7 +2603,7 @@ contains
              ! Track as diagnostic fluxes
              elflux_diags%surf_fine_litter_input(pft) = &
                   elflux_diags%surf_fine_litter_input(pft) + &
-                  num_dead_trees * (leaf_m+repro_m) * (1.0_r8-currentCohort%fraction_crown_burned)
+                  (num_dead_trees + num_resprouts) * (leaf_m+repro_m) * (1.0_r8-currentCohort%fraction_crown_burned)
 
              elflux_diags%root_litter_input(pft) = &
                   elflux_diags%root_litter_input(pft) + &
@@ -2457,7 +2619,7 @@ contains
 
              do c = 1,ncwd
                 do sl = 1,currentSite%nlevsoil
-                   donatable_mass =  num_dead_trees * SF_val_CWD_frac_adj(c) * &
+                   donatable_mass =  (num_dead_trees + num_resprouts) * SF_val_CWD_frac_adj(c) * &
                          bcroot * currentSite%rootfrac_scr(sl)
 
                    new_litt%bg_cwd(c,sl) = new_litt%bg_cwd(c,sl) + &
@@ -2478,10 +2640,10 @@ contains
              ! Above ground coarse woody debris from twigs and small branches
              ! a portion of this pool may burn
              do c = 1,ncwd
-                 donatable_mass = num_dead_trees * SF_val_CWD_frac_adj(c) * bstem
+                 donatable_mass = (num_dead_trees + num_resprouts) * SF_val_CWD_frac_adj(c) * bstem
                  if (c == 1 .or. c == 2) then
                       donatable_mass = donatable_mass * (1.0_r8-currentCohort%fraction_crown_burned)
-                      burned_mass = num_dead_trees * SF_val_CWD_frac_adj(c) * bstem * &
+                      burned_mass = (num_dead_trees + num_resprouts) * SF_val_CWD_frac_adj(c) * bstem * &
                       currentCohort%fraction_crown_burned
                       site_mass%burn_flux_to_atm = site_mass%burn_flux_to_atm + burned_mass
                 endif

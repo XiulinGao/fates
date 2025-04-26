@@ -143,6 +143,7 @@ Module EDCohortDynamicsMod
   public :: SendCohortToLitter
   public :: EvaluateAndCorrectDBH
   public :: DamageRecovery
+  public :: RefreshResproutFlag
   
   logical, parameter :: debug  = .false. ! local debug flag
   
@@ -829,6 +830,10 @@ end subroutine create_cohort
 
                              ! check cohorts have same damage class before fusing
                              if (currentCohort%crowndamage == nextc%crowndamage) then
+                             
+                             ! check cohorts have the same resprout status before fusing
+                             if (currentCohort%resprout == nextc%resprout) then
+                           
 
                              ! check cohorts in same c. layer. before fusing
 
@@ -857,6 +862,7 @@ end subroutine create_cohort
                                       write(fates_log(),*) 'dbh:',currentCohort%dbh,nextc%dbh
                                       write(fates_log(),*) 'pft:',currentCohort%pft,nextc%pft
                                       write(fates_log(),*) 'crowndamage:',currentCohort%crowndamage,nextc%crowndamage
+                                      write(fates_log(),*) 'resprout',currentCohort%resprout,nextc%resprout
                                       write(fates_log(),*) 'canopy_trim:',currentCohort%canopy_trim,nextc%canopy_trim
                                       write(fates_log(),*) 'canopy_layer_yesterday:', &
                                            currentCohort%canopy_layer_yesterday,nextc%canopy_layer_yesterday
@@ -1096,6 +1102,9 @@ end subroutine create_cohort
                                       
                                       currentCohort%rx_mort        = (currentCohort%n*currentCohort%rx_mort + &
                                            nextc%n*nextc%rx_mort)/newn
+                                      
+                                      currentCohort%frac_resprout  = (currentCohort%n*currentCohort%frac_resprout &
+                                      nextc%n*nextc%frac_resprout)/newn
 
                                       ! mortality diagnostics
                                       currentCohort%cmort = (currentCohort%n*currentCohort%cmort + nextc%n*nextc%cmort)/newn
@@ -1206,6 +1215,7 @@ end subroutine create_cohort
 
                                 endif ! if( currentCohort%isnew.eqv.nextc%isnew ) then
                              endif !canopy layer
+                           endif !resprout
                              endif ! crowndamage 
                           endif !pft
                        endif  !index no.
@@ -1853,11 +1863,39 @@ end subroutine create_cohort
     return
   end subroutine DamageRecovery
 
-
-
-
 !:.........................................................................:
 
-  
+
+  subroutine RefreshResproutFlag(currentCohort)
+   !
+   !DESCRIPTION
+   !Check if the resprout should no longer be considered a resprout
+   !based on how close its fine root carbon pool is to target
+
+   !USES
+   use FatesAllometryMod, only : bfineroot 
+
+   !ARGUMENTS
+   type(fates_cohort_type), intent(inout) :: currentCohort
+   
+   !LOCAL VARIABLES
+   real(r8) :: target_fnrt_c !target fine root carbon pool [kg]
+   real(r8) :: fnrt_c !actual fine root carbon pool [kg]
+   real(r8) :: dbfrdd !fine root derivative
+
+   call bfineroot(currentCohort%dbh,currentCohort%pft,&
+          currentCohort%canopy_trim,currentCohort%l2fr,target_fnrt_c,dbfrdd)
+
+   fnrt_c = currentCohort%prt%GetState(fnrt_organ,carbon12_element)
+
+   !If difference between actual and target fine root carbon is within 3% of the actual carbon
+   !then the cohort loses its resprout flag is in considered to be witin the range of
+   !non-resprouting allometry.
+   if ((fnrt_c - target_fnrt_c) / fnrt_c < 0.03_r8) then
+      currentCohort%resprout = 0
+   end if
+
+   end subroutine RefreshResproutFlag
+
 
 end module EDCohortDynamicsMod
