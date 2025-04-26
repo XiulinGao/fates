@@ -279,6 +279,9 @@ contains
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
 
+          write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
+          write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
+
           currentCohort => currentCohort%taller
        end do
 
