@@ -1103,7 +1103,7 @@ end subroutine create_cohort
                                       currentCohort%rx_mort        = (currentCohort%n*currentCohort%rx_mort + &
                                            nextc%n*nextc%rx_mort)/newn
                                       
-                                      currentCohort%frac_resprout  = (currentCohort%n*currentCohort%frac_resprout &
+                                      currentCohort%frac_resprout  = (currentCohort%n*currentCohort%frac_resprout + &
                                       nextc%n*nextc%frac_resprout)/newn
 
                                       ! mortality diagnostics
