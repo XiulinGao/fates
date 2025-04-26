@@ -557,8 +557,8 @@ contains
     type (fates_patch_type) , pointer :: currentPatch
     type (fates_cohort_type), pointer :: currentCohort
     type (fates_cohort_type), pointer :: nc
-    !type (fates_cohort_type), pointer :: storesmallcohort
-    !type (fates_cohort_type), pointer :: storebigcohort
+    type (fates_cohort_type), pointer :: storesmallcohort
+    type (fates_cohort_type), pointer :: storebigcohort
     real(r8) :: site_areadis_primary         ! total area disturbed (to primary forest) in m2 per site per day
     real(r8) :: site_areadis_secondary       ! total area disturbed (to secondary forest) in m2 per site per day
     real(r8) :: patch_site_areadis           ! total area disturbed in m2 per patch per day

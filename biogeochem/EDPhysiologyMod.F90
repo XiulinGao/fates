@@ -91,7 +91,7 @@ module EDPhysiologyMod
   use EDTypesMod          , only : phen_dstat_timeon
   use EDTypesMod          , only : phen_dstat_pshed
   use EDTypesMod          , only : phen_dstat_pshed
-  use EDTypesMod          , only : init_recruit_trim
+  use EDParamsMod          , only : init_recruit_trim
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use FatesGlobals          , only : fates_log
   use FatesGlobals          , only : endrun => fates_endrun
@@ -2141,7 +2141,7 @@ contains
 
              !how much seed remains in the patch where it was produced
              intra_patch_seed_rain(ipatch,pft) = intra_patch_seed_rain(ipatch,pft) + &
-               ( 1.0_r8 - EDPftvarcon_inst%inter_patch_disp_frac(pft) ) * seed_prod * currentCohort%n)
+               ( 1.0_r8 - EDPftvarcon_inst%inter_patch_disp_frac(pft) ) * seed_prod * currentCohort%n
              !how much seed is distributed evenly over all patches (including the current patch)
                site_seed_rain(pft) = site_seed_rain(pft) +  &
                ( (EDPftvarcon_inst%inter_patch_disp_frac(pft) * seed_prod * currentCohort%n) + &
@@ -2166,7 +2166,7 @@ contains
        ipatch = 0
        currentPatch => currentSite%oldest_patch
        seed_in_loop: do while (associated(currentPatch))
-          ipatch = iptach + 1
+          ipatch = ipatch + 1
 
           litt => currentPatch%litter(el)
           do pft = 1,numpft
