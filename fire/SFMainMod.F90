@@ -32,6 +32,7 @@ module SFMainMod
   use PRTGenericMod,          only : carbon12_element
   use PRTGenericMod,          only : sapw_organ
   use PRTGenericMod,          only : struct_organ
+  use PRTGenericMod,          only : store_organ
   use FatesInterfaceTypesMod, only : numpft
   use FatesAllometryMod,      only : CrownDepth
   use FatesAllometryMod,      only : target_resprout_carbon_pools
