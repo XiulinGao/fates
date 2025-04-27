@@ -2710,9 +2710,9 @@ contains
             hio_fire_fuel_sav_si(io_si)        = hio_fire_fuel_sav_si(io_si) + cpatch%fuel%SAV_notrunks * cpatch%area * AREA_INV / m_per_cm
             hio_fire_fuel_mef_si(io_si)        = hio_fire_fuel_mef_si(io_si) + cpatch%fuel%MEF_notrunks * cpatch%area * AREA_INV
             hio_sum_fuel_si(io_si)             = hio_sum_fuel_si(io_si) + cpatch%fuel%non_trunk_loading * cpatch%area * AREA_INV
-            hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%canopy_fuel_load * AREA_INV * mass_2_carbon
-            hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
-            hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%canopy_base_height * cpatch%area * AREA_INV 
+            hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%fuel%canopy_fuel_load * AREA_INV * mass_2_carbon
+            hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%fuel%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
+            hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%fuel%canopy_base_height * cpatch%area * AREA_INV 
 
             hio_nonrx_intensity_area_product_si(io_si) = hio_nonrx_intensity_area_product_si(io_si) + &
                  cpatch%nonrx_FI * cpatch%nonrx_frac_burnt * cpatch%area * AREA_INV * J_per_kJ
