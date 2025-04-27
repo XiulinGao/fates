@@ -280,7 +280,7 @@ contains
         biom_matrix(:) = 0.0_r8
   
         !loop across cohorts to calculate canopy fuel load by 1m height bin
-        currentCohort=>currentCohort%tallest
+        currentCohort=>currentPatch%tallest
         
         do while(associated(currentCohort))
           !zero cohort level variables
@@ -690,11 +690,13 @@ contains
 
     ! ARGUMENTS
     type(ed_site_type), intent(inout), target :: currentSite
+    type(bc_in_type),   intent(in) :: bc_in
 
     !LOCALS
     type(fates_patch_type), pointer :: currentPatch  
 
     real(r8) :: total_burnable_frac        ! total fractional land area that can apply prescribed fire after condition checks at site level
+    integer,  parameter :: rx_freq = 8 ! Rx fire return interval 
 
 
     ! initialize site variables
@@ -703,8 +705,6 @@ contains
 
     ! update total burnable fraction
     total_burnable_frac = currentSite%rxfire_area_fi / AREA
-
-    integer,  parameter :: rx_freq = 8 ! Rx fire return interval 
 
     ! zero current site total burnable area and fraction before loop through patches
     currentSite%rxfire_area_final = 0._r8
@@ -721,8 +721,8 @@ contains
         total_burnable_frac .ge. SF_val_rxfire_min_frac .and. &
         currentSite%rx_burn_accum .lt. (0.95_r8 * AREA)) then
           currentSite%rxfire_area_final = currentSite%rxfire_area_final + currentPatch%area ! the final burned total land area 
-          currentPatch%rx_frac_burnt = min(0.99_r8, (SF_val_rxfire_AB / total_burnable_frac)
-          currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt)
+          currentPatch%rx_frac_burnt = min(0.99_r8, (SF_val_rxfire_AB / total_burnable_frac))
+          currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rx_frac_burnt
           if(currentSite%rx_burn_accum .ge. (0.95_r8*AREA))then
             currentSite%next_rx_year = hlm_current_year + rx_freq
           end if
@@ -747,7 +747,7 @@ contains
 
       end if
 
-      currentPatch => currentPatch%younger;  
+      currentPatch => currentPatch%younger;
     end do ! end patch loop
 
     !flush cumulative burnt area once it's time for the next cycle of Rx fire
@@ -755,7 +755,7 @@ contains
     hlm_current_year .eq. currentSite%next_rx_year)then
       currentSite%rx_burn_accum = 0.0_r8
     end if
-    
+
 
   end subroutine CalculateRxfireAreaBurnt
 
