@@ -250,7 +250,7 @@ contains
       real(r8), parameter :: cap_targ1   = 0.75_r8   !max. harvesting fraction for plants < ref_dbh1 
       real(r8), parameter :: cap_targ2   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
       real(r8), parameter :: cap_targ3   = 0.20_r8   !max. harvesting fraction for plants > ref_dbh3
-      real(r8), parameter :: targ_ba_precision= 1.0E-5_r8   !error allowed for achieving target basal area 
+      real(r8), parameter :: targ_ba_precision= 1.0E-6_r8   !error allowed for achieving target basal area 
       integer , parameter :: target_harvest = 1       !switch for turnning on target harvesting 
 
       ! todo: probably lower the dbhmin default value to 30 cm
