@@ -313,7 +313,8 @@ contains
             write(fates_log(),*) 'current patch canopy fuel is ', currentPatch%fuel%canopy_fuel_load
             
             ! 1m biomass bin
-            crown_fuel_per_m = (leaf_c + woody_c) / (carbon_2_biomass * crown_depth) !kg biomass / m
+            crown_fuel_per_m = (leaf_c + woody_c*SF_val_CWD_frac_adj(1)) / &
+            (carbon_2_biomass * crown_depth) !kg biomass / m
             ! sort crown fuel into bins from bottom to top of crown
             ! accumulate across cohorts to find density within canopy 1m sections
                  do h_idx = int(cbh_co), int(currentCohort%height)
