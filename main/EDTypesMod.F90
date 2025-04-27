@@ -452,6 +452,9 @@ module EDTypesMod
      real(r8) ::  rxfire_area_fuel                             ! daily total burnable area [m2] when burn window present and fuel condition met 
      real(r8) ::  rxfire_area_fi                               ! daily total burnable area [m2] when burn window present, fuel and fire intensity condition met
      real(r8) ::  rxfire_area_final                            ! daily total burnable area [m2] when all conditions met  
+     real(r8) ::  rx_burn_accum                                ! cumulative burnt fraction by Rx fire at site
+     integer  ::  next_rx_year                                 ! year of next Rx fire
+
 
 
 

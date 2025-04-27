@@ -677,13 +677,14 @@ contains
   !---------------------------------------------------------------------------------------
 
   !*****************************************************************
-  subroutine CalculateRxfireAreaBurnt ( currentSite )
+  subroutine CalculateRxfireAreaBurnt ( currentSite, bc_in )
   !*****************************************************************
 
     !returns burned fraction for prescribed fire per patch by first checking
     !if total burnable fraction at site level is greater than user defined fraction of site area 
     !if yes, calculate burned fraction as (user defined frac / total burnable frac)
 
+    use FatesInterfaceTypesMod, only : hlm_current_year
     use SFParamsMod,       only : SF_val_rxfire_AB !user defined prescribed fire area in fraction per day to reflect burning capacity
     use SFParamsMod,       only : SF_val_rxfire_min_frac !user defind minimum burnable fraction for conducting rx fire
 
@@ -695,8 +696,6 @@ contains
 
     real(r8) :: total_burnable_frac        ! total fractional land area that can apply prescribed fire after condition checks at site level
 
-    ! Testing parameters 
-    real(r8), parameter :: min_frac_site = 0.1_r8 
 
     ! initialize site variables
     currentSite%rxfire_area_final = 0.0_r8 
@@ -704,6 +703,11 @@ contains
 
     ! update total burnable fraction
     total_burnable_frac = currentSite%rxfire_area_fi / AREA
+
+    integer,  parameter :: rx_freq = 8 ! Rx fire return interval 
+
+    ! zero current site total burnable area and fraction before loop through patches
+    currentSite%rxfire_area_final = 0._r8
    
     currentPatch => currentSite%oldest_patch;
 
@@ -714,9 +718,15 @@ contains
         currentPatch%frac_burnt = 0.0_r8 ! rx_frac_burnt + nonrx_frac_burnt
         currentPatch%rx_frac_burnt = 0.0_r8
         if (currentPatch%rx_fire .eq. itrue .and. & 
-        total_burnable_frac .ge. SF_val_rxfire_min_frac ) then
+        total_burnable_frac .ge. SF_val_rxfire_min_frac .and. &
+        currentSite%rx_burn_accum .lt. (0.95_r8 * AREA)) then
           currentSite%rxfire_area_final = currentSite%rxfire_area_final + currentPatch%area ! the final burned total land area 
-          currentPatch%rx_frac_burnt = min(0.99_r8, (SF_val_rxfire_AB / total_burnable_frac))
+          currentPatch%rx_frac_burnt = min(0.99_r8, (SF_val_rxfire_AB / total_burnable_frac)
+          currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt)
+          if(currentSite%rx_burn_accum .ge. (0.95_r8*AREA))then
+            currentSite%next_rx_year = hlm_current_year + rx_freq
+          end if
+
         else
           currentPatch%rx_fire = 0 ! update rxfire occurence at patch 
           currentPatch%rx_FI = 0.0_r8
@@ -739,6 +749,13 @@ contains
 
       currentPatch => currentPatch%younger;  
     end do ! end patch loop
+
+    !flush cumulative burnt area once it's time for the next cycle of Rx fire
+    if(currentSite%rx_burn_accum .ge. (0.95_r8*AREA) .and. &
+    hlm_current_year .eq. currentSite%next_rx_year)then
+      currentSite%rx_burn_accum = 0.0_r8
+    end if
+    
 
   end subroutine CalculateRxfireAreaBurnt
 
