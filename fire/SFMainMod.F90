@@ -83,7 +83,7 @@ contains
       call CalculateSurfaceRateOfSpread(currentSite)
       call CalculateSurfaceFireIntensity(currentSite)
       call CalculateAreaBurnt(currentSite)
-      call CalculateRxfireAreaBurnt(currentSite)
+      call CalculateRxfireAreaBurnt(currentSite, bc_in)
       call crown_scorching(currentSite)
       call crown_damage(currentSite)
       call cambial_damage_kill(currentSite)
