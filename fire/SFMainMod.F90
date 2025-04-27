@@ -331,6 +331,8 @@ contains
         write(fates_log(),*) 'current patch CBD is ', currentPatch%fuel%canopy_bulk_density
         write(fates_log(),*) 'current patch canopy base height is ', currentPatch%fuel%canopy_base_height
 
+        deallocate(biom_matrix)
+
       end if ! nocomp_bareground 
       currentPatch => currentPatch%younger;
     end do ! end patch loop
