@@ -214,7 +214,6 @@ contains
                                  ! degradation (i.e. they are moved to newly-anthro-disturbed 
                                  ! secondary forest patch)
     real(r8) :: dist_rate_ldist_notharvested
-    real(r8) :: deltaBA_update
     integer  :: threshold_sizeclass
     integer  :: i_dist
     integer  :: h_index
@@ -297,12 +296,6 @@ contains
           write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
           write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
           write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
-
-          !update delta_BA by subtracting basal area from trees that died in logging, excluding degradation
-          deltaBA_update = currentPatch%delta_BA - (0.25_r8 * pi_const * &
-          ((currentCohort%dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
-          lmort_infra)*currentCohort%n /currentPatch%area)
-          currentPatch%delta_BA = deltaBA_update
 
           write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
 
