@@ -441,6 +441,7 @@ module FatesFuelMod
 
       ! Locals:
       real(r8) :: canopy_base_height            ! canopy base height at which biomass density is > minimum canopy fuel density [m]
+      real(r8) :: canopy_top_height             ! the highest point at which biomass density is > minimum canopy fuel density [m]
       integer  :: ih                            ! biomass bin counter
 
       ! Params:
@@ -455,12 +456,30 @@ module FatesFuelMod
                                                    ! add 1 to be conservative when searching for CBH
 
           exit
+        else
+          this%canopy_base_height = max_height
         end if
       end do
+
+      ! now loop from top to bottom to find the highest point at which the minimum bulk density is met
+      ! XLG: I modified the way how canopy bulk density is calculated by reducing the maximum canopy height
+      ! to the highest point where the minimum bulk density is met. 
+
+      do ih = max_height, 0, -1
+        if (biom_matrix(ih) > min_density_canopy_fuel) then
+          canopy_top_height = dble(ih) + 1.0_r8 
+          exit
+        else
+          canopy_top_height = max_height 
+        end if
+      end do
+
+      ! XLG: We now only calculate canopy bulk density for fuels between
+      ! canopy base and top height 
       
-      if ((max_height - this%canopy_base_height) > nearzero) then
-        this%canopy_bulk_density = sum(biom_matrix(int(this%canopy_base_height-1.0_r8):)) / &
-        (max_height - this%canopy_base_height)
+      if ((canopy_top_height - this%canopy_base_height) > nearzero) then
+        this%canopy_bulk_density = sum(biom_matrix(int(this%canopy_base_height-1.0_r8):int(canopy_top_height-1.0_r8))) / &
+        (canopy_top_height - this%canopy_base_height)
       else
         this%canopy_bulk_density = 0.0_r8
       end if
