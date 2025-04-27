@@ -40,6 +40,7 @@ module FatesHistoryInterfaceMod
   use FatesConstantsMod        , only : dtype_ifall
   use FatesConstantsMod        , only : dtype_ifire
   use FatesConstantsMod        , only : dtype_ilog
+  use FatesConstantsMod        , only : mass_2_carbon
   use FatesIODimensionsMod     , only : fates_io_dimension_type
   use FatesIOVariableKindMod   , only : fates_io_variable_kind_type
   use FatesIOVariableKindMod   , only : site_int
@@ -462,6 +463,9 @@ module FatesHistoryInterfaceMod
   integer :: ih_fire_fuel_sav_si
   integer :: ih_fire_fuel_mef_si
   integer :: ih_sum_fuel_si
+  integer :: ih_sum_canopy_fuel_si
+  integer :: ih_canopy_fuel_bulkd_si
+  integer :: ih_canopy_base_height_si
   integer :: ih_rx_burn_window_si
   integer :: ih_rx_intensity_si
   integer :: ih_rx_area_si
@@ -2425,6 +2429,9 @@ contains
          hio_fire_fuel_sav_si    => this%hvars(ih_fire_fuel_sav_si)%r81d, &
          hio_fire_fuel_mef_si    => this%hvars(ih_fire_fuel_mef_si)%r81d, &
          hio_sum_fuel_si         => this%hvars(ih_sum_fuel_si)%r81d,  &
+         hio_sum_canopy_fuel_si  => this%hvars(ih_sum_canopy_fuel_si)%r81d, &
+         hio_canopy_fuel_bulkd_si     => this%hvars(ih_canopy_fuel_bulkd_si)%r81d, &
+         hio_canopy_base_height_si     => this%hvars(ih_canopy_base_height_si)%r81d, &
          hio_nonrx_intensity_si  => this%hvars(ih_nonrx_intensity_si)%r81d, &
          hio_nonrx_intensity_area_product_si => this%hvars(ih_nonrx_intensity_area_product_si)%r81d, &
          hio_nonrx_area_si       => this%hvars(ih_nonrx_area_si)%r81d, &
@@ -2703,6 +2710,9 @@ contains
             hio_fire_fuel_sav_si(io_si)        = hio_fire_fuel_sav_si(io_si) + cpatch%fuel%SAV_notrunks * cpatch%area * AREA_INV / m_per_cm
             hio_fire_fuel_mef_si(io_si)        = hio_fire_fuel_mef_si(io_si) + cpatch%fuel%MEF_notrunks * cpatch%area * AREA_INV
             hio_sum_fuel_si(io_si)             = hio_sum_fuel_si(io_si) + cpatch%fuel%non_trunk_loading * cpatch%area * AREA_INV
+            hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%canopy_fuel_load * AREA_INV * mass_2_carbon
+            hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
+            hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%canopy_base_height * cpatch%area * AREA_INV 
 
             hio_nonrx_intensity_area_product_si(io_si) = hio_nonrx_intensity_area_product_si(io_si) + &
                  cpatch%nonrx_FI * cpatch%nonrx_frac_burnt * cpatch%area * AREA_INV * J_per_kJ
@@ -6398,6 +6408,24 @@ contains
             use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
             upfreq=group_dyna_simple, ivar=ivar, initialize=initialize_variables,                 &
             index = ih_sum_fuel_si)
+          
+       call this%set_history_var(vname='FATES_CANOPY_FUEL_AMOUNT', units='kg m-2',       &
+            long='total canopy 1h woody plus leaf biomass for crown fire in kg C per m2 land area',   &
+            use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+            upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+            index = ih_sum_canopy_fuel_si)
+
+       call this%set_history_var(vname='FATES_CANOPY_FUEL_BULKD', units='kg m-3',       &
+            long='canopy fuel bulk density (only 1hr woody plus leaf biomss) in kg C per m3',   &
+            use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+            upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+            index = ih_canopy_fuel_bulkd_si)
+
+       call this%set_history_var(vname='FATES_CANOPY_BASE_HEIGHT', units='kg m-3',       &
+            long='canopy base height in m, at which biomass density is enough to propogate fire', &
+            use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+            upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+            index = ih_canopy_base_height_si)
        ! Litter Variables
 
        call this%set_history_var(vname='FATES_LITTER_IN', units='kg m-2 s-1',     &
