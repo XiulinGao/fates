@@ -600,7 +600,7 @@ contains
               currentPatch%nonrx_fire = 1 
             end if
 
-          end if
+          end if !burn window check 
 
           if (currentPatch%nonrx_fire == itrue) then
             currentSite%NF_successful = currentSite%NF_successful + &
@@ -609,9 +609,13 @@ contains
           else if (currentPatch%rx_fire == itrue) then
             currentPatch%rx_FI = currentPatch%FI
           end if
+          ! zero fuel consumed when there is no fire
+          if (currentPatch%nonrx_fire == 0 .and. currentPatch%rx_fire == 0) then
+            currentPatch%TFC_ROS = 0.0_r8
+          end if
           
-        end if
-      end if
+        end if ! NF and rx_flag check 
+      end if ! nocomp_bareground check 
 
       currentPatch => currentPatch%younger
     end do    
