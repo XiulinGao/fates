@@ -395,6 +395,7 @@ contains
          
           ! remove trunks from patch%sum_fuel because they should not be included in fire equations
           ! NOTE: ACF will update this soon to be more clean/bug-proof
+          currentPatch%sum_fuel_trunk = currentPatch%sum_fuel
           currentPatch%sum_fuel = currentPatch%sum_fuel - litt_c%ag_cwd(tr_sf)
 
        else
@@ -1287,6 +1288,11 @@ contains
          endif !end rx fire condition check
           
        endif ! NF ignitions check
+       ! zero fuel consumed when there is no fire 
+       if(currentPatch%fire == 0 .and. currentPatch%rxfire == 1) then
+         currentPatch%TFC_ROS = 0.0_r8
+       end if
+
       endif ! nocomp_pft_label check
        
        currentPatch => currentPatch%younger
@@ -1688,6 +1694,11 @@ end subroutine rxfire_area
 
           enddo !end cohort loop
        endif !fire?
+       ! update fire intenity for wildfire 
+       if(currentPatch%fire == 0) then
+         currentPatch%FI = 0.0_r8
+       end if
+       
        endif !nocomp_pft_label check
 
        currentPatch => currentPatch%younger
