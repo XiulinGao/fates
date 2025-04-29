@@ -3761,14 +3761,14 @@ end subroutine flush_hvars
          ! These things are all duplicated. Should they all be converted to LL or array structures RF?
          ! define scalar to counteract the patch albedo scaling logic for conserved quantities
 
-         ! Update Fire Variables
+         ! Update Fire Variables 
          hio_spitfire_ros_si(io_si)         = hio_spitfire_ros_si(io_si) + cpatch%ROS_front * cpatch%area * AREA_INV / sec_per_min
-         hio_effect_wspeed_si(io_si)        = hio_effect_wspeed_si(io_si) + cpatch%effect_wspeed * cpatch%area * AREA_INV / sec_per_min
          hio_tfc_ros_si(io_si)              = hio_tfc_ros_si(io_si) + cpatch%TFC_ROS * cpatch%area * AREA_INV
          hio_fire_intensity_si(io_si)       = hio_fire_intensity_si(io_si) + cpatch%FI * cpatch%area * AREA_INV * J_per_kJ
          hio_fire_area_si(io_si)            = hio_fire_area_si(io_si) + cpatch%frac_burnt * cpatch%area * AREA_INV / sec_per_day
          hio_rxfire_intensity_si(io_si)     = hio_rxfire_intensity_si(io_si) + cpatch%rxfire_FI * cpatch%area * AREA_INV * J_per_kJ
          hio_rxfire_area_si(io_si)          = hio_rxfire_area_si(io_si) + cpatch%rxfire_frac_burnt * cpatch%area * AREA_INV / sec_per_day
+         hio_effect_wspeed_si(io_si)        = hio_effect_wspeed_si(io_si) + cpatch%effect_wspeed * cpatch%area * AREA_INV / sec_per_min
          hio_fire_fuel_bulkd_si(io_si)      = hio_fire_fuel_bulkd_si(io_si) + cpatch%fuel_bulkd * cpatch%area * AREA_INV
          hio_fire_fuel_eff_moist_si(io_si)  = hio_fire_fuel_eff_moist_si(io_si) + cpatch%fuel_eff_moist * cpatch%area * AREA_INV
          hio_fire_fuel_sav_si(io_si)        = hio_fire_fuel_sav_si(io_si) + cpatch%fuel_sav * cpatch%area * AREA_INV / m_per_cm
@@ -3787,13 +3787,13 @@ end subroutine flush_hvars
 
             i_agefuel = get_agefuel_class_index(cpatch%age,i_fuel)
             hio_fuel_amount_age_fuel(io_si,i_agefuel) = hio_fuel_amount_age_fuel(io_si,i_agefuel) + &
-               cpatch%fuel_frac(i_fuel) * cpatch%sum_fuel * cpatch%area * AREA_INV
+               cpatch%fuel_frac(i_fuel) * cpatch%sum_fuel_trunk * cpatch%area * AREA_INV
 
             hio_litter_moisture_si_fuel(io_si, i_fuel) = hio_litter_moisture_si_fuel(io_si, i_fuel) + &
                cpatch%litter_moisture(i_fuel) * cpatch%area * AREA_INV
 
             hio_fuel_amount_si_fuel(io_si, i_fuel) = hio_fuel_amount_si_fuel(io_si, i_fuel) + &
-               cpatch%fuel_frac(i_fuel) * cpatch%sum_fuel * cpatch%area * AREA_INV
+               cpatch%fuel_frac(i_fuel) * cpatch%sum_fuel_trunk * cpatch%area * AREA_INV
 
             hio_burnt_frac_litter_si_fuel(io_si, i_fuel) = hio_burnt_frac_litter_si_fuel(io_si, i_fuel) + &
                cpatch%burnt_frac_litter(i_fuel) * cpatch%frac_burnt * cpatch%area * AREA_INV
