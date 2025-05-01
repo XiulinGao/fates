@@ -408,7 +408,8 @@ end subroutine  rxfire_burn_window
             if ( hlm_masterproc == itrue ) write(fates_log(),*) 'problem with spitfire fuel averaging'
        endif 
        endif !nocomp_pft_label check
-
+       
+       currentPatch%sum_fuel_trunk = currentPatch%sum_fuel
        currentPatch%sum_fuel = currentPatch%sum_fuel - litt_c%ag_cwd(tr_sf)
        
        currentPatch => currentPatch%younger
