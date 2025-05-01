@@ -1266,7 +1266,7 @@ end subroutine  rxfire_burn_window
  
     !real(r8), parameter :: km2_to_m2 = 1000000.0_r8 !area conversion for square km to square m
     integer,  parameter :: rx_freq = 8 ! Rx fire return interval 
-    real(r8), parameter :: min_frac_site = 0.1_r8  ! min. burnable fraction for Rx fire to happen
+    real(r8), parameter :: min_frac_site = 0.0_r8  ! min. burnable fraction for Rx fire to happen
  
     ! zero current site total burnable area and fraction before loop through patches
     currentSite%rxfire_area_final = 0._r8
@@ -1299,11 +1299,11 @@ end subroutine  rxfire_burn_window
        if(currentPatch%nocomp_pft_label .ne. nocomp_bareground)then  
           currentPatch%rxfire_frac_burnt = 0.0_r8
           if(currentPatch%rxfire == 1 .and. total_burnable_area >= min_burnable_area .and. &
-          currentSite%rx_burn_accum < AREA)then
+          currentSite%rx_burn_accum < 0.95_r8*AREA)then
              currentSite%rxfire_area_final = currentSite%rxfire_area_final + currentPatch%area
              currentPatch%rxfire_frac_burnt = min(0.99_r8, (prescribed_burnt_area / total_burnable_area))
              currentSite%rx_burn_accum = currentSite%rx_burn_accum + currentPatch%area * currentPatch%rxfire_frac_burnt
-             if(currentSite%rx_burn_accum >= AREA)then
+             if(currentSite%rx_burn_accum >= 0.95_r8*AREA)then
                 !currentSite%lst_rx_year = hlm_current_year
                 !currentSite%lst_rx_month = hlm_current_month
                 currentSite%next_rx_year = hlm_current_year + rx_freq
@@ -1323,7 +1323,7 @@ end subroutine  rxfire_burn_window
     enddo !end patch loop
  
     !flush cumulative burnt area once it's time for the next cycle of Rx fire
-    if(currentSite%rx_burn_accum >= AREA .and. &
+    if(currentSite%rx_burn_accum >= 0.95_r8*AREA .and. &
        hlm_current_year .eq. currentSite%next_rx_year)then
          currentSite%rx_burn_accum = 0.0_r8
     endif
