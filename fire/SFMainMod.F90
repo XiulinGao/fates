@@ -1289,7 +1289,7 @@ contains
           
        endif ! NF ignitions check
        ! zero fuel consumed when there is no fire 
-       if(currentPatch%fire == 0 .and. currentPatch%rxfire == 1) then
+       if(currentPatch%fire == 0 .and. currentPatch%rxfire == 0) then
          currentPatch%TFC_ROS = 0.0_r8
        end if
 
