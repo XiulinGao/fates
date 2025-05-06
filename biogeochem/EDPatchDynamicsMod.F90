@@ -1609,7 +1609,8 @@ contains
 
        do c = 1,ncwd
          frac_burnt = 0.0_r8
-         if (dist_type == dtype_ifire .and. currentPatch%fire == 1) then
+         if (dist_type == dtype_ifire .and. (currentPatch%fire == 1 .or. &
+         currentPatch%rxfire == 1)) then
             frac_burnt = currentPatch%burnt_frac_litter(c)
          end if 
              
@@ -1636,7 +1637,8 @@ contains
        enddo
 
        frac_burnt = 0.0_r8
-       if (dist_type == dtype_ifire .and. currentPatch%fire == 1) then
+       if (dist_type == dtype_ifire .and. (currentPatch%fire == 1 .or. &
+       currentPatch%rxfire == 1)) then
          frac_burnt = currentPatch%burnt_frac_litter(dl_sf)
       end if 
           
