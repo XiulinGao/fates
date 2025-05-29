@@ -35,7 +35,6 @@ module SFMainMod
   use PRTGenericMod,          only : store_organ
   use FatesInterfaceTypesMod, only : numpft
   use FatesAllometryMod,      only : CrownDepth
-<<<<<<< HEAD
   use FatesAllometryMod,      only : target_resprout_carbon_pools
   use FatesAllometryMod,      only : h2d_allom
   use FatesAllometryMod,      only : bleaf
@@ -44,9 +43,6 @@ module SFMainMod
   use FatesAllometryMod,      only : bagw_allom
   use FatesAllometryMod,      only : bbgw_allom
   use FatesAllometryMod,      only : bdead_allom
-=======
-  use FatesAllometryMod,      only : set_root_fraction
->>>>>>> dfa06c1d (update calculation of CBD and add a model to calculate live fuel moisture content)
   use FatesFuelClassesMod,    only : fuel_classes
 
   
@@ -82,7 +78,7 @@ contains
     if (hlm_spitfire_mode > hlm_sf_nofire_def) then
       call UpdateFireWeather(currentSite, bc_in)
       call UpdateFuelCharacteristics(currentSite)
-      call UpdateCanopyFuelCharacteristics(currentSite)
+      call UpdateCanopyFuelCharacteristics(currentSite, bc_in)
       call CalculateIgnitionsandFDI(currentSite, bc_in)
       call CalculateSurfaceRateOfSpread(currentSite)
       call CalculateSurfaceFireIntensity(currentSite)
@@ -233,10 +229,11 @@ contains
     use SFParamsMod,     only : SF_val_CWD_frac
     use FatesLitterMod,  only : adjust_SF_CWD_frac
     use SFEquationsMod,  only : LiveFuelMoistureContent
+    use EDTypesMod,      only : numWaterMem
   
 
     ! ARGUMENTS:
-    type(ed_site_type), intent(in), target :: currentSite  ! site object
+    type(ed_site_type), intent(inout), target :: currentSite  ! site object
     type(bc_in_type),   intent(in)         :: bc_in
 
    
@@ -254,9 +251,8 @@ contains
     real(r8) ::  fuel_1h              ! 1 hour woody fuel + leaf biomass (kg biomass)
     real(r8) ::  crown_fuel_per_m     ! crown fuel per 1m section in cohort
     real(r8) ::  SF_val_CWD_frac_adj(ncwd)  ! adjusted fractional allocation of woody biomass to coarse wood debris pool
-    real(r8) ::  rootfrac_notop       ! Total rooting fraction excluding the top soil layer
+    real(r8) ::  mean_10day_smp(numpft)       ! averaged 10 day soil matric potential for each PFT 
     integer  ::  ipft                 ! pft index
-    integer  ::  nlevroot             ! Number of rooting levels to consider
     
 
     real(r8), dimension(:), allocatable :: biom_matrix   ! matrix to track biomass from bottom to top
@@ -264,10 +260,21 @@ contains
 
     real(r8), parameter :: carbon_2_biomass = 0.45_r8
     ! LFMC parameters for testing
-    real(r8), parameter :: swc_alpha = 1.9_r8
-    real(r8), parameter :: lai_beta = 0.0_r8
-    real(r8), parameter :: gamma_int = 1.2_r8
+    real(r8), parameter :: max_lfmc = 70.0_r8
+    real(r8), parameter :: min_lfmc = 40.0_r8
+    real(r8), parameter :: swc_alpha = 3.0E-6_r8
+    real(r8), parameter :: lai_beta = 0.15_r8
+    real(r8), parameter :: gamma_int = 0.0_r8
 
+    ! update site level soil matric potential for each PFT
+    mean_10day_smp(:) = 0.0_r8
+    do ipft=1,numpft
+      if(int(prt_params%woody(ipft)) == itrue) then 
+         mean_10day_smp(ipft) = sum(currentSite%smp_memory(1:numWaterMem,ipft)) / &
+                                real(numWaterMem,r8)
+         
+      end if
+    end do
 
     currentPatch => currentSite%oldest_patch
 
@@ -278,6 +285,7 @@ contains
         currentPatch%fuel%canopy_fuel_load    = 0.0_r8
         currentPatch%fuel%canopy_bulk_density = 0.0_r8
         currentPatch%fuel%canopy_base_height  = 0.0_r8
+        currentPatch%fuel%canopy_water_content = 0.0_r8
     
       
         ! find the max cohort height to set the upper bounds of biom_matrix
@@ -296,28 +304,6 @@ contains
         allocate(biom_matrix(0:int(max_height)))
         biom_matrix(:) = 0.0_r8
 
-        ! update soil water content for each PFT
-        ! this is a copy of code from EDhysiologyMod where swc is used for drought deciduous phenology
-        ! rooting depth of cohort
-        do ipft=1,numpft
-         if(int(prt_params%woody(ipft)) == itrue) then 
-            call set_root_fraction( currentSite%rootfrac_scr, ipft, currentSite%zi_soil, &
-            bc_in%max_rooting_depth_index_col )
-            nlevroot = max(2,min(ubound(currentSite%zi_soil,1),bc_in%max_rooting_depth_index_col))
-            rootfrac_notop = sum(currentSite%rootfrac_scr(2:nlevroot))
-            if ( rootfrac_notop <= nearzero ) then
-               ! Unlikely, but just in case all roots are in the first layer, we use the second
-               ! layer (to avoid FPE issues).
-               currentSite%rootfrac_scr(2) = 1.0_r8
-               rootfrac_notop              = 1.0_r8
-            end if
-            ! swc to be weighted average of soil water content using
-            ! root fraction as weighting factor
-            currentSite%swc_vol(ipft) = sum(bc_in%h2o_liqvol_sl     (2:nlevroot) * &
-                                        currentSite%rootfrac_scr(2:nlevroot) ) / &
-                                        rootfrac_notop
-         end if
-        end do
 
         !loop across cohorts to calculate canopy fuel load by 1m height bin
         currentCohort=>currentPatch%tallest
@@ -349,12 +335,14 @@ contains
             leaf_c   = currentCohort%n * leaf_c
             
             call adjust_SF_CWD_frac(currentCohort%dbh, ncwd, SF_val_CWD_frac, SF_val_CWD_frac_adj)
+            woody_c = woody_c*SF_val_CWD_frac_adj(1)
+            currentCohort%canopy_fuel_1h = (leaf_c + woody_c)/carbon_2_biomass
             ! update canopy fuel load
-            call currentPatch%fuel%CalculateCanopyFuelLoad(leaf_c, woody_c, SF_val_CWD_frac_adj)
+            call currentPatch%fuel%CalculateCanopyFuelLoad(currentCohort%canopy_fuel_1h)
             write(fates_log(),*) 'current patch canopy fuel is ', currentPatch%fuel%canopy_fuel_load
             
             ! 1m biomass bin
-            crown_fuel_per_m = (leaf_c + woody_c*SF_val_CWD_frac_adj(1)) / &
+            crown_fuel_per_m = (leaf_c + woody_c) / &
             (carbon_2_biomass * crown_depth) !kg biomass / m
             ! sort crown fuel into bins from bottom to top of crown
             ! accumulate across cohorts to find density within canopy 1m sections
@@ -363,19 +351,31 @@ contains
             end do
             ! calculate live fuel moisture content
             currentCohort%lfmc = LiveFuelMoistureContent(currentCohort%treelai, &
-            currentSite%swc_vol(currentCohort%pft), &
+            mean_10day_smp(currentCohort%pft), &
             max_lfmc, min_lfmc, swc_alpha, lai_beta, gamma_int)
-            fuel_1h = (leaf_c + woody_c * SF_val_CWD_frac_adj(1))/carbon_2_biomass
-            call currentPatch%fuel%NonHydroCanopyWaterContent(currentCohort%lfmc, fuel_1h)
-            write(fates_log(),*) 'current patch canopy water content is ', currentPatch%fuel%canopy_water_content
+
+            write(fates_log(),*) 'current cohort LFMC is ', currentCohort%lfmc
 
           end if ! trees only
           currentCohort => currentCohort%shorter;
         end do ! end cohort loop
 
+        ! loop across cohorts to calculate patch level canopy water content
+        currentCohort => currentPatch%tallest
+
+        do while(associated(currentCohort))
+         if ( int(prt_params%woody(currentCohort%pft)) == itrue) then !trees
+            call currentPatch%fuel%NonHydroCanopyWaterContent(currentCohort%lfmc, &
+            currentCohort%canopy_fuel_1h)
+         end if
+         currentCohort => currentCohort%shorter;
+        end do
+
         biom_matrix(:) = biom_matrix(:) / currentPatch%area ! kg biomass / m3
         ! update canopy fuel bulk density
         call currentPatch%fuel%CalculateCanopyBulkDensity(biom_matrix, max_height)
+        
+        write(fates_log(),*) 'current patch canopy fuel is ', currentPatch%fuel%canopy_fuel_load
         write(fates_log(),*) 'current patch CBD is ', currentPatch%fuel%canopy_bulk_density
         write(fates_log(),*) 'current patch canopy base height is ', currentPatch%fuel%canopy_base_height
 

@@ -280,6 +280,8 @@ module FatesCohortMod
     real(r8) ::  rx_crown_mort         ! crown fire mortality due to prescribed fire
     real(r8) ::  rx_mort               ! post-fire mortality due to prescribed fire
     real(r8) ::  frac_resprout         ! post-fire fraction resprout for resprouter
+    real(r8) ::  lfmc                  ! live fuel moisture content [%]
+    real(r8) ::  canopy_fuel_1h        ! leaf + 1 hour woody live fuel [kg biomass]
 
     !---------------------------------------------------------------------------
 
@@ -466,6 +468,8 @@ module FatesCohortMod
       this%rx_crown_mort           = nan
       this%rx_mort                 = nan
       this%frac_resprout           = nan
+      this%lfmc                    = nan
+      this%canopy_fuel_1h          = nan
 
 
     end subroutine NanValues
@@ -560,6 +564,8 @@ module FatesCohortMod
       this%rx_crown_mort           = 0._r8
       this%rx_mort                 = 0._r8
       this%frac_resprout           = 0._r8
+      this%lfmc                    = 0._r8
+      this%canopy_fuel_1h          = 0._r8
     
     end subroutine ZeroValues
    
@@ -813,6 +819,8 @@ module FatesCohortMod
       copyCohort%rx_crown_mort           = this%rx_crown_mort
       copyCohort%rx_mort                 = this%rx_mort
       copyCohort%frac_resprout           = this%frac_resprout
+      copyCohort%lfmc                    = this%lfmc
+      copyCohort%canopy_fuel_1h          = this%canopy_fuel_1h
 
       ! HYDRAULICS
       if (hlm_use_planthydro .eq. itrue) then
@@ -1121,6 +1129,8 @@ module FatesCohortMod
       write(fates_log(),*) 'cohort%rx_cambial_mort        = ', this%rx_cambial_mort
       write(fates_log(),*) 'cohort%rx_mort                = ', this%rx_mort
       write(fates_log(),*) 'cohort%frac_resprout          = ', this%frac_resprout
+      write(fates_log(),*) 'cohort%lfmc                   = ', this%lfmc
+      write(fates_log(),*) 'cohort%canopy_fuel_1h         = ', this%canopy_fuel_1h
       write(fates_log(),*) 'cohort%size_class             = ', this%size_class
       write(fates_log(),*) 'cohort%size_by_pft_class      = ', this%size_by_pft_class
    

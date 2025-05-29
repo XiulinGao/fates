@@ -29,15 +29,7 @@ module SFEquationsMod
   public :: FireSize
   public :: AreaBurnt
   public :: FireIntensity
-<<<<<<< HEAD
-=======
-  public :: PassiveCrownFireIntensity
-  public :: HeatReleasePerArea
-  public :: TorchingIndex
-  public :: CrowningIndex
-  public :: CrownFireIntensity
   public :: LiveFuelMoistureContent
->>>>>>> dfa06c1d (update calculation of CBD and add a model to calculate live fuel moisture content)
   
   contains 
   
@@ -474,156 +466,9 @@ module SFEquationsMod
     FireIntensity = SF_val_fuel_energy*fuel_consumed*ros
 
   end function FireIntensity
-<<<<<<< HEAD
-=======
 
 !---------------------------------------------------------------------------------------
-  
-  real(r8) function PassiveCrownFireIntensity(canopy_base_height)
-  ! DESCRIPTION:
-  ! Calculate the energy threshold for igniting crown fuels [kW/m or kJ/m/s]
-  ! EQ. 11 in Scott & Reinhardt 2001
-
-  ! ARGUMENTS:
-  real(r8), intent(in) :: canopy_base_height   ! canopy base height at which biomass density > minimum density 0.011 kg/m3
-  
-
-  ! Locals:
-  real(r8)            :: crown_ignition_energy  ! surface fire intensity required to ignite crown fuels [kJ/kg]
-  real(r8), parameter :: canopy_water_content = 100.0_r8  ! canopy fuel water content in %, to be replaced by transient value later 
-
-  ! Note: crown_ignition_energy to be calculated based on PFT foliar moisture content from FATES-Hydro
-  ! or create foliar moisture % based on BTRAN
-  ! Use foliar_moisture(currentCohort%pft) and compute weighted PFT average with Eq 3 Van Wagner 1977
-  ! in place of canopy_water_content parameter
-
-  ! Eq 3 Van Wagner 1977, Eq 11 Scott & Reinhardt 2001
-  crown_ignition_energy = 460.0_r8 + 25.9_r8 * canopy_water_content
-
-  ! Crown fuel ignition potential (kW/m), Eq 4 Van Wagner 1977, Eq 11 Scott & Reinhardt 2001
-  ! FI = (Czh)**3/2 where z=canopy base height,h=heat of crown ignite energy, FI=fire intensity
-  ! 0.01 = C, empirical constant Van Wagner 1977 Eq 4 for 6m canopy base height, 100% FMC, FI 2500kW/m
-  ! passive_crown_FI = min fire intensity to ignite canopy fuel (kW/m or kJ/m/s)
-  PassiveCrownFireIntensity = (0.01_r8 * canopy_base_height * crown_ignition_energy)**1.5_r8
-end function PassiveCrownFireIntensity
-
-!---------------------------------------------------------------------------------------
-real(r8) function HeatReleasePerArea(SAV, i_r)
-!
-! DESCRIPTION:
-! Calculate heat release per unit area of surface fire (HPA, kJ/m2)
-! EQ. 2 in Scott & Reinhardt 2001
-
-! ARGUMENTS:
-real(r8), intent(in)  :: SAV      ! fuel surface area to volume ratio [/cm]
-real(r8), intent(in)  :: i_r      ! reaction intensity [kJ/m2/min]
-
-
-! Locals:
-real(r8)   :: time_r       ! fire residence time [min]
-if (SAV < nearzero) then
-  time_r = 0.0_r8
-else
-  time_r = 12.595_r8 / SAV  ! EQ 3 in Scott & Reinhardt 2001
-end if
-
-HeatReleasePerArea = i_r * time_r
-
-end function HeatReleasePerArea
-
-!---------------------------------------------------------------------------------------
-
-real(r8) function TorchingIndex(bulk_density, SAV, eps, q_ig, i_r, xi, beta_ratio, &
-                                passive_crown_FI, HPA)
-!
-! DESCRIPTION:
-! Calculate open wind speed [in km/hour] at which surface fire intensity equals 
-! to the minimum fire intensity for initiating crown fire, AKA Torching Index (TI).
-!  EQ. 18 in Scott & Reinhardt 2001
-! XLG: currently we are ignoring the slope effect 
-! ARGUMENTS:
-
-real(r8), intent(in) :: bulk_density      ! fulk bulk density [kg/m3]
-real(r8), intent(in) :: SAV               ! fuel surface area to volume ratio [/cm]
-real(r8), intent(in) :: eps               ! effective heating number [unitless]
-real(r8), intent(in) :: q_ig              ! heat of preignition [kJ/kg] 
-real(r8), intent(in) :: i_r               ! reaction intensity [kJ/m2/min]
-real(r8), intent(in) :: xi                ! propagating flux [unitless]      
-real(r8), intent(in) :: beta_ratio        ! relative packing ratio [unitless]
-real(r8), intent(in) :: passive_crown_FI  ! fire intensity threshold for initiating crown fire [kW/m or kJ/m/s] 
-real(r8), intent(in) :: HPA               ! heat release per unit area [kJ/m2]
-
-! Locals:
-real(r8)              :: wind_coef                   ! critical wind coefficient for crown fire initiation [unitless]
-real(r8)              :: b, c, e                     ! temporary variables
-real(r8), parameter   :: wind_reduce_factor = 0.2_r8 ! wind reduction factor. XLG: can be incluede as a user defined param later?
-
-! EQ. 16 in Scott & Reinhardt 2001 ignoring slope factor
-wind_coef = (60._r8 * passive_crown_FI * bulk_density * eps * q_ig) / &
-(HPA * xi * i_r) - 1.0_r8  
-
-! Equation A7 in Thonicke et al. 2010 per eqn 49 from Rothermel 1972
-b = 0.15988_r8*(SAV**0.54_r8)
-      
-! Equation A8 in Thonicke et al. 2010 per eqn 48 from Rothermel 1972 
-c = 7.47_r8*(exp(-0.8711_r8*(SAV**0.55_r8)))
-
-! Equation A9 in Thonicke et al. 2010 (appears to have typo, using coefficient Eq. 50 Rothermel 1972)
-e = 0.715_r8*(exp(-0.01094_r8*SAV))
-
-! EQ. 18 in Scott & Reinhardt 2001
-TorchingIndex = (wind_coef / c * (beta_ratio**(-e)))**(1.0_r8 / b)
-
-end function TorchingIndex
-
-!---------------------------------------------------------------------------------------
-real(r8) function CrowningIndex(eps, q_ig, i_r, canopy_bulk_density)
-!
-! DESCRIPTION:
-! Calculate open wind speed [km/hr] at which a fully active crown fire is sustained
-! EQ. 20 in Scott & Reinhardt 2001
-! XLG: currently we are ignoring slope effect 
-!
-! ARGUMENTS:
-real(r8), intent(in) :: eps                  ! effective heating number [unitless]
-real(r8), intent(in) :: q_ig                 ! heat of preignition [kJ/kg] 
-real(r8), intent(in) :: i_r                  ! reaction intensity [kJ/m2/min]
-real(r8), intent(in) :: canopy_bulk_density  ! canopy fuel bulk density [kg biomass / m3]
-! Locals:
-real(r8)   :: CI_temp      ! temporary variables
-
-if(i_r <= nearzero .or. canopy_bulk_density <= nearzero) then
-  CI_temp = 0.0_r8
-else
-  CI_temp = (164.8_r8 * eps * q_ig) / (i_r * canopy_bulk_density) - 1.0_r8
-end if
-CrowningIndex = 0.0457_r8 * ((CI_temp / 0.001612_r8)**0.7_r8)
-
-end function CrowningIndex
-
-
-!---------------------------------------------------------------------------------------
-
-real(r8) function CrownFireIntensity(HPA, canopy_fuel, CFB, ROS_final)
-!
-! Description
-! Calculate fire intentisy for crown fire using
-! EQ. 22 in Scott & Reinhardt 2001
-!
-! ARGUMENTS:
-real(r8), intent(in) :: HPA             ! heat release per unit area [kJ/m2]
-real(r8), intent(in) :: canopy_fuel     ! canopy fuel load [kg biomass] 
-real(r8), intent(in) :: CFB             ! crown fraction burnt [fraction]
-real(r8), intent(in) :: ROS_final       ! final rate of spread after a crown fire happens [m/min]
-! Locals:
-real(r8), parameter  :: H_canopy = 18000.0_r8 ! heat yield for canopy fuels [kJ/kg biomass]
-
-CrownFireIntensity = (HPA + (canopy_fuel * H_canopy * CFB)) * &
- ROS_final / 60.0_r8 
-
-end function CrownFireIntensity
-
-!---------------------------------------------------------------------------------------
+ 
 
 real(r8) function LiveFuelMoistureContent(lai, swc, max_lfmc, min_lfmc, &
 swc_alpha, lai_beta, gamma_int)
@@ -657,6 +502,5 @@ LiveFuelMoistureContent = max_lfmc - min_lfmc*exp(-effect_temp)
 end function LiveFuelMoistureContent
 
 
->>>>>>> dfa06c1d (update calculation of CBD and add a model to calculate live fuel moisture content)
   
 end module SFEquationsMod
