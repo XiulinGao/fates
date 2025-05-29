@@ -665,6 +665,8 @@ module FatesHistoryInterfaceMod
   integer :: ih_npatches_si_age
   integer :: ih_zstar_si_age
   integer :: ih_biomass_si_age
+  integer :: ih_canopy_fuel_si_age
+  integer :: ih_canopy_water_content_si_age
   integer :: ih_c_stomata_si_age
   integer :: ih_c_lblayer_si_age
   integer :: ih_agesince_anthrodist_si_age
@@ -792,6 +794,7 @@ module FatesHistoryInterfaceMod
 
   ! indices to (patch age x fuel size class) variables
   integer :: ih_fuel_amount_age_fuel
+  integer :: ih_fuel_eff_moist_age_fuel
 
   ! The number of variable dim/kind types we have defined (static)
 
@@ -3294,6 +3297,8 @@ contains
            hio_npatches_si_age     => this%hvars(ih_npatches_si_age)%r82d, &
            hio_zstar_si_age        => this%hvars(ih_zstar_si_age)%r82d, &
            hio_biomass_si_age        => this%hvars(ih_biomass_si_age)%r82d, &
+           hio_canopy_fuel_si_age    => this%hvars(ih_canopy_fuel_si_age)%r82d, &
+           hio_canopy_water_content_si_age    => this%hvars(ih_canopy_water_content_si_age)%r82d, &
            hio_npp_si_age                     => this%hvars(ih_npp_si_age)%r82d, &
            hio_npp_si_landuse                 => this%hvars(ih_npp_si_landuse)%r82d, &
            hio_agesince_anthrodist_si_age     => this%hvars(ih_agesince_anthrodist_si_age)%r82d, &
@@ -3311,6 +3316,7 @@ contains
            hio_burnt_frac_litter_si_fuel      => this%hvars(ih_burnt_frac_litter_si_fuel)%r82d, &
            hio_fuel_amount_si_fuel            => this%hvars(ih_fuel_amount_si_fuel)%r82d, &
            hio_fuel_amount_age_fuel            => this%hvars(ih_fuel_amount_age_fuel)%r82d, &
+           hio_fuel_eff_moist_age_fuel         => this%hvars(ih_fuel_eff_moist_age_fuel)%r82d, &
            hio_rx_intensity_si_age            => this%hvars(ih_rx_intensity_si_age)%r82d, &
            hio_nonrx_intensity_si_age         => this%hvars(ih_nonrx_intensity_si_age)%r82d, &  
            hio_canopy_height_dist_si_height   => this%hvars(ih_canopy_height_dist_si_height)%r82d, &
@@ -4322,6 +4328,9 @@ contains
                    hio_fuel_amount_age_fuel(io_si,i_agefuel) = hio_fuel_amount_age_fuel(io_si,i_agefuel) + &
                         cpatch%fuel%frac_loading(i_fuel) * cpatch%fuel%non_trunk_loading * cpatch%area * AREA_INV
 
+                   hio_fuel_eff_moist_age_fuel(io_si, i_agefuel) = hio_fuel_eff_moist_age_fuel(io_si,i_agefuel) + &
+                        cpatch%fuel%effective_moisture(i_fuel) * cpatch%area * AREA_INV
+
                    hio_litter_moisture_si_fuel(io_si, i_fuel) = hio_litter_moisture_si_fuel(io_si, i_fuel) + &
                         cpatch%fuel%effective_moisture(i_fuel) * cpatch%area * AREA_INV
 
@@ -4332,6 +4341,12 @@ contains
                         cpatch%fuel%frac_burnt(i_fuel) * cpatch%frac_burnt * cpatch%area * AREA_INV
                 end do
 
+                ! update total canopy fuel load per age bin
+                hio_canopy_fuel_si_age(io_si,cpatch%age_class) = hio_canopy_fuel_si_age(io_si,cpatch%age_class) + &
+                  cpatch%fuel%canopy_fuel_load * AREA_INV * mass_2_carbon
+                ! update canopy water content per age bin
+                hio_canopy_water_content_si_age(io_si,cpatch%age_class) = hio_canopy_water_content_si_age(io_si,cpatch%age_class) + &
+                cpatch%fuel%canopy_water_content * cpatch%area * AREA_INV
 
 
 
@@ -7184,6 +7199,12 @@ contains
                hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
                index = ih_litter_moisture_si_fuel)
 
+          call this%set_history_var(vname='FATES_FUEL_MOISTURE_APFC', units='m3 m-3',  &
+               long='spitfire age-fuel class level fuel moisture (volumetric)',        &
+               use_default='inactive', avgflag='A', vtype=site_agefuel_r8,             &
+               hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
+               index = ih_canopy_water_content_si_age)
+
           call this%set_history_var(vname='FATES_FUEL_AMOUNT_FC', units='kg m-2',    &
                long='spitfire fuel-class level fuel amount in kg carbon per m2 land area', &
                use_default='active', avgflag='A', vtype=site_fuel_r8,                &
@@ -7195,6 +7216,18 @@ contains
                use_default='inactive', avgflag='A', vtype=site_agefuel_r8,           &
                hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
                index = ih_fuel_amount_age_fuel)
+
+          call this%set_history_var(vname='FATES_CANOPY_FUEL_AMOUNT_AP', units='kg m-2',  &
+               long='canopy fuel quantity in each age class in kg carbon per m2 land area', &
+               use_default='inactive', avgflag='A', vtype=site_age_r8,               &
+               hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
+               index = ih_canopy_fuel_si_age)
+
+          call this%set_history_var(vname='FATES_CANOPY_WATER_CONTENT_AP', units='%',  &
+               long='canopy water content in each age class in percent, derived using non-hydro appraoch', &
+               use_default='inactive', avgflag='A', vtype=site_age_r8,                 &
+               hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
+               index = ih_canopy_water_content_si_age)
 
           call this%set_history_var(vname='FATES_BURNFRAC_AP', units='s-1',          &
                long='spitfire fraction area burnt (per second) by patch age, sum of rx and wildfire', &
