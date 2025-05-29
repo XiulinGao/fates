@@ -466,6 +466,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_sum_canopy_fuel_si
   integer :: ih_canopy_fuel_bulkd_si
   integer :: ih_canopy_base_height_si
+  integer :: ih_canopy_water_content_si
   integer :: ih_rx_burn_window_si
   integer :: ih_rx_intensity_si
   integer :: ih_rx_area_si
@@ -2432,6 +2433,7 @@ contains
          hio_sum_canopy_fuel_si  => this%hvars(ih_sum_canopy_fuel_si)%r81d, &
          hio_canopy_fuel_bulkd_si     => this%hvars(ih_canopy_fuel_bulkd_si)%r81d, &
          hio_canopy_base_height_si     => this%hvars(ih_canopy_base_height_si)%r81d, &
+         hio_canopy_water_content_si   => this%hvars(ih_canopy_water_content_si)%r81d, &
          hio_nonrx_intensity_si  => this%hvars(ih_nonrx_intensity_si)%r81d, &
          hio_nonrx_intensity_area_product_si => this%hvars(ih_nonrx_intensity_area_product_si)%r81d, &
          hio_nonrx_area_si       => this%hvars(ih_nonrx_area_si)%r81d, &
@@ -2713,6 +2715,7 @@ contains
             hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%fuel%canopy_fuel_load * AREA_INV * mass_2_carbon
             hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%fuel%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
             hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%fuel%canopy_base_height * cpatch%area * AREA_INV 
+            hio_canopy_water_content_si(io_si) = hio_canopy_water_content_si(io_si) + cpatch%fuel%canopy_water_content * cpatch%area * AREA_INV
 
             hio_nonrx_intensity_area_product_si(io_si) = hio_nonrx_intensity_area_product_si(io_si) + &
                  cpatch%nonrx_FI * cpatch%nonrx_frac_burnt * cpatch%area * AREA_INV * J_per_kJ
@@ -6426,6 +6429,12 @@ contains
             use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
             upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
             index = ih_canopy_base_height_si)
+
+       call this%set_history_var(vname='FATES_CANOPY_WATER_CONTENT', units='%',  &
+            long='Non-hydro live canopy water content in %',                     &
+            use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',    &
+            upfreq=1, ivar=ivar, initialize=initialize_variables,                &
+            index = ih_canopy_water_content_si)
        ! Litter Variables
 
        call this%set_history_var(vname='FATES_LITTER_IN', units='kg m-2 s-1',     &
