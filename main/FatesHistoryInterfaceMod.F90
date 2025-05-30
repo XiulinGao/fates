@@ -4328,7 +4328,7 @@ contains
                    hio_fuel_amount_age_fuel(io_si,i_agefuel) = hio_fuel_amount_age_fuel(io_si,i_agefuel) + &
                         cpatch%fuel%frac_loading(i_fuel) * cpatch%fuel%non_trunk_loading * cpatch%area * AREA_INV
 
-                   hio_fuel_eff_moist_age_fuel(io_si, i_agefuel) = hio_fuel_eff_moist_age_fuel(io_si,i_agefuel) + &
+                   hio_fuel_eff_moist_age_fuel(io_si,i_agefuel) = hio_fuel_eff_moist_age_fuel(io_si,i_agefuel) + &
                         cpatch%fuel%effective_moisture(i_fuel) * cpatch%area * AREA_INV
 
                    hio_litter_moisture_si_fuel(io_si, i_fuel) = hio_litter_moisture_si_fuel(io_si, i_fuel) + &
@@ -7203,7 +7203,7 @@ contains
                long='spitfire age-fuel class level fuel moisture (volumetric)',        &
                use_default='inactive', avgflag='A', vtype=site_agefuel_r8,             &
                hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar, initialize=initialize_variables, &
-               index = ih_canopy_water_content_si_age)
+               index = ih_fuel_eff_moist_age_fuel)
 
           call this%set_history_var(vname='FATES_FUEL_AMOUNT_FC', units='kg m-2',    &
                long='spitfire fuel-class level fuel amount in kg carbon per m2 land area', &
