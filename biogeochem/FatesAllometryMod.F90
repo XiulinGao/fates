@@ -456,8 +456,12 @@ contains
     real(r8),intent(out)   :: blmax     ! plant leaf biomass [kg]
     real(r8),intent(out),optional :: dblmaxdd  ! change leaf bio per diameter [kgC/cm]
 
+    real(r8)               :: h       ! height
+    real(r8)               :: dhdd    ! change in height wrt d
+
     associate( dbh_maxh    => prt_params%allom_dbh_maxheight(ipft), &
                rho         => prt_params%wood_density(ipft), &
+               slatop      => prt_params%slatop(ipft),       &
                c2b         => prt_params%c2b(ipft),          &
                allom_lmode => prt_params%allom_lmode(ipft),  &
                p1          => prt_params%allom_d2bl1(ipft),  &
@@ -503,6 +507,7 @@ contains
                                             ! instead of crown area from dbh
 
      real(r8)               :: dbh_eff      ! Effective diameter (cm)
+     real(r8)               :: height       ! height
      logical                :: do_inverse   ! local copy of the inverse argument
                                             ! defaults to false
      logical                :: capped_allom ! if we are using an allometry that caps
