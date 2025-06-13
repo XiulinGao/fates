@@ -2608,6 +2608,91 @@ contains
   
   ! =========================================================================
 
+  subroutine carea_3pwr(dbh,height,ipft,dbh_maxh,spread,dh2bl_p2,dh2bl_ediff, &
+                        dh2ca_min,dh2ca_max,crowndamage,c_area,inverse)
+
+   !---~---
+   !    Calculate area of ground covered by entire cohort. (m2)
+   ! Function of DBH (cm), height (m), canopy spread (m/cm) and number of 
+   ! individuals. 
+   !---~---
+   !--- List of arguments
+   real(r8)   , intent(inout) :: dbh         ! Diameter at breast/ref/ height     [   cm]
+   real(r8)   , intent(inout) :: height      ! Height                             [    m]
+   integer(i4), intent(in)    :: ipft        ! PFT index
+   real(r8)   , intent(in)    :: dbh_maxh    ! Minimum DBH at maximum height      [   cm]
+   real(r8)   , intent(in)    :: spread      ! site level relative spread score   [  0-1]
+   real(r8)   , intent(in)    :: dh2bl_p2    ! Exponent for size (bleaf)          [    -]
+   real(r8)   , intent(in)    :: dh2bl_ediff ! Difference in size exponent        [    -]
+   real(r8)   , intent(in)    :: dh2ca_min   ! Minimum (closed forest) scaling    [    -]
+                                             !    coefficient for crown area
+   real(r8)   , intent(in)    :: dh2ca_max   ! Maximum (savannah) scaling         [    -]
+                                             !    coefficient for crown area
+   integer    , intent(in)    :: crowndamage ! Crown damage class                 [    -]
+                                             !    [1: undamaged, >1: damaged]
+   real(r8)   , intent(inout) :: c_area      ! crown area for one plant           [   m2]
+   logical    , intent(in)    :: inverse     ! If true, calculate dbh from crown
+                                             !    area rather than its reverse
+   !--- Local variables
+   real(r8) :: size            ! Size (Diameter^2 * Height)                       [cm2 m]
+   real(r8) :: dh2ca_p1        ! Effective scaling factor (crown area)            [    -]
+   real(r8) :: dh2ca_p2        ! Effective exponent (crown area)                  [    -]
+   real(r8) :: crown_reduction ! Crown area reduction due to damage.              [    -]
+   !---~---
+
+   !---~---
+   !   Define the scaling (log-intercept) and exponent (log-slope) parameters for
+   ! crown area. The scaling parameter accounts for the site-level spread elasticity.
+   ! The exponent is defined in terms of the leaf biomass exponent plus an offset 
+   ! parameter (allom_blca_expnt_diff). This is done because the default in FATES is
+   ! for both exponents to be same (i.e., allom_blca_expnt_diff = 0.) so the per-plant 
+   ! canopy area remains invariant during growth. However, allometric models in general
+   ! predict that leaf area grows faster than crown area. 
+   !---~---
+
+   dh2ca_p1 = spread * dh2ca_max + (1._r8 - spread) * dh2ca_min
+   dh2ca_p2 = dh2bl_p2 + dh2bl_ediff
+   !---~---
+
+   !---~---
+   !   Decide whether to use DBH and height to find crown area (default) or the
+   ! other way round.
+   !---~---
+   select case (inverse)
+   case (.false.)
+      !--- Find the maximum area
+      size   = dbh * dbh * height
+      c_area = dh2ca_p1 * size ** dh2ca_p2
+      !---~---
+
+      !--- Reduce area if the crown is damaged.
+       if (crowndamage > 1) then
+         call GetCrownReduction(crowndamage, crown_reduction)
+         c_area = c_area * (1.0_r8 - crown_reduction)
+       end if
+
+       case (.true.)
+         !--- Reduce area if the crown is damaged.
+         if (crowndamage > 1) then
+            call GetCrownReduction(crowndamage, crown_reduction)
+            c_area = c_area * (1.0_r8 - crown_reduction)
+         end if
+         !---~---
+
+         !---~---
+         !   Find the size, then use a root-finding algorithm to find DBH.
+         !---~---
+         size = ( c_area / dh2ca_p1 ) ** ( 1.0_r8 / dh2ca_p2 )
+         call size2dbh(size,ipft,dbh,dbh_maxh)
+         !---~---
+      end select
+       !---~---
+       return
+       
+  end subroutine carea_3pwr
+
+
+
   subroutine set_root_fraction(root_fraction, ft, zi, max_nlevroot)
 
     !
