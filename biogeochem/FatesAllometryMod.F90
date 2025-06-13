@@ -2688,7 +2688,7 @@ contains
       end select
        !---~---
        return
-       
+
   end subroutine carea_3pwr
 
 
@@ -3146,6 +3146,262 @@ subroutine ForceDBH( ipft, crowndamage, canopy_trim, elongf_leaf, elongf_stem, d
   end subroutine cspline
   
  ! ==================================================================================
+
+   ! ============================================================================
+   !    This function finds the DBH when size (DBH^2 * Height) is known but we
+   ! cannot find DBH analytically due to the non-linear relationship between DBH
+   ! and height. This is borrowed from the same approach applied in ED2 for
+   ! root finding. It starts with the Newton's method, which should quickly
+   ! converge to the solution. In the unlikely case of failure, we use the
+   ! Regula Falsi (Illinois) method as a back-up.
+   ! ============================================================================
+   subroutine size2dbh(size,ipft,dbh,dbh_maxh)
+      !--- Arguments.
+      real(r8)   , intent(in)    :: size        ! Size (DBH^2 * Height)           [cm2 m]
+      integer(i4), intent(in)    :: ipft        ! PFT index                       [    -]
+      real(r8)   , intent(inout) :: dbh         ! Diameter at breast height       [   cm]
+      real(r8)   , intent(in)    :: dbh_maxh    ! Minimum DBH at maximum height   [   cm]
+      !--- Local variables
+      real(r8)                   :: hgt         ! Height                          [    m]
+      real(r8)                   :: dhgtddbh    ! Height derivative               [ m/cm]
+      real(r8)                   :: size_maxh   ! Minimum size at maximum height  [cm2 m]
+      real(r8)                   :: deriv       ! Function derivative             [ cm m]
+      real(r8)                   :: afun        ! Function value (lower guess)    [cm2 m]
+      real(r8)                   :: rfun        ! Function value (RF new guess)   [cm2 m]
+      real(r8)                   :: zfun        ! Function value (upper guess)    [cm2 m]
+      real(r8)                   :: adbh        ! DBH: lower guess                [   cm]
+      real(r8)                   :: rdbh        ! DBH: updated guess (Reg. Falsi) [   cm]
+      real(r8)                   :: zdbh        ! DBH: upper guess                [   cm]
+      real(r8)                   :: delta       ! Second guess for the RF method  [   cm]
+      integer                    :: itn         ! Iteration counter -- Newton     [    -]
+      integer                    :: iti         ! Iteration counter -- Reg. Falsi [    -]
+      logical                    :: converged   ! Has the solution converged?     [  T|F]
+      logical                    :: zside       ! Converging on the upper size?   [  T|F]
+      !--- Local constants.
+      real(r8) , parameter :: toler =1.0e-12_r8 ! Relative tolerance              [   --]
+      integer  , parameter :: maxit_newt = 10   ! Cap in iterations -- Newton     [   --]
+      integer  , parameter :: maxit_rf   = 100  ! Cap in iterations -- Reg. Falsi [   --]
+      !---~---
+
+
+      !---~---
+      !   Find the maximum size beyond which the height is assumed constant. In this
+      ! case, DBH can be determined without the iterative approach.
+      !---~---
+      call h_allom(dbh_maxh,ipft,hgt)
+      size_maxh = dbh_maxh * dbh_maxh * hgt
+      if (size >= size_maxh) then
+         dbh = sqrt(size/hgt)
+         return
+      end if
+      !---~---
+
+
+      !--- First guess: use current DBH.
+      adbh  = dbh
+      call h_allom(adbh,ipft,hgt,dhgtddbh)
+      afun  = adbh * adbh * hgt - size
+      deriv = 2.0_r8 * adbh * hgt + adbh * adbh * dhgtddbh
+      !---~---
+
+
+      !--- Copy just in case it fails at the first iteration.
+      zdbh = adbh
+      zfun = afun
+      !---~---
+
+
+      !---~---
+      !   Enter the Newton's method loop
+      !---~---
+      converged = .false.
+      newton_loop: do itn = 1, maxit_newt
+         !--- If derivative is too flat, go to Regula Falsi
+         if ( abs(deriv) < toler) exit newton_loop
+         !---~---
+
+
+         !--- Copy the previous guess.
+         adbh = zdbh
+         afun = zfun
+         !---~---
+
+
+         !--- Find the new guess, and evaluate the function and derivative.
+         zdbh  = adbh - afun / deriv
+         call h_allom(zdbh,ipft,hgt,dhgtddbh)
+         zfun  = zdbh * zdbh * hgt - size
+         deriv = 2.0_r8 * zdbh * hgt + zdbh * zdbh * dhgtddbh
+         !---~---
+
+         !--- Check convergence.
+         converged = abs(adbh - zdbh) < toler * zdbh
+         if (converged) then
+            !--- Convergence by iterations.
+            dbh = 0.5_r8 * (adbh + zdbh)
+            return
+            !---~---
+         else if (abs(zfun) < nearzero) then
+            !--- Convergence by luck.
+            dbh = zdbh
+            return
+            !---~---
+         end if
+         !---~---
+      end do newton_loop
+      !---~---
+
+
+
+      !---~---
+      !   If we have reached this point, then Newton's method has failed. Use Regula
+      ! Falsi instead. For this, we must have two guesses whose function evaluation has
+      ! opposite signs.
+      !---~---
+      if (afun * zfun <= -nearzero) then
+         !--- We already have two guesses with opposite signs.
+         zside = .true.
+         !---~---
+      else
+         !--- Look for another guess with opposite sign.
+         if (abs(zfun-afun) < 100._r8 * toler * adbh) then
+            delta = 100._r8 * toler * adbh
+         else
+            delta = max( abs( afun * (zdbh-adbh) / (zfun-afun) ),100._r8 * toler * adbh )
+         end if
+         !---~---
+
+
+         !---~---
+         !   Try guesses on both sides of the first guess, sending guesses increasingly
+         ! further away until we find a good guess.
+         !---~---
+         zdbh  = adbh + delta
+         zside = .false.
+         zguess_loop: do iti=1,maxit_rf
+            zdbh = adbh + real((-1)**iti * (iti+3)/2,r8) * delta
+            call h_allom(zdbh,ipft,hgt)
+            zfun  = zdbh * zdbh * hgt - size
+            zside = afun * zfun < -nearzero
+            if (zside) exit zguess_loop
+         end do zguess_loop
+
+         !---~---
+         !   Issue an error in case the function failed finding a second guess.
+         !---~---
+         if (.not. zside) then
+            write (unit=*,fmt='(a)')           '---~---'
+            write (unit=*,fmt='(a)')           ' Failed finding the second guess:'
+            write (unit=*,fmt='(a)')           '---~---'
+            write (unit=*,fmt='(a)')           ' '
+            write (unit=*,fmt='(a)')           ' Input:   '
+            write (unit=*,fmt='(a,1x,es14.7)') ' + size  =',size
+            write (unit=*,fmt='(a,1x,es14.7)') ' + dbh   =',dbh
+            write (unit=*,fmt='(a)')           ' '
+            write (unit=*,fmt='(a)')           ' Current guesses and evaluations:'
+            write (unit=*,fmt='(a,1x,es14.7)') ' + adbh  =',adbh
+            write (unit=*,fmt='(a,1x,es14.7)') ' + afun  =',afun
+            write (unit=*,fmt='(a,1x,es14.7)') ' + zdbh  =',zdbh
+            write (unit=*,fmt='(a,1x,es14.7)') ' + zfun  =',zfun
+            write (unit=*,fmt='(a)')           ' '
+            write (unit=*,fmt='(a)')           '---~---'
+            write(fates_log(),*) 'Second guess for Regula Falsi method not found.'
+            call endrun(msg=errMsg(sourcefile, __LINE__))
+         end if
+         !---~---
+      end if
+      !---~---
+
+      !---~---
+      !   Proceed to the regula falsi loop.
+      !---~---
+      regfalsi_loop: do iti=1,maxit_rf
+
+         !--- Update solution.
+         rdbh =  ( zfun * adbh - afun * zdbh ) / ( zfun - afun)
+         !---~---
+
+
+         !---~---
+         !   Check for convergence. In case it converged, we can exit the sub-routine.
+         !---~---
+         converged = abs(rdbh - adbh) < toler * max(rdbh,adbh)
+         if (converged) exit regfalsi_loop
+         !---~---
+
+
+         !--- Find the new function evaluation.
+         call h_allom(rdbh,ipft,hgt)
+         rfun = rdbh * rdbh * hgt - size
+         !---~---
+
+
+         !---~---
+         !   Define the new searching interval based on the intermediate value theorem.
+         !---~---
+         if (abs(rfun) < nearzero) then
+            !--- Converged by luck.
+            converged = .true.
+            exit regfalsi_loop
+            !---~---
+         else if (rfun * afun <= -nearzero ) then
+            !--- Guess is between lower and current guess.
+            zdbh = rdbh
+            zfun = rfun
+            !--- If we are updating the upper side again, halve afun (Regula Falsi method).
+            if (zside) afun = afun * 0.5_r8
+            !--- Flag that we have just updated the upper side.
+            zside = .true.
+            !---~---
+         else
+            !--- Guess is between current and upper guess.
+            adbh = rdbh
+            afun = rfun
+            !--- If we are updating the lower side again, halve zfun (Regula Falsi method).
+            if (.not. zside) zfun = zfun * 0.5_r8
+            !--- Flag that we have just updated the lower side.
+            zside = .false.
+         end if
+      end do regfalsi_loop
+      !---~---
+
+
+      !---~---
+      !   Check that the Regula Falsi method indeed converged.
+      !---~---
+      if (converged) then
+         !--- Yes, return the last guess
+         dbh = rdbh
+         !---~---
+      else
+         !--- No, report the bad news
+         write (unit=*,fmt='(a)')           '---~---'
+         write (unit=*,fmt='(a)')           ' Failed finding the solution:'
+         write (unit=*,fmt='(a)')           '---~---'
+         write (unit=*,fmt='(a)')           ' '
+         write (unit=*,fmt='(a)')           ' Input:   '
+         write (unit=*,fmt='(a,1x,es14.7)') ' + size  =',size
+         write (unit=*,fmt='(a,1x,es14.7)') ' + dbh   =',dbh
+         write (unit=*,fmt='(a)')           ' '
+         write (unit=*,fmt='(a)')           ' Current guesses and evaluations:'
+         write (unit=*,fmt='(a,1x,es14.7)') ' + adbh  =',adbh
+         write (unit=*,fmt='(a,1x,es14.7)') ' + afun  =',afun
+         write (unit=*,fmt='(a,1x,es14.7)') ' + rdbh  =',rdbh
+         write (unit=*,fmt='(a,1x,es14.7)') ' + rfun  =',rfun
+         write (unit=*,fmt='(a,1x,es14.7)') ' + zdbh  =',zdbh
+         write (unit=*,fmt='(a,1x,es14.7)') ' + zfun  =',zfun
+         write (unit=*,fmt='(a)')           ' '
+         write (unit=*,fmt='(a)')           '---~---'
+         write(fates_log(),*) 'Size to DBH routine failed to converge!'
+         call endrun(msg=errMsg(sourcefile, __LINE__))
+         !---~---
+      end if
+      !---~---
+
+      return
+   end subroutine size2dbh
+   ! ============================================================================
+
 
   subroutine target_resprout_carbon_pools(h,pft,store_c,nrc_leaf_c,nrc_sapw_c,nrc_struct_c,nrc_store_c,&
        nrc_dbldd,nrc_dbsapwdd,nrc_dbdeaddd,nrc_dbbgwdd,nrc_dbagwdd)
