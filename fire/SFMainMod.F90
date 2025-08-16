@@ -1131,12 +1131,15 @@ contains
        if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then
           currentCohort => currentPatch%tallest;
           do while(associated(currentCohort))  
+            currentCohort%fire_mort = 0.0_r8
              if ( prt_params%woody(currentCohort%pft) == itrue) then !trees only
                 ! Equation 21 in Thonicke et al 2010
                 bt = EDPftvarcon_inst%bark_scaler(currentCohort%pft)*currentCohort%dbh ! bark thickness. 
                 ! Equation 20 in Thonicke et al. 2010. 
                 tau_c = 2.9_r8*bt**2.0_r8 !calculate time it takes to kill cambium (min)
                 ! Equation 19 in Thonicke et al. 2010
+                currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%fraction_crown_burned**(tau_c / &
+                currentPatch%tau_l - 0.5_r8)))
                 if ((currentPatch%tau_l/tau_c) >= 2.0_r8) then
                    currentCohort%cambial_mort = 1.0_r8
                 else
@@ -1184,7 +1187,7 @@ contains
        if (currentPatch%fire == 1 .or. currentPatch%rxfire == 1) then 
           currentCohort => currentPatch%tallest
           do while(associated(currentCohort))  
-             currentCohort%fire_mort = 0.0_r8
+             !currentCohort%fire_mort = 0.0_r8
              currentCohort%crownfire_mort = 0.0_r8
              currentCohort%rxfire_mort = 0.0_r8
              currentCohort%rxcrownfire_mort = 0.0_r8
@@ -1193,8 +1196,8 @@ contains
                 ! Equation 22 in Thonicke et al. 2010. 
                 currentCohort%crownfire_mort = EDPftvarcon_inst%crown_kill(currentCohort%pft)*currentCohort%fraction_crown_burned**3.0_r8
                 ! Equation 18 in Thonicke et al. 2010. 
-                currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
-                     (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.   
+                !currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
+                !     (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.   
              else
                 currentCohort%fire_mort = 0.0_r8 !Set to zero. Grass mode of death is removal of leaves.
              endif !trees
