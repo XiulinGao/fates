@@ -542,7 +542,7 @@ contains
   
   !---------------------------------------------------------------------------------------
   
-  subroutine CalculateSurfaceFireIntensity(currentSite)
+  subroutine CalculateSurfaceFireIntensity(currentSite, bc_in)
     !
     !  DESCRIPTION:
     !  Calculates surface fireline intensity for each patch of a site
@@ -551,6 +551,7 @@ contains
     !  Right now also calculates the area burnt...
     !
     use FatesConstantsMod, only : m2_per_km2
+    use FatesConstantsMod, only : tfrz => t_water_freeze_k_1atm
     use SFEquationsMod,    only : FireDuration, LengthToBreadth
     use SFEquationsMod,    only : AreaBurnt, FireSize, FireIntensity
     use SFParamsMod,       only : SF_val_fire_threshold, SF_val_rxfire_minthreshold, &
@@ -573,7 +574,17 @@ contains
     logical                         :: managed_wildfire                ! is it a wildfire with FI lower than the max rxfire intensity?[can either be Rx fire or wildfire]
     logical                         :: true_wildfire                   ! is it a wildfire that cannot be managed?
     logical                         :: is_wildfire                     ! combine both managed and true wildfire for now
-    
+    real(r8)                        :: ambient_t                       !ambient mean temp in C
+    real(r8)                        :: delta_t                         !difference between ambient temp and the lethal temp 
+    real(r8)                        :: ln_base
+    real(r8)                        :: l_tot
+
+    real(r8), parameter :: z = 1.0_r8  
+    real(r8), parameter :: k = 4.47_r8 
+    real(r8), parameter :: r = 0.016_r8
+    real(r8), parameter :: beta = 0.16_r8
+
+
     currentPatch => currentSite%oldest_patch 
     do while (associated(currentPatch))
       
@@ -593,11 +604,17 @@ contains
         currentPatch%fire = 0
         currentPatch%rxfire = 0
         currentPatch%rxfire_FI = 0.0_r8
+        currentPatch%tau_l = 0.0_r8
         
         if (currentSite%NF > 0.0_r8 .or. currentSite%fireWeather%rx_flag .eq. itrue) then
           
           ! fire intensity [kW/m]
           currentPatch%FI = FireIntensity(currentPatch%TFC_ROS/0.45_r8, currentPatch%ROS_front/60.0_r8)
+          ambient_t = currentPatch%tveg24%GetMean() - tfrz
+          delta_t   = 60.0_r8 - ambient_t
+          ln_base   = (k * (currentPatch%FI**0.667_r8)) / (z * delta_t)
+          l_tot     = (beta * z * (log(ln_base))**0.5_r8) + (1.0_r8 / r) * log(ln_base) ! in sec
+          currentPatch%tau_l = min(8.0_r8, (l_tot / 60.0_r8))
 
           ! Decide if prescribed fire or wildfire happen 
           ! prescribed fire and wildfire cannot happen on the same patch
