@@ -24,6 +24,7 @@ module FatesFuelMod
     real(r8) :: SAV_notrunks                         ! weighted average of surface area to volume ratio across non-trunk fuel classes [/cm]
     real(r8) :: MEF_notrunks                         ! weighted average of moisture of extinction across non-trunk fuel classes [m3/m3]
     real(r8) :: canopy_fuel_load                     ! patch level total canopy fuel load [kg biomass]
+    real(r8) :: canopy_fuel_load_sapling             ! patch level total canopy fuel load for trees below 1.5 m [kg biomass]
     real(r8) :: canopy_base_height                   ! patch level canopy base height at which biomass density > minimum density required for canopy fire spread [m]
     real(r8) :: canopy_bulk_density                  ! patch level canopy fuel bulk density [kg biomass m-3]
     real(r8) :: canopy_water_content                 ! patch level canopy water content [%]
@@ -67,6 +68,7 @@ module FatesFuelMod
       this%SAV_notrunks = 0.0_r8
       this%MEF_notrunks = 0.0_r8 
       this%canopy_fuel_load = 0.0_r8
+      this%canopy_fuel_load_sapling = 0.0_r8
       this%canopy_base_height = 0.0_r8
       this%canopy_bulk_density = 0.0_r8
       this%canopy_water_content = 0.0_r8
@@ -114,6 +116,8 @@ module FatesFuelMod
       this%MEF_notrunks = this%MEF_notrunks*self_weight + donor_fuel%MEF_notrunks*donor_weight  
       this%canopy_fuel_load = this%canopy_fuel_load*self_weight +      &
         donor_fuel%canopy_fuel_load*donor_weight
+      this%canopy_fuel_load_sapling = this%canopy_fuel_load_sapling*self_weight + &
+        donor_fuel%canopy_fuel_load_sapling*donor_weight
       this%canopy_base_height = this%canopy_base_height*self_weight +   &
         donor_fuel%canopy_base_height*donor_weight
       this%canopy_bulk_density = this%canopy_bulk_density*self_weight +    &
@@ -398,7 +402,7 @@ module FatesFuelMod
     
   !---------------------------------------------------------------------------------------
 
-    subroutine CalculateCanopyFuelLoad(this, fuel_1h)
+    subroutine CalculateCanopyFuelLoad(this, fuel_1h, fuel_sapling)
       ! DESCRIPTION:
       ! Calculate canopy fuel load by summing up leaf biomass and 1 hour woody biomass
       ! XLG: I did not change how Sam L. calculate canopy fuel load here except 
@@ -409,10 +413,12 @@ module FatesFuelMod
       ! ARGUMENTS:
       class(fuel_type), intent(inout) :: this                     ! fuel class
       real(r8),         intent(in)    :: fuel_1h                  ! leaf + 1 hour woody fuels of each cohort [kg biomass]
+      real(r8),         intent(in).   :: fuel_sapling
 
 
        ! this is the summed canopy fuel load at site level, not scaled by land area
        this%canopy_fuel_load = this%canopy_fuel_load + fuel_1h
+       this%canopy_fuel_load_sapling = this%canopy_fuel_load_sapling + fuel_sapling
 
       
     end subroutine CalculateCanopyFuelLoad

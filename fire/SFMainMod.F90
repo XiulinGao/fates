@@ -239,6 +239,7 @@ contains
     real(r8) ::  sapw_c               ! sapwood carbon (kgC)
     real(r8) ::  struct_c             ! structure carbon (kgC)
     real(r8) ::  crown_fuel_per_m     ! crown fuel per 1m section in cohort
+    real(r8) ::  fuel_sapling         ! biomass of trees below 1.5 m
     real(r8) ::  SF_val_CWD_frac_adj(ncwd)  ! adjusted fractional allocation of woody biomass to coarse wood debris pool
     real(r8) ::  mean_10day_smp(numpft)       ! averaged 10 day soil matric potential for each PFT 
     real(r8) ::  water_mass           ! canopy water mass per individual plant (kgH2O/plant)
@@ -274,6 +275,7 @@ contains
         !zero Patch level variables
         max_height                            = 0.0_r8
         currentPatch%fuel%canopy_fuel_load    = 0.0_r8
+        currentPatch%fuel%canopy_fuel_load_sapling = 0.0_r8
         currentPatch%fuel%canopy_bulk_density = 0.0_r8
         currentPatch%fuel%canopy_base_height  = 0.0_r8
         currentPatch%fuel%canopy_water_content = 0.0_r8
@@ -305,6 +307,7 @@ contains
           sapw_c             = 0.0_r8
           struct_c           = 0.0_r8
           crown_fuel_per_m   = 0.0_r8
+          fuel_sapling       = 0.0_r8
           crown_depth        = 0.0_r8
           cbh_co             = 0.0_r8
           SF_val_CWD_frac_adj(ncwd) = 0.0_r8
@@ -325,11 +328,15 @@ contains
             leaf_c   = currentCohort%n * leaf_c
             
             call adjust_SF_CWD_frac(currentCohort%dbh, ncwd, SF_val_CWD_frac, SF_val_CWD_frac_adj)
+
+            if(currentCohort%height <= 1.5_r8) then
+              fuel_sapling = woody_c*(SF_val_CWD_frac_adj(1) + SF_val_CWD_frac_adj(2) + SF_val_CWD_frac_adj(3))
+              fuel_sapling = (fuel_sapling + leaf_c) / carbon_2_biomass
+            end if
             woody_c = woody_c*SF_val_CWD_frac_adj(1)
             currentCohort%canopy_fuel_1h = (leaf_c + woody_c)/carbon_2_biomass
             ! update canopy fuel load
-            call currentPatch%fuel%CalculateCanopyFuelLoad(currentCohort%canopy_fuel_1h)
-            
+            call currentPatch%fuel%CalculateCanopyFuelLoad(currentCohort%canopy_fuel_1h, fuel_sapling)
             ! 1m biomass bin
             crown_fuel_per_m = (leaf_c + woody_c) / (carbon_2_biomass * crown_depth) !kg biomass / m
             ! sort crown fuel into bins from bottom to top of crown
