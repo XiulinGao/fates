@@ -413,7 +413,7 @@ module FatesFuelMod
       ! ARGUMENTS:
       class(fuel_type), intent(inout) :: this                     ! fuel class
       real(r8),         intent(in)    :: fuel_1h                  ! leaf + 1 hour woody fuels of each cohort [kg biomass]
-      real(r8),         intent(in).   :: fuel_sapling
+      real(r8),         intent(in)    :: fuel_sapling
 
 
        ! this is the summed canopy fuel load at site level, not scaled by land area
