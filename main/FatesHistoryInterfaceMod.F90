@@ -460,6 +460,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_fire_fuel_mef_si
   integer :: ih_sum_fuel_si
   integer :: ih_sum_canopy_fuel_si
+  integer :: ih_canopy_fuel_sapling_si
   integer :: ih_canopy_fuel_bulkd_si
   integer :: ih_act_crown_fire_freq_si
   integer :: ih_pass_crown_fire_freq_si
@@ -2427,6 +2428,7 @@ contains
          hio_fire_fuel_mef_si    => this%hvars(ih_fire_fuel_mef_si)%r81d, &
          hio_sum_fuel_si         => this%hvars(ih_sum_fuel_si)%r81d,  &
          hio_sum_canopy_fuel_si  => this%hvars(ih_sum_canopy_fuel_si)%r81d, &
+         hio_canopy_fuel_sapling_si   => this%hvars(ih_canopy_fuel_sapling_si)%r81d, &
          hio_canopy_fuel_bulkd_si     => this%hvars(ih_canopy_fuel_bulkd_si)%r81d, &
          hio_act_crown_fire_freq_si   => this%hvars(ih_act_crown_fire_freq_si)%r81d, &
          hio_pass_crown_fire_freq_si   => this%hvars(ih_pass_crown_fire_freq_si)%r81d, &
@@ -2710,6 +2712,7 @@ contains
             ! calculate site level fuel load density, we only need to scale this by site area, and convert to carbon for consistency
             ! in FATES output unit
             hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%fuel%canopy_fuel_load * AREA_INV * mass_2_carbon
+            hio_canopy_fuel_sapling_si(io_si)  = hio_canopy_fuel_sapling_si(io_si) + cpatch%fuel%canopy_fuel_load_sapling * AREA_INV * mass_2_carbon
             hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%fuel%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
             hio_act_crown_fire_freq_si(io_si)  = hio_act_crown_fire_freq_si(io_si) + cpatch%active_crown_fire * cpatch%area * AREA_INV
             hio_pass_crown_fire_freq_si(io_si) = hio_pass_crown_fire_freq_si(io_si) + cpatch%passive_crown_fire * cpatch%area * AREA_INV
@@ -6383,6 +6386,12 @@ contains
             use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
             upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
             index = ih_sum_canopy_fuel_si)
+
+       call this%set_history_var(vname='FATES_CANOPY_FUEL_SAPLING', units='kg m-2',       &
+            long='total canopy 1h-100h woody plus leaf biomass for trees >= 1.5m in kg C per m2 land area',   &
+            use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+            upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+            index = ih_canopy_fuel_sapling_si)
      
        call this%set_history_var(vname='FATES_CANOPY_FUEL_BULKD', units='kg m-3',       &
             long='canopy fuel bulk density (only 1hr woody plus leaf biomss) in kg C per m3',   &
