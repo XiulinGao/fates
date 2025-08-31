@@ -219,6 +219,8 @@ contains
             inv_pss_list, inv_css_list, &
             inv_lat_list, inv_lon_list)
 
+      inv_lon_list(:) = inv_lon_list(:) - 360.0_r8
+
       ! We can close the list file now
       close(sitelist_file_unit, iostat = ios)
       if( ios /= 0 ) then
