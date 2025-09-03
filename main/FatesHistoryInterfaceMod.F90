@@ -3344,7 +3344,7 @@ contains
            hio_mortality_understory_si_scag     => this%hvars(ih_mortality_understory_si_scag)%r82d, &
            hio_mortality_fire_si_scag           => this%hvars(ih_mortality_fire_si_scag)%r82d, &
            hio_mortality_cambialburn_si_scag    => this%hvars(ih_mortality_cambialburn_si_scag)%r82d, &
-           hio_mortality_crownscorch_si_scag    => this%hvars(ih_mortality_crownscorch_si_scag))
+           hio_mortality_crownscorch_si_scag    => this%hvars(ih_mortality_crownscorch_si_scag)%r82d)
 
         ! Break up associates for NAG compilers
         associate( hio_site_dstatus_si_pft              => this%hvars(ih_site_dstatus_si_pft)%r82d, &
