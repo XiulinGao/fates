@@ -383,6 +383,10 @@ module FatesHistoryInterfaceMod
   integer :: ih_ddbh_understory_si_scag
   integer :: ih_mortality_canopy_si_scag
   integer :: ih_mortality_understory_si_scag
+  integer :: ih_mortality_fire_si_scag
+  integer :: ih_mortality_cambialburn_si_scag
+  integer :: ih_mortality_crownscorch_si_scag
+
 
   ! Indices to site by size-class by age by pft variables
   integer :: ih_nplant_si_scagpft
@@ -3337,7 +3341,10 @@ contains
            hio_ddbh_canopy_si_scag              => this%hvars(ih_ddbh_canopy_si_scag)%r82d, &
            hio_ddbh_understory_si_scag          => this%hvars(ih_ddbh_understory_si_scag)%r82d, &
            hio_mortality_canopy_si_scag         => this%hvars(ih_mortality_canopy_si_scag)%r82d, &
-           hio_mortality_understory_si_scag     => this%hvars(ih_mortality_understory_si_scag)%r82d )
+           hio_mortality_understory_si_scag     => this%hvars(ih_mortality_understory_si_scag)%r82d, &
+           hio_mortality_fire_si_scag           => this%hvars(ih_mortality_fire_si_scag)%r82d, &
+           hio_mortality_cambialburn_si_scag    => this%hvars(ih_mortality_cambialburn_si_scag)%r82d, &
+           hio_mortality_crownscorch_si_scag    => this%hvars(ih_mortality_crownscorch_si_scag))
 
         ! Break up associates for NAG compilers
         associate( hio_site_dstatus_si_pft              => this%hvars(ih_site_dstatus_si_pft)%r82d, &
@@ -3987,7 +3994,13 @@ contains
                         iscag = get_sizeage_class_index(ccohort%dbh,cpatch%age)
 
                         hio_nplant_si_scag(io_si,iscag) = hio_nplant_si_scag(io_si,iscag) + ccohort%n / m2_per_ha
-
+                        hio_mortality_fire_si_scag(io_si,iscag) = hio_mortality_fire_si_scag(io_si,iscag) + &
+                        ccohort%fire_mort * ccohort%n / m2_per_ha
+                        hio_mortality_cambialburn_si_scag(io_si,iscag) = hio_mortality_cambialburn_si_scag(io_si,iscag) + &
+                        ccohort%cambial_mort * ccohort%n / m2_per_ha
+                        hio_mortality_crownscorch_si_scag(io_si,iscag) = hio_mortality_crownscorch_si_scag(io_si,iscag) + &
+                        ccohort%crownfire_mort * ccohort%n / m2_per_ha
+                        
                         hio_nplant_si_scls(io_si,scls) = hio_nplant_si_scls(io_si,scls) + ccohort%n / m2_per_ha
 
 
@@ -7602,6 +7615,27 @@ contains
                use_default='inactive', avgflag='A', vtype=site_scag_r8,             &
                hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar,                                 &
                initialize=initialize_variables, index = ih_mortality_understory_si_scag)
+          
+          call this%set_history_var(vname='FATES_MORTALITY_FIRE_SZAP',              &
+               units = 'm-2 yr-1',                                                  &
+               long='fire mortality rate in number of plants per m2 per year in each size x age class', &
+               use_default='inactive', avgflag='A', vtype=site_scag_r8,             &
+               hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar,                 &
+               initialize=initialize_variables, index = ih_mortality_fire_si_scag)
+
+          call this%set_history_var(vname='FATES_MORTALITY_CAMBIALBURN_SZAP',              &
+               units = 'm-2 yr-1',                                                  &
+               long='cambial damage mortality rate in number of plants per m2 per year in each size x age class', &
+               use_default='inactive', avgflag='A', vtype=site_scag_r8,             &
+               hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar,                 &
+               initialize=initialize_variables, index = ih_mortality_cambialburn_si_scag)
+
+          call this%set_history_var(vname='FATES_MORTALITY_CROWNSCORCH_SZAP',              &
+               units = 'm-2 yr-1',                                                  &
+               long='crown scorch mortality rate in number of plants per m2 per year in each size x age class', &
+               use_default='inactive', avgflag='A', vtype=site_scag_r8,             &
+               hlms='CLM:ALM', upfreq=group_dyna_complx, ivar=ivar,                 &
+               initialize=initialize_variables, index = ih_mortality_crownscorch_si_scag)
 
           ! size x age x pft dimensioned
 
