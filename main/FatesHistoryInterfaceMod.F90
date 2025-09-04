@@ -3994,12 +3994,6 @@ contains
                         iscag = get_sizeage_class_index(ccohort%dbh,cpatch%age)
 
                         hio_nplant_si_scag(io_si,iscag) = hio_nplant_si_scag(io_si,iscag) + ccohort%n / m2_per_ha
-                        hio_mortality_fire_si_scag(io_si,iscag) = hio_mortality_fire_si_scag(io_si,iscag) + &
-                        ccohort%fire_mort * ccohort%n / m2_per_ha
-                        hio_mortality_cambialburn_si_scag(io_si,iscag) = hio_mortality_cambialburn_si_scag(io_si,iscag) + &
-                        ccohort%cambial_mort * ccohort%n / m2_per_ha
-                        hio_mortality_crownscorch_si_scag(io_si,iscag) = hio_mortality_crownscorch_si_scag(io_si,iscag) + &
-                        ccohort%crownfire_mort * ccohort%n / m2_per_ha
                         
                         hio_nplant_si_scls(io_si,scls) = hio_nplant_si_scls(io_si,scls) + ccohort%n / m2_per_ha
 
@@ -4539,6 +4533,13 @@ contains
                         sites(s)%fmort_rate_canopy(i_scls, ft) / m2_per_ha
                    hio_mortality_understory_si_scag(io_si,iscag) = hio_mortality_understory_si_scag(io_si,iscag) + &
                         sites(s)%fmort_rate_ustory(i_scls, ft) / m2_per_ha
+                        
+                   hio_mortality_fire_si_scag(io_si,iscag) = hio_mortality_fire_si_scag(io_si,iscag) + &
+                        (sites(s)%fmort_rate_canopy(i_scls, ft) + sites(s)%fmort_rate_ustory(i_scls, ft)) / m2_per_ha
+                   hio_mortality_cambialburn_si_scag(io_si,iscag) = hio_mortality_cambialburn_si_scag(io_si,iscag) + &
+                        sites(s)%fmort_rate_cambial(i_scls, ft) / m2_per_ha
+                   hio_mortality_crownscorch_si_scag(io_si,iscag) = hio_mortality_crownscorch_si_scag(io_si,iscag) + &
+                        sites(s)%fmort_rate_crown(i_scls, ft) / m2_per_ha
 
                    ! while in this loop, pass the fusion-induced growth rate flux to history
                    hio_growthflux_fusion_si_scpf(io_si,i_scpf) = hio_growthflux_fusion_si_scpf(io_si,i_scpf) + &
