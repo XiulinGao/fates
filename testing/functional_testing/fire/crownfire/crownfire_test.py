@@ -137,7 +137,6 @@ class CrownFireTest(FunctionalTest):
         for i, alpha in enumerate(smp_alpha_vals):
             dat = data_frame[data_frame["smp_alpha"] == alpha]
             dat = dat.sort_values("smp")
-            fmt.set_scientific(False)
            
             plt.plot(
                 dat.smp.values,
@@ -146,13 +145,15 @@ class CrownFireTest(FunctionalTest):
                 color=COLORS[i],
                 label=alpha,
             )
-            plt.xaxis.set_major_formatter(fmt)
-            plt.set_xticks([0, -2, -4, -6, -8, -10])
-        
-        
+            
         plt.xlabel("Soil matric potential (MPa)", fontsize=11)
         plt.ylabel("Live fuel moisture (%)", fontsize=11)
         plt.legend(loc="upper right", title="Soil matric potential coeff")
+        plt.set_xlim(0.0,-10.0)
+        fmt = ScalarFormatter(useOffset=False)
+        fmt.set_scientific(False)
+        plt.xaxis.set_major_formatter(fmt)
+        plt.set_xticks([0, -2, -4, -6, -8, -10])
 
         if save_fig:
             fig_name = os.path.join(plot_dir, "lfmc_plot.png")
