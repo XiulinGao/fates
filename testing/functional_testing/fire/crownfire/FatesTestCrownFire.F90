@@ -22,11 +22,6 @@ program FatesTestCrownFire
 
   ! CONSTANTS:
   character(len=*), parameter :: out_file = 'crownfire_out.nc' ! output file 
-  real(r8),         parameter :: lai = 3.0_r8                  ! leaf area index (for LFMC) [m2/m2]
-  real(r8),         parameter :: lai_beta = 0.15_r8            ! coefficient associate with LAI (for LFMC) [unitless]
-  real(r8),         parameter :: min_lfmc = 50.0_r8            ! min live fuel moisture (for LFMC) [%]
-  real(r8),         parameter :: coeff_lfmc = 30.0_r8          ! value adds to min_lfmc in response to change in smp and lai (for LFMC) [unitless]
-  real(r8),         parameter :: gamma_int = 0.0_r8            ! model coef. for interaction effect of swc and lai on LFMC [unitless]
   
   interface
 
@@ -144,14 +139,14 @@ subroutine TestPassCrownFI(CBH, CWC, passive_crown_fi)
   real(r8), parameter                :: CBH_min = 0.0_r8       ! min canopy base height [m]
   real(r8), parameter                :: CBH_max = 10.0_r8      ! max canopy base height [m]
   real(r8), parameter                :: CBH_inc = 1.0_r8       ! CBH increment to scale [m]
-  real(r8), parameter, dimension(6)  :: canopy_water_content = (/10.0_r8, 30.0_r8, 50.0_r8, 70.0_r8, 90.0_r8, 110.0_r8/) ! CWC to use
+  real(r8), parameter, dimension(5)  :: canopy_water_content = (/10.0_r8, 30.0_r8, 75.0_r8, 85.0_r8, 120.0_r8/) ! CWC to use
 
   !LOCALS:
   integer :: num_CBH ! size of CBH arrays
   integer :: i, j    ! looping indices
 
   ! allocate arrays
-  num_CBH = int((CBH_max - CBH_min) / CBH_inc +1)
+  num_CBH = int((CBH_max - CBH_min) / CBH_inc + 1)
   allocate(passive_crown_fi(num_CBH, size(canopy_water_content)))
   allocate(CBH(num_CBH))
   allocate(CWC(size(canopy_water_content)))
@@ -202,7 +197,7 @@ subroutine TestLiveFuelMoisture(smp, smp_alpha, LFMC)
   integer    :: i, j      ! looping indicies
 
   ! allocate arrays
-  num_smp = int((smp_max - smp_min) / smp_inc + 1)
+  num_smp = int((smp_max - smp_min) / abs(smp_inc) + 1)
   allocate(smp(num_smp))
   allocate(smp_alpha(size(smp_coef)))
   allocate(LFMC(num_smp, size(smp_coef)))
