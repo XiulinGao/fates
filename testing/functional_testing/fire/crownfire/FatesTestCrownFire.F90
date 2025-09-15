@@ -370,7 +370,7 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
     3, pasv_crwn_ID)
     
   ! register live fuel moisture content 
-  call RegisterVar(ncid, 'LFMC', (dimIDs(3:4)), type_double,  &
+  call RegisterVar(ncid, 'LFMC', dimIDs(3:4), type_double,  &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],         &
     [character(len=150) :: 'smp smp_alpha', '%', 'live fuel moisture content'], &
     3, LFMCID)
@@ -384,7 +384,7 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   ! register crowning index
   call RegisterVar(ncid, 'CI_FM10', dimIDs(5:5), type_double,  &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],         &
-    [character(len=150) :: 'CBD', 'm/min', 'wind speed at which a active crown fire is sustained, assuming fuel model 10'], &
+    [character(len=150) :: 'CBD', 'm/min', 'wind speed at which a active crown fire is sustained'], &
     3, CI_FM10_ID)
     
     
