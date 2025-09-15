@@ -134,6 +134,7 @@ class CrownFireTest(FunctionalTest):
 
         for i, alpha in enumerate(smp_alpha_vals):
             dat = data_frame[data_frame["smp_alpha"] == alpha]
+            dat = dat.sort_values("smp")
             plt.plot(
                 dat.smp.values,
                 dat["LFMC"].values,
