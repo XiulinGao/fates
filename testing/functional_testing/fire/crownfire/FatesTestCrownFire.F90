@@ -185,10 +185,10 @@ subroutine TestLiveFuelMoisture(smp, smp_alpha, LFMC)
   real(r8), parameter                :: smp_max = 0.0_r8       ! max soil matric potential [MPa]
   real(r8), parameter                :: smp_min = -10.0_r8     ! min soil matric potential [MPa]
   real(r8), parameter                :: smp_inc = -1.0_r8      ! smp increment to scale    [MPa]
-  real(r8), parameter, dimension(5)  :: smp_coef = (/0.1, 0.01, 0.2, 0.3, 0.05/)   ! model coeff associated with smp to use
+  real(r8), parameter, dimension(5)  :: smp_coef = (/0.1_r8, 0.09_r8, 0.2_r8, 0.5_r8, 0.05_r8/)   ! model coeff associated with smp to use
   real(r8), parameter                :: lai = 3.0_r8           ! leaf area index for LFMC  [m2/m2]
-  real(r8), parameter                :: min_lfmc = 50.0_r8     ! min LFMC [%]
-  real(r8), parameter                :: coef_lfmc = 30.0_r8    ! value add to min LFMC as a response to change in smp and lai [unitless]
+  real(r8), parameter                :: min_lfmc = 70.0_r8     ! min LFMC [%]
+  real(r8), parameter                :: coef_lfmc = 50.0_r8    ! value add to min LFMC as a response to change in smp and lai [unitless]
   real(r8), parameter                :: lai_beta = 0.15_r8     ! coefficient associate with lai for LFMC [unitless]
   real(r8), parameter                :: gamma_int = 0.0_r8     ! coefficient associate with the LAI and SMP interaction term
 
