@@ -1,5 +1,5 @@
 """
-Concrete class for running the ros functional test for FATES.
+Concrete class for running the crownfire functional test for FATES.
 """
 import os
 import numpy as np
@@ -139,7 +139,7 @@ class CrownFireTest(FunctionalTest):
                 dat["LFMC"].values,
                 lw=2,
                 color=COLORS[i],
-                label=smp_alpha,
+                label=alpha,
             )
 
         plt.xlabel("Soil matric potential (MPa)", fontsize=11)
