@@ -3,6 +3,8 @@ program FatesTestCrownFire
   use FatesConstantsMod,           only : r8 => fates_r8 
   use FatesArgumentUtils,          only : command_line_arg
   use FatesUnitTestParamReaderMod, only : fates_unit_test_param_reader
+  use SFParamsMod,                 only : SF_val_miner_total, SF_val_drying_ratio
+  use SFParamsMod,                 only : SF_val_part_dens
 
   implicit none
 
@@ -53,7 +55,7 @@ program FatesTestCrownFire
 
     end subroutine TestLiveFuelMoisture
 
-    subroutine TestCrownFireFM10(CBD, wind, ROS_acitive_FM10, CI_FM10)
+    subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
 
         use FatesConstantsMod,        only : r8 => fates_r8 
         use CrownFireEquationsMod,    only : CrownFireBehaveFM10
@@ -66,7 +68,7 @@ program FatesTestCrownFire
     end subroutine TestCrownFireFM10
 
     subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
-        smp, smp_alpha, LFMC, CBD, wind, ROS_acitive_FM10, CI_FM10)
+        smp, smp_alpha, LFMC, CBD, wind, ROS_active_FM10, CI_FM10)
 
         use FatesConstantsMod, only : r8 => fates_r8
         use FatesUnitTestIOMod,  only : OpenNCFile, CloseNCFile, RegisterNCDims
@@ -107,7 +109,7 @@ program FatesTestCrownFire
 
   ! write out data
   call WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
-        smp, smp_alpha, LFMC, CBD, wind, ROS_acitive_FM10, CI_FM10)
+        smp, smp_alpha, LFMC, CBD, wind, ROS_active_FM10, CI_FM10)
 
   ! deallocate arrays
   if (allocated(CBH)) deallocate(CBH)
@@ -118,7 +120,7 @@ program FatesTestCrownFire
   if(allocated(LFMC)) deallocate(LFMC)
   if(allocated(CBD)) deallocate(CBD)
   if(allocated(wind)) deallocate(wind)
-  if(allocated(ROS_acitive_FM10)) deallocate(ROS_acitive_FM10)
+  if(allocated(ROS_active_FM10)) deallocate(ROS_active_FM10)
   if(allocated(CI_FM10)) deallocate(CI_FM10)
 
 end program FatesTestCrownFire
@@ -247,7 +249,7 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_acitive_FM10, CI_FM10)
   real(r8), parameter                :: CBD_inc = 0.01_r8       ! CBD increment to scale [unitless]
   real(r8), parameter, dimension(6)  :: wind_vals = (/5.0_r8, 10.0_r8, 15.0_r8, 25.0_r8, 35.0_r8, 45.0_r8/)
   real(r8), parameter                :: fire_weather_index = 5000_r8 ! Nesterove fire weather index [unitless]
-  real(r8), parameter.               :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
+  real(r8), parameter                :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
   
   ! LOCALS:
   integer            :: num_CBD     ! size of canopy bulk density array
@@ -399,7 +401,7 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   call WriteVar(ncid, LFMCID, LFMC(:,:))
   call WriteVar(ncid, CBDID, CBD(:))
   call WriteVar(ncid, windID, wind(:))
-  call WriteVar(ncid, ROSACT_FM10_ID, ROS_acitive_FM10(:,:))
+  call WriteVar(ncid, ROSACT_FM10_ID, ROS_active_FM10(:,:))
   call WriteVar(ncid, CI_FM10_ID, CI_FM10(:))
   
   ! close file
