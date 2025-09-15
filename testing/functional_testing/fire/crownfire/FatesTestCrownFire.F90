@@ -3,8 +3,6 @@ program FatesTestCrownFire
   use FatesConstantsMod,           only : r8 => fates_r8 
   use FatesArgumentUtils,          only : command_line_arg
   use FatesUnitTestParamReaderMod, only : fates_unit_test_param_reader
-  use SFParamsMod,                 only : SF_val_miner_total, SF_val_drying_ratio
-  use SFParamsMod,                 only : SF_val_part_dens
 
   implicit none
 
@@ -14,7 +12,6 @@ program FatesTestCrownFire
   real(r8),         allocatable      :: CWC(:)                       ! canopy water content [%]
   real(r8),         allocatable      :: CBD(:)                       ! canopy bulk density in biomass [kg/m3]
   real(r8),         allocatable      :: CBH(:)                       ! canopy base height [m]
-  !real(r8),         allocatable      :: SAV(:)                       ! fuel surface area to volume ratio [/cm]
   real(r8),         allocatable      :: smp(:)                       ! soil matric potential [MPa]
   real(r8),         allocatable      :: smp_alpha(:)                 ! coefficient associate with smp for LFMC [unitless]
   real(r8),         allocatable      :: wind(:)                      ! wind speed [km/hr]
@@ -62,7 +59,7 @@ program FatesTestCrownFire
         implicit none
         real(r8), allocatable, intent(out)   :: CBD(:)
         real(r8), allocatable, intent(out)   :: wind(:)
-        real(r8), allocatable, intent(out)   :: ROS_acitive_FM10(:,:)
+        real(r8), allocatable, intent(out)   :: ROS_active_FM10(:,:)
         real(r8), allocatable, intent(out)   :: CI_FM10(:)
     
     end subroutine TestCrownFireFM10
@@ -234,6 +231,8 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_acitive_FM10, CI_FM10)
 
   use FatesConstantsMod,      only : r8 => fates_r8 
   use CrownFireEquationsMod,  only : CrownFireBehaveFM10
+  use SFParamsMod,                 only : SF_val_miner_total, SF_val_drying_ratio
+  use SFParamsMod,                 only : SF_val_part_dens
 
   implicit none
 
