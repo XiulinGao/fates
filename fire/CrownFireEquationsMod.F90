@@ -161,7 +161,7 @@ module CrownFireEquationsMod
 
 
   subroutine CrownFireBehaveFM10(drying_ratio, fire_weather_index, miner_total, part_dens, wind, &
-                                 canopy_bulk_density, ROS_active, CI)
+                                 canopy_bulk_density, ROS_active)
     !
     ! DESCRIPTION
     ! Calculate theoretical rate of spread for a active crown fire using
@@ -177,10 +177,10 @@ module CrownFireEquationsMod
     real(r8), intent(in)  :: fire_weather_index  ! Nesterov fire weather index 
     real(r8), intent(in)  :: miner_total         ! SPITFIRE parameter to set fractional mineral content per unit biomass [fraction]
     real(r8), intent(in)  :: part_dens           ! SPITFIRE parameter to set particle density for fuels [kg/m2]
-    real(r8), intent(in)  :: wind                ! Site wind speed [m/s]
+    real(r8), intent(in)  :: wind                ! Site wind speed [m/min]
     real(r8), intent(in)  :: canopy_bulk_density ! Canopy fuel bulk density [kg biomass / m3]               ! 
     real(r8), intent(out) :: ROS_active          ! Theoretical rate of spread a fully active crown fire using fuel model 10  [m/min]
-    real(r8), intent(out) :: CI                  ! Open wind speed to sustain an active crown fire using fuel model 10 [km/hr]
+   ! real(r8), intent(out) :: CI                  ! Open wind speed to sustain an active crown fire using fuel model 10 [km/hr]
 
     ! Local variables:
 
@@ -202,7 +202,7 @@ module CrownFireEquationsMod
     real(r8)                        :: fuel_moist10h     ! FMC of 10 hour fuel for FM 10 [fraction]
     real(r8)                        :: fuel_moist100h    ! FMC of 100 hour fuel for FM 10 [fraction]
     real(r8)                        :: fuel_moist_live   ! FMC of live fuels for FM 10 [fraction]
-    real(r8)                        :: midflame_wind     ! 40% of open wind speed 
+    real(r8)                        :: midflame_wind     ! 40% of open wind speed [m/min]
     real(r8)                        :: beta_fm10         ! packing ratio derived for fuel model 10 [unitless]
     real(r8)                        :: beta_op_fm10      ! optimum packing ratio for FM 10 [unitless]
     real(r8)                        :: beta_ratio_fm10   ! relative packing ratio for FM 10 [unitless]
@@ -285,9 +285,9 @@ module CrownFireEquationsMod
     ROS_active = ROS_active * 3.34_r8
 
     ! Calculate crowning index, which is used for calculating ROS_SA
-    CI = CrowningIndex(eps_fm10, q_ig_fm10, i_r_fm10, &
+   ! CI = CrowningIndex(eps_fm10, q_ig_fm10, i_r_fm10, &
                        canopy_bulk_density )
-    CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
+   ! CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
 
   end subroutine CrownFireBehaveFM10
 
