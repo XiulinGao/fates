@@ -185,7 +185,7 @@ subroutine TestLiveFuelMoisture(smp, smp_alpha, LFMC)
   real(r8), parameter                :: smp_max = 0.0_r8       ! max soil matric potential [MPa]
   real(r8), parameter                :: smp_min = -10.0_r8     ! min soil matric potential [MPa]
   real(r8), parameter                :: smp_inc = -1.0_r8      ! smp increment to scale    [MPa]
-  real(r8), parameter, dimension(5)  :: smp_coef = (/1E-6_r8, 3E-6_r8, 5E-6_r8, 7E-6_r8, 1E-5_r8/)   ! model coeff associated with smp to use
+  real(r8), parameter, dimension(5)  :: smp_coef = (/0.1, 0.01, 0.2, 0.3, 0.05/)   ! model coeff associated with smp to use
   real(r8), parameter                :: lai = 3.0_r8           ! leaf area index for LFMC  [m2/m2]
   real(r8), parameter                :: min_lfmc = 50.0_r8     ! min LFMC [%]
   real(r8), parameter                :: coef_lfmc = 30.0_r8    ! value add to min LFMC as a response to change in smp and lai [unitless]
@@ -239,10 +239,10 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
 
   ! CONSTANTS:
   real(r8), parameter                :: CBD_min = 0.0_r8        ! min canopy bulk density [kg/m3]
-  real(r8), parameter                :: CBD_max = 0.5_r8        ! max canopy bulk density [kg/m3]
+  real(r8), parameter                :: CBD_max = 0.3_r8        ! max canopy bulk density [kg/m3]
   real(r8), parameter                :: CBD_inc = 0.01_r8       ! CBD increment to scale [unitless]
   real(r8), parameter, dimension(6)  :: wind_vals = (/5.0_r8, 10.0_r8, 15.0_r8, 25.0_r8, 35.0_r8, 45.0_r8/)
-  real(r8), parameter                :: fire_weather_index = 5000_r8 ! Nesterove fire weather index [unitless]
+  real(r8), parameter                :: fire_weather_index = 10000_r8 ! Nesterove fire weather index [unitless]
   real(r8), parameter                :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
   
   ! LOCALS:
