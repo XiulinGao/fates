@@ -286,7 +286,7 @@ module CrownFireEquationsMod
 
     ! Calculate crowning index, which is used for calculating ROS_SA
    ! CI = CrowningIndex(eps_fm10, q_ig_fm10, i_r_fm10, &
-                       canopy_bulk_density )
+    !                   canopy_bulk_density )
    ! CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
 
   end subroutine CrownFireBehaveFM10
