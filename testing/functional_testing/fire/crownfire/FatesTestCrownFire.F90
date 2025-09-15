@@ -222,7 +222,7 @@ end subroutine TestLiveFuelMoisture
 
 !=========================================================================================
 
-subroutine TestCrownFireFM10(CBD, wind, ROS_acitive_FM10, CI_FM10)
+subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   !
   ! DESCRIPTION:
   ! Calculate fully active crown fire spread rate using fule model 10 over a range of CBD and wind speed
@@ -239,7 +239,7 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_acitive_FM10, CI_FM10)
   ! ARGUMENTS:
   real(r8), allocatable, intent(out) :: CBD(:)                  ! canopy bulk density in biomass [kg/m3]
   real(r8), allocatable, intent(out) :: wind(:)                 ! wind speed [km/hr]
-  real(r8), allocatable, intent(out) :: ROS_acitive_FM10(:,:)   ! fully active crown fire spread rate using fule model 10
+  real(r8), allocatable, intent(out) :: ROS_active_FM10(:,:)   ! fully active crown fire spread rate using fule model 10
   real(r8), allocatable, intent(out) :: CI_FM10(:)              ! crowning index using fule model 10 [km/hr]
 
   ! CONSTANTS:
@@ -260,7 +260,7 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_acitive_FM10, CI_FM10)
   num_CBD = int((CBD_max - CBD_min) / CBD_inc + 1)
   allocate(CBD(num_CBD))
   allocate(wind(size(wind_vals)))
-  allocate(ROS_acitive_FM10(num_CBD, size(wind_vals)))
+  allocate(ROS_active_FM10(num_CBD, size(wind_vals)))
   allocate(CI_FM10(num_CBD))
 
   do i = 1, num_CBD
@@ -280,7 +280,7 @@ end subroutine TestCrownFireFM10
 !=========================================================================================
 
 subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
-        smp, smp_alpha, LFMC, CBD, wind, ROS_acitive_FM10, CI_FM10)
+        smp, smp_alpha, LFMC, CBD, wind, ROS_active_FM10, CI_FM10)
   !
   ! DESCRIPTION:
   ! write out data from the test
