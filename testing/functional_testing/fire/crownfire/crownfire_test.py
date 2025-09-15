@@ -130,34 +130,29 @@ class CrownFireTest(FunctionalTest):
         min_smp = float(data_frame["smp"].min())
         max_lfmc = 150.0
 
-        fig, ax = blank_plot(0.0, -10.0, 150.0, 0.0, draw_horizontal_lines=True)
+        blank_plot(0.0, -10.0, 150.0, 0.0, draw_horizontal_lines=True)
 
         smp_alpha_vals = np.unique(data_frame.smp_alpha.values)
 
         for i, alpha in enumerate(smp_alpha_vals):
             dat = data_frame[data_frame["smp_alpha"] == alpha]
             dat = dat.sort_values("smp")
-            ax.plot(dat["smp"].values, dat["LFMC"].values, lw=2, label=str(alpha))
-            ax.set_xlabel("Soil matric potential (MPa)", fontsize=11)
-            ax.set_ylabel("Live fuel moisture (%)", fontsize=11)
-            ax.legend(loc="upper right", title="Soil matric potential coeff")
-            ax.set_xlim(0.0, -10.0) 
-            fmt = ScalarFormatter(useOffset=False)
             fmt.set_scientific(False)
-            ax.xaxis.set_major_formatter(fmt)
-            ax.set_xticks([0, -2, -4, -6, -8, -10])
-
-    #        plt.plot(
-    #            dat.smp.values,
-    #            dat["LFMC"].values,
-    #            lw=2,
-    #            color=COLORS[i],
-    #            label=alpha,
-    #        )
-
-     #   plt.xlabel("Soil matric potential (MPa)", fontsize=11)
-     #   plt.ylabel("Live fuel moisture (%)", fontsize=11)
-     #   plt.legend(loc="upper right", title="Soil matric potential coeff")
+           
+            plt.plot(
+                dat.smp.values,
+                dat["LFMC"].values,
+                lw=2,
+                color=COLORS[i],
+                label=alpha,
+            )
+            plt.xaxis.set_major_formatter(fmt)
+            plt.set_xticks([0, -2, -4, -6, -8, -10])
+        
+        
+        plt.xlabel("Soil matric potential (MPa)", fontsize=11)
+        plt.ylabel("Live fuel moisture (%)", fontsize=11)
+        plt.legend(loc="upper right", title="Soil matric potential coeff")
 
         if save_fig:
             fig_name = os.path.join(plot_dir, "lfmc_plot.png")
