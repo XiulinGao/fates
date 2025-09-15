@@ -161,7 +161,7 @@ module CrownFireEquationsMod
 
 
   subroutine CrownFireBehaveFM10(drying_ratio, fire_weather_index, miner_total, part_dens, wind, &
-                                 canopy_bulk_density, ROS_active, CI)
+                                 canopy_bulk_density, ROS_active)
     !
     ! DESCRIPTION
     ! Calculate theoretical rate of spread for a active crown fire using
@@ -180,7 +180,7 @@ module CrownFireEquationsMod
     real(r8), intent(in)  :: wind                ! Site wind speed [m/min]
     real(r8), intent(in)  :: canopy_bulk_density ! Canopy fuel bulk density [kg biomass / m3]               ! 
     real(r8), intent(out) :: ROS_active          ! Theoretical rate of spread a fully active crown fire using fuel model 10  [m/min]
-    real(r8), intent(out) :: CI                  ! Open wind speed to sustain an active crown fire using fuel model 10 [km/hr]
+    !real(r8), intent(out) :: CI                  ! Open wind speed to sustain an active crown fire using fuel model 10 [km/hr]
 
     ! Local variables:
 
@@ -285,9 +285,9 @@ module CrownFireEquationsMod
     ROS_active = ROS_active * 3.34_r8
 
     ! Calculate crowning index, which is used for calculating ROS_SA
-    CI = CrowningIndex(eps_fm10, q_ig_fm10, i_r_fm10, &
-                       canopy_bulk_density )
-    CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
+   ! CI = CrowningIndex(eps_fm10, q_ig_fm10, i_r_fm10, &
+   !                    canopy_bulk_density )
+   ! CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
 
   end subroutine CrownFireBehaveFM10
 
