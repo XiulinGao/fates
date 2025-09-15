@@ -126,9 +126,9 @@ class CrownFireTest(FunctionalTest):
         )
 
         min_smp = data_frame["smp"].min()
-        max_pass_fi = 5000
+        max_lfmc = 150
 
-        blank_plot(0.0,min_smp,max_pass_fi, 0.0, draw_horizontal_lines=True)
+        blank_plot(0.0,min_smp,max_lfmc, 0.0, draw_horizontal_lines=True)
 
         smp_alpha_vals = np.unique(data_frame.smp_alpha.values)
 
