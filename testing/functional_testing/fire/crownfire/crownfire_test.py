@@ -153,7 +153,7 @@ class CrownFireTest(FunctionalTest):
     #            lw=2,
     #            color=COLORS[i],
     #            label=alpha,
-            )
+    #        )
 
      #   plt.xlabel("Soil matric potential (MPa)", fontsize=11)
      #   plt.ylabel("Live fuel moisture (%)", fontsize=11)
