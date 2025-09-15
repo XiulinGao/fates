@@ -264,7 +264,7 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
     do j = 1, size(wind_vals)
         wind(j) = wind_vals(j) * kmhr_to_mmin  ! convert wind speed to m/min
         call CrownFireBehaveFM10(SF_val_drying_ratio, fire_weather_index, SF_val_miner_total, &
-        SF_val_part_dens, wind(j), CBD(i), ROS_active, CI)
+        SF_val_part_dens, wind(j), CBD(i), ROS_active)
         ROS_active_FM10(i, j) = ROS_active
         CI_FM10(i) = 0
     end do
