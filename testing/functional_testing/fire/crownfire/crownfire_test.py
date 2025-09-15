@@ -150,10 +150,6 @@ class CrownFireTest(FunctionalTest):
         plt.ylabel("Live fuel moisture (%)", fontsize=11)
         plt.legend(loc="upper right", title="Soil matric potential coeff")
         plt.xlim(0.0,-10.0)
-        #fmt = ScalarFormatter(useOffset=False)
-        #fmt.set_scientific(False)
-        #plt.xaxis.set_major_formatter(fmt)
-        #plt.set_xticks([0, -2, -4, -6, -8, -10])
 
         if save_fig:
             fig_name = os.path.join(plot_dir, "lfmc_plot.png")
@@ -172,7 +168,7 @@ class CrownFireTest(FunctionalTest):
             {
                 "CBD": np.tile(data.CBD, len(data.wind)),
                 "wind": np.repeat(data.wind, len(data.CBD)),
-                "ros_active_fm10": data.ROSACT_FM10.flatten(),
+                "ros_active_fm10": data.ROSACT_FM10.values.flatten(),
             }
         )
 

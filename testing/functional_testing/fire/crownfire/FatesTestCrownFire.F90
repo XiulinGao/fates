@@ -225,6 +225,10 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   !
 
   use FatesConstantsMod,      only : r8 => fates_r8 
+  use SFEquationsMod,    only : OptimumPackingRatio, ReactionIntensity
+  use SFEquationsMod,    only : HeatofPreignition, EffectiveHeatingNumber
+  use SFEquationsMod,    only : WindFactor, PropagatingFlux
+  use SFEquationsMod,    only : ForwardRateOfSpread
   use CrownFireEquationsMod,  only : CrownFireBehaveFM10
   use SFParamsMod,                 only : SF_val_miner_total, SF_val_drying_ratio
   use SFParamsMod,                 only : SF_val_part_dens
@@ -264,9 +268,9 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
     do j = 1, size(wind_vals)
         wind(j) = wind_vals(j) * kmhr_to_mmin  ! convert wind speed to m/min
         call CrownFireBehaveFM10(SF_val_drying_ratio, fire_weather_index, SF_val_miner_total, &
-        SF_val_part_dens, wind(j), CBD(i), ROS_active)
+        SF_val_part_dens, wind(j), CBD(i), ROS_active, CI)
         ROS_active_FM10(i, j) = ROS_active + 1.0_r8
-        CI_FM10(i) = 0
+        CI_FM10(i) = CI
     end do
   end do
 
