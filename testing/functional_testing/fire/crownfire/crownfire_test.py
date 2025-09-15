@@ -125,15 +125,15 @@ class CrownFireTest(FunctionalTest):
             }
         )
 
-        min_smp = data_frame["smp"].min()
-        max_lfmc = 150
+        min_smp = float(data_frame["smp"].min())
+        max_lfmc = 150.0
 
-        blank_plot(0.0,-10,150, 0.0, draw_horizontal_lines=True)
+        blank_plot(0.0, min_smp, max_lfmc, 0.0, draw_horizontal_lines=True)
 
         smp_alpha_vals = np.unique(data_frame.smp_alpha.values)
 
         for i, alpha in enumerate(smp_alpha_vals):
-            dat = data_frame[data_frame.smp_alpha == alpha]
+            dat = data_frame[data_frame["smp_alpha"] == alpha]
             plt.plot(
                 dat.smp.values,
                 dat["LFMC"].values,
@@ -169,7 +169,7 @@ class CrownFireTest(FunctionalTest):
 
         data_frame["wind_kmhr"] = data_frame.wind * MPERMIN_TO_KMPERHOUR  # match usual wind speed unit in crown fire plots
 
-        max_cbd = 0.5
+        max_cbd = 0.3
         max_ros_active = 100.0
 
         blank_plot(max_cbd, 0.0, max_ros_active, 0.0, draw_horizontal_lines=True)
