@@ -167,8 +167,7 @@ class CrownFireTest(FunctionalTest):
             }
         )
 
-        data_frame["wind_kmhr"] = data_frame.wind * MPERMIN_TO_KMPERHOUR
-        )  # match usual wind speed unit in crown fire plots
+        data_frame["wind_kmhr"] = data_frame.wind * MPERMIN_TO_KMPERHOUR  # match usual wind speed unit in crown fire plots
 
         max_cbd = 0.5
         max_ros_active = 100.0
