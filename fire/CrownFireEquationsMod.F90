@@ -171,7 +171,6 @@ module CrownFireEquationsMod
     use SFEquationsMod,    only : HeatofPreignition, EffectiveHeatingNumber
     use SFEquationsMod,    only : WindFactor, PropagatingFlux
     use SFEquationsMod,    only : ForwardRateOfSpread
-    use FatesFuelMod,      only : MoistureOfExtinction
 
     ! ARGUMENTS:
     real(r8), intent(in)  :: drying_ratio        ! SPITFIRE fuel parameters controlling fuel dying rate [unitless]
@@ -237,6 +236,8 @@ module CrownFireEquationsMod
     real(r8),parameter  :: sqft_cubicft_to_sqcm_cubiccm = 0.0328_r8    ! convert ft2/ft3 to cm2/cm3
     real(r8),parameter  :: ft_to_meter = 0.3048_r8                     ! convert ft to meter
     real(r8),parameter  :: km_per_hr_to_m_per_min = 16.6667_r8         ! convert km/hour to m/min for wind speed
+    real(r8),parameter  :: mef_a = 0.524_r8
+    real(r8),parameter  :: mef_b = 0.066_r8
 
     fuel_1h     = fuel_1h_ton * tonnes_acre_to_kg_m2
     fuel_10h    = fuel_10h_ton * tonnes_acre_to_kg_m2
@@ -251,10 +252,10 @@ module CrownFireEquationsMod
     fuel_moist10h    = exp(-1.0_r8 * ((fuel_sav10h/drying_ratio) * fire_weather_index))
     fuel_moist100h   = exp(-1.0_r8 * ((fuel_sav100h/drying_ratio) * fire_weather_index))
     fuel_moist_live  = exp(-1.0_r8 * ((fuel_savlive/drying_ratio) * fire_weather_index))
-    fuel_mef1h       = MoistureOfExtinction(fuel_sav1h)
-    fuel_mef10h      = MoistureOfExtinction(fuel_sav10h)
-    fuel_mef100h     = MoistureOfExtinction(fuel_sav100h)
-    fuel_mef_live    = MoistureOfExtinction(fuel_savlive)
+    fuel_mef1h       = mef_a - mef_b*log(fuel_sav1h)
+    fuel_mef10h      = mef_a - mef_b*log(fuel_sav10h)
+    fuel_mef100h     = mef_a - mef_b*log(fuel_sav100h)
+    fuel_mef_live    = mef_a - mef_b*log(fuel_savlive)
     fuel_depth       = fuel_depth_ft * ft_to_meter           !convert to meters
     fuel_bd          = total_fuel/fuel_depth                 !fuel bulk density (kg biomass/m3)
 
