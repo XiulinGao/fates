@@ -228,7 +228,7 @@ module CrownFireEquationsMod
     real(r8),parameter  :: sav_100h_ft = 30.0_r8                       ! BEHAVE model 100-hr SAV (ft2/ft3)
     real(r8),parameter  :: sav_live_ft  = 1650.0_r8                    ! BEHAVE model live SAV (ft2/ft3)
     real(r8),parameter  :: tonnes_acre_to_kg_m2 = 0.2241701_r8         ! convert tons/acre to kg/m2
-    real(r8),parameter  :: sqft_cubicft_to_sqm_cubicm = 0.03280844_r8  ! convert ft2/ft3 to m2/m3
+    real(r8),parameter  :: sqft_cubicft_to_sqm_cubicm = 3.28084_r8  ! convert ft2/ft3 to m2/m3
     real(r8),parameter  :: ft_to_meter = 0.3048_r8                     ! convert ft to meter
     real(r8),parameter  :: km_per_hr_to_m_per_min = 16.6667_r8         ! convert km/hour to m/min for wind speed
 
