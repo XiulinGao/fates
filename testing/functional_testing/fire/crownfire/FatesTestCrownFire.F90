@@ -225,6 +225,7 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   !
 
   use FatesConstantsMod,      only : r8 => fates_r8 
+  use FatesConstantsMod,      only : nearzero
   use SFEquationsMod,    only : OptimumPackingRatio, ReactionIntensity
   use SFEquationsMod,    only : HeatofPreignition, EffectiveHeatingNumber
   use SFEquationsMod,    only : WindFactor, PropagatingFlux
