@@ -15,6 +15,7 @@ program FatesTestCrownFire
   real(r8),         allocatable      :: smp(:)                       ! soil matric potential [MPa]
   real(r8),         allocatable      :: smp_alpha(:)                 ! coefficient associate with smp for LFMC [unitless]
   real(r8),         allocatable      :: wind(:)                      ! wind speed [km/hr]
+  real(r8),         allocatable      :: drying_ratio(:)              ! drying ratio [unitless]
   real(r8),         allocatable      :: passive_crown_fi(:,:)        ! min surface fire intensity to ignite crown fuel [kW/m]
   real(r8),         allocatable      :: CI_FM10(:,:)                 ! open wind speed at which a fully active crown fire is maintained using fule model 10 [km/hr]
   real(r8),         allocatable      :: LFMC(:,:)                    ! live fuel moisture content [%]
@@ -104,7 +105,7 @@ program FatesTestCrownFire
 
   print *, 'CBD(mid)=', CBD((size(CBD)+1)/2)
   print *, 'wind(1:6)[m/min]=', wind(1:min(6,size(wind)))
-  print *, 'drying_ratio(1:6)=', drying_ratio(1:min(6,size(wind)))
+  print *, 'drying_ratio(1:6)=', drying_ratio(1:min(6,size(drying_ratio)))
   print *, 'ROS(1:6,1)=', ROS_active_FM10(1:min(6,size(ROS_active_FM10)),1)
   print *, 'CI (1:6,1)=', CI_FM10(1:min(6,size(CI_FM10)),1)
 
@@ -418,7 +419,7 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
     3, ROSACT_FM10_ID)
     
   ! register crowning index
-  call RegisterVar(ncid, 'CI_FM10', dimIDs(/dimIDs(5),dimIDs(7)/), type_double,  &
+  call RegisterVar(ncid, 'CI_FM10', (/dimIDs(5),dimIDs(7)/), type_double,  &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],         &
     [character(len=150) :: 'CBD dratio', 'm/min', 'wind speed at which a active crown fire is sustained'], &
     3, CI_FM10_ID)
