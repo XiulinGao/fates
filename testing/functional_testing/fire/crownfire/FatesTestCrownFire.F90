@@ -50,6 +50,7 @@ program FatesTestCrownFire
     subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
 
         use FatesConstantsMod,        only : r8 => fates_r8 
+        use FatesConstantsMod,        only : nearzero
         use CrownFireEquationsMod,    only : CrownFireBehaveFM10
         implicit none
         real(r8), allocatable, intent(out)   :: CBD(:)
@@ -98,6 +99,12 @@ program FatesTestCrownFire
 
   ! calculate active crown fire spread rate and crowning index using fuel model 10
   call TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
+  
+  print *, 'CBD(mid)=', CBD((size(CBD)+1)/2)
+  print *, 'wind(1:6)[m/min]=', wind(1:min(6,size(wind)))
+  print *, 'ROS(1:6)=', ROS_active_FM10(1:min(6,size(ROS_active_FM10)))
+  print *, 'CI (1:6)=', CI_FM10(1:min(6,size(CI_FM10)))
+
 
   ! write out data
   call WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
