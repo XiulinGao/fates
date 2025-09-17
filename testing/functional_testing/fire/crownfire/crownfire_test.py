@@ -211,7 +211,7 @@ class CrownFireTest(FunctionalTest):
         data_frame["CI_kmhr"] = data_frame.CI_FM10* MPERMIN_TO_KMPERHOUR
 
         max_CBD = data_frame["CBD"].max()
-        max_CI = 100
+        max_CI = data_frame["CI_kmhr"].max()
 
         blank_plot(max_CBD, 0.0, max_CI, 0.0, draw_horizontal_lines=True)
 
