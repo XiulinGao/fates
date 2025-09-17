@@ -18,7 +18,7 @@ program FatesTestCrownFire
   real(r8),         allocatable      :: passive_crown_fi(:,:)        ! min surface fire intensity to ignite crown fuel [kW/m]
   real(r8),         allocatable      :: CI_FM10(:)                   ! open wind speed at which a fully active crown fire is maintained using fule model 10 [km/hr]
   real(r8),         allocatable      :: LFMC(:,:)                    ! live fuel moisture content [%]
-  real(r8),         allocatable      :: ROS_active_FM10(:,:)         ! active crown fire spread rate using fuel model 10 [m/min] 
+  real(r8),         allocatable      :: ROS_active_FM10(:)         ! active crown fire spread rate using fuel model 10 [m/min] 
 
   ! CONSTANTS:
   character(len=*), parameter :: out_file = 'crownfire_out.nc' ! output file 
@@ -54,7 +54,7 @@ program FatesTestCrownFire
         implicit none
         real(r8), allocatable, intent(out)   :: CBD(:)
         real(r8), allocatable, intent(out)   :: wind(:)
-        real(r8), allocatable, intent(out)   :: ROS_active_FM10(:,:)
+        real(r8), allocatable, intent(out)   :: ROS_active_FM10(:)
         real(r8), allocatable, intent(out)   :: CI_FM10(:)
     
     end subroutine TestCrownFireFM10
@@ -76,7 +76,7 @@ program FatesTestCrownFire
         real(r8),             intent(in)  :: LFMC(:,:)
         real(r8),             intent(in)  :: CBD(:)
         real(r8),             intent(in)  :: wind(:)
-        real(r8),             intent(in)  :: ROS_active_FM10(:,:)
+        real(r8),             intent(in)  :: ROS_active_FM10(:)
         real(r8),             intent(in)  :: CI_FM10(:)
 
     end subroutine WriteCrownFireData
@@ -238,40 +238,54 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   ! ARGUMENTS:
   real(r8), allocatable, intent(out) :: CBD(:)                  ! canopy bulk density in biomass [kg/m3]
   real(r8), allocatable, intent(out) :: wind(:)                 ! wind speed [km/hr]
-  real(r8), allocatable, intent(out) :: ROS_active_FM10(:,:)   ! fully active crown fire spread rate using fule model 10
+  real(r8), allocatable, intent(out) :: ROS_active_FM10(:)      ! fully active crown fire spread rate using fule model 10
   real(r8), allocatable, intent(out) :: CI_FM10(:)              ! crowning index using fule model 10 [km/hr]
 
   ! CONSTANTS:
   real(r8), parameter                :: CBD_min = 0.0_r8        ! min canopy bulk density [kg/m3]
   real(r8), parameter                :: CBD_max = 0.3_r8        ! max canopy bulk density [kg/m3]
   real(r8), parameter                :: CBD_inc = 0.01_r8       ! CBD increment to scale [unitless]
-  real(r8), parameter, dimension(6)  :: wind_vals = (/5.0_r8, 10.0_r8, 15.0_r8, 25.0_r8, 35.0_r8, 45.0_r8/)
-  real(r8), parameter                :: fire_weather_index = 500.0_r8 ! Nesterove fire weather index [unitless]
+  real(r8), parameter                :: wind_min = 0.0_r8
+  real(r8), parameter                :: wind_max = 50.0_r8
+  real(r8), parameter                :: wind_inc = 1.0_r8
+  real(r8), parameter                :: cbd_ref = 0.2_r8
+  real(r8), parameter                :: wind_ref = 20.0_r8
+  real(r8), parameter                :: fire_weather_index = 5000.0_r8 ! Nesterove fire weather index [unitless]
   real(r8), parameter                :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
   
   ! LOCALS:
   integer            :: num_CBD     ! size of canopy bulk density array
-  integer            :: i, j        ! looping indicies
+  integer            :: num_wind
+  integer            :: i, j           ! looping indicies
   real(r8)           :: ROS_active  ! ROS_active output from CrownFireBehaveFM10 [m/min]
   real(r8)           :: CI          ! CI output from CrownFireBehaveFM10 [m/min]
 
   ! allocate arrays
   num_CBD = int((CBD_max - CBD_min) / CBD_inc + 1)
+  num_wind = int((wind_max - wind_min) / wind_inc + 1)
   allocate(CBD(num_CBD))
-  allocate(wind(size(wind_vals)))
-  allocate(ROS_active_FM10(num_CBD, size(wind_vals)))
+  allocate(wind(num_wind))
+  allocate(ROS_active_FM10(num_wind))
   allocate(CI_FM10(num_CBD))
+
+  wind_ref = wind_ref * kmhr_to_mmin
 
   do i = 1, num_CBD
     CBD(i) = CBD_min + CBD_inc * (i-1)
 
-    do j = 1, size(wind_vals)
-        wind(j) = wind_vals(j) * kmhr_to_mmin  ! convert wind speed to m/min
-        call CrownFireBehaveFM10(SF_val_drying_ratio, fire_weather_index, SF_val_miner_total, &
-        SF_val_part_dens, wind(j), CBD(i), ROS_active)
-        ROS_active_FM10(i, j) = ROS_active
-        CI_FM10(i) = 0
-    end do
+    call CrownFireBehaveFM10(SF_val_drying_ratio, fire_weather_index, SF_val_miner_total, &
+      SF_val_part_dens, wind_ref, CBD(i), ROS_active, CI)
+    CI_FM10(i) = CI
+
+  end do
+
+  do j = 1, num_wind
+    wind(j) = (wind_min + wind_inc * (j-1)) * kmhr_to_mmin  ! convert wind speed to m/min
+
+    call CrownFireBehaveFM10(SF_val_drying_ratio, fire_weather_index, SF_val_miner_total, &
+      SF_val_part_dens, wind(j), cbd_ref, ROS_active, CI)
+
+    ROS_active_FM10(j) = ROS_active
   end do
 
 end subroutine TestCrownFireFM10
@@ -301,7 +315,7 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   real(r8),             intent(in)  :: LFMC(:,:)
   real(r8),             intent(in)  :: CBD(:)
   real(r8),             intent(in)  :: wind(:)
-  real(r8),             intent(in)  :: ROS_active_FM10(:,:)
+  real(r8),             intent(in)  :: ROS_active_FM10(:)
   real(r8),             intent(in)  :: CI_FM10(:)
 
   ! LOCALS:
@@ -375,9 +389,9 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
     3, LFMCID)
     
   ! register active crown fire spread rate using fuel model 10
-  call RegisterVar(ncid, 'ROSACT_FM10', dimIDs(5:6), type_double,  &
+  call RegisterVar(ncid, 'ROSACT_FM10', dimIDs(6:6), type_double,  &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],         &
-    [character(len=150) :: 'CBD wind', 'm/min', 'active crown fire ROS using fuel model 10'], &
+    [character(len=150) :: 'wind', 'm/min', 'active crown fire ROS using fuel model 10'], &
     3, ROSACT_FM10_ID)
     
   ! register crowning index
@@ -399,7 +413,7 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   call WriteVar(ncid, LFMCID, LFMC(:,:))
   call WriteVar(ncid, CBDID, CBD(:))
   call WriteVar(ncid, windID, wind(:))
-  call WriteVar(ncid, ROSACT_FM10_ID, ROS_active_FM10(:,:))
+  call WriteVar(ncid, ROSACT_FM10_ID, ROS_active_FM10(:))
   call WriteVar(ncid, CI_FM10_ID, CI_FM10(:))
   
   ! close file

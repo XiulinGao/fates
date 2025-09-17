@@ -166,36 +166,27 @@ class CrownFireTest(FunctionalTest):
         """
         data_frame = pd.DataFrame(
             {
-                "CBD": np.tile(data.CBD, len(data.wind)),
-                "wind": np.repeat(data.wind, len(data.CBD)),
+                "wind": data.wind,
                 "ros_active_fm10": data.ROSACT_FM10.values.flatten(),
             }
         )
 
         data_frame["wind_kmhr"] = data_frame.wind * MPERMIN_TO_KMPERHOUR  # match usual wind speed unit in crown fire plots
 
-        max_cbd = 0.3
-        max_ros_active = 100.0
+        max_wind = data_frame["wind_kmhr"].max()
+        max_ros_active = data_frame["ros_active_fm10"].max()
 
-        blank_plot(max_cbd, 0.0, max_ros_active, 0.0, draw_horizontal_lines=True)
+        blank_plot(max_wind, 0.0, max_ros_active, 0.0, draw_horizontal_lines=True)
 
-        wind_vals = np.unique(data_frame.wind_kmhr.values)
-        colors = COLORS
-        colors.reverse()
-
-        for i, ws in enumerate(wind_vals):
-            dat = data_frame[data_frame.wind_kmhr == ws]
-            plt.plot(
-                dat.CBD.values,
-                dat["ros_active_fm10"].values,
-                lw=2,
-                color=colors[i],
-                label=ws,
+        plt.plot(
+            data_frame.wind.values,
+            data_frame["ros_active_fm10"].values,
+            lw=2,
+            color="k",
             )
 
-        plt.xlabel("Canopy bulk density (kg m$^{-3}$)", fontsize=11)
+        plt.xlabel("Wind speed (km hr$^{-1}$)", fontsize=11)
         plt.ylabel("Active crown fire ROS (m min$^{-1}$)", fontsize=11)
-        plt.legend(loc="upper right", title="Wind speed (km hr$^{-1}$)")
 
         if save_fig:
             fig_name = os.path.join(plot_dir, "ros_active_plot.png")
