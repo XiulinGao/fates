@@ -179,7 +179,7 @@ class CrownFireTest(FunctionalTest):
         blank_plot(max_wind, 0.0, max_ros_active, 0.0, draw_horizontal_lines=True)
 
         plt.plot(
-            data_frame.wind.values,
+            data_frame.wind_kmhr.values,
             data_frame["ros_active_fm10"].values,
             lw=2,
             color="k",
