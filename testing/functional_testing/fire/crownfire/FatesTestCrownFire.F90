@@ -99,7 +99,7 @@ program FatesTestCrownFire
 
   ! calculate active crown fire spread rate and crowning index using fuel model 10
   call TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
-  
+
   print *, 'CBD(mid)=', CBD((size(CBD)+1)/2)
   print *, 'wind(1:6)[m/min]=', wind(1:min(6,size(wind)))
   print *, 'ROS(1:6)=', ROS_active_FM10(1:min(6,size(ROS_active_FM10)))
@@ -258,7 +258,7 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   real(r8), parameter                :: wind_inc = 1.0_r8
   real(r8), parameter                :: cbd_ref = 0.2_r8
   real(r8), parameter                :: wind_ref = 350.0_r8
-  real(r8), parameter                :: fire_weather_index = 5000.0_r8 ! Nesterove fire weather index [unitless]
+  real(r8), parameter                :: fire_weather_index = 10000.0_r8 ! Nesterove fire weather index [unitless]
   real(r8), parameter                :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
   
   ! LOCALS:
