@@ -249,7 +249,7 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   real(r8), parameter                :: wind_max = 50.0_r8
   real(r8), parameter                :: wind_inc = 1.0_r8
   real(r8), parameter                :: cbd_ref = 0.2_r8
-  real(r8), parameter                :: wind_ref = 20.0_r8
+  real(r8), parameter                :: wind_ref = 350.0_r8
   real(r8), parameter                :: fire_weather_index = 5000.0_r8 ! Nesterove fire weather index [unitless]
   real(r8), parameter                :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
   
@@ -267,8 +267,6 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   allocate(wind(num_wind))
   allocate(ROS_active_FM10(num_wind))
   allocate(CI_FM10(num_CBD))
-
-  wind_ref = wind_ref * kmhr_to_mmin
 
   do i = 1, num_CBD
     CBD(i) = CBD_min + CBD_inc * (i-1)
