@@ -165,8 +165,9 @@ class CrownFireTest(FunctionalTest):
             plot_dir (str): if saving figure, where to write to
         """
         data_frame = pd.DataFrame(
-            {   "wind": np.tile(data.wind, len(data.drying_ratio)),
-                "drying_ratio": np.repeat(data.drying_ratio, len(data.wind)),
+            {   
+                "wind": np.tile(data.wind, len(data.dratio)),
+                "drying_ratio": np.repeat(data.dratio, len(data.wind)),
                 "ros_active_fm10": data.ROSACT_FM10.values.flatten(),
             }
         )
@@ -209,8 +210,8 @@ class CrownFireTest(FunctionalTest):
         """
         data_frame = pd.DataFrame(
             {
-                "CBD": data.CBD,
-                "drying_ratio": data.drying_ratio,
+                "CBD": np.tile(data.CBD, len(data.dratio)),
+                "drying_ratio": np.repeat(data.dratio, len(data.CBD)),
                 "CI_FM10": data.CI_FM10.values.flatten(),
             }
         )

@@ -262,7 +262,7 @@ subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
   real(r8), parameter, dimension(5)  :: dratio_vals = (/1000.0_r8, 3000.0_r8, 8000.0_r8, 15000.0_r8, 45000.0_r8/) ! drying ratio values to use
   real(r8), parameter                :: cbd_ref = 0.2_r8        ! reference canopy bulk density [kg/m3]
   real(r8), parameter                :: wind_ref = 350.0_r8     ! reference wind speed [m/min]
-  real(r8), parameter                :: fire_weather_index = 10000.0_r8 ! Nesterove fire weather index [unitless]
+  real(r8), parameter                :: fire_weather_index = 5000.0_r8 ! Nesterove fire weather index [unitless]
   real(r8), parameter                :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
   
   ! LOCALS:
@@ -299,7 +299,7 @@ subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
     do j = 1, size(dratio_vals)
       drying_ratio(j) = dratio_vals(j)
       call CrownFireBehaveFM10(drying_ratio(j), fire_weather_index, SF_val_miner_total, &
-      SF_val_part_dens, wind(j), cbd_ref, ROS_active, CI)
+      SF_val_part_dens, wind(i), cbd_ref, ROS_active, CI)
       ROS_active_FM10(i, j) = ROS_active
 
     end do
