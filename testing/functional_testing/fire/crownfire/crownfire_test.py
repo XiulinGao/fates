@@ -103,8 +103,8 @@ class CrownFireTest(FunctionalTest):
             )
 
         plt.xlabel("Canopy base height (m)", fontsize=11)
-        plt.ylabel("Threshold fire intensity to ignite crown fuels", fontsize=11)
-        plt.legend(loc="upper left", title="Canopy water content")
+        plt.ylabel("Threshold fire intensity to ignite crown fuels (kW m$^{-1}$)", fontsize=11)
+        plt.legend(loc="upper left", title="Canopy water content (%)")
 
         if save_fig:
             fig_name = os.path.join(plot_dir, "passcrown_fi_plot.png")
@@ -165,8 +165,8 @@ class CrownFireTest(FunctionalTest):
             plot_dir (str): if saving figure, where to write to
         """
         data_frame = pd.DataFrame(
-            {
-                "wind": data.wind,
+            {   "wind": np.tile(data.wind, len(data.drying_ratio)),
+                "drying_ratio": np.repeat(data.drying_ratio, len(data.wind)),
                 "ros_active_fm10": data.ROSACT_FM10.values.flatten(),
             }
         )
@@ -178,15 +178,21 @@ class CrownFireTest(FunctionalTest):
 
         blank_plot(max_wind, 0.0, max_ros_active, 0.0, draw_horizontal_lines=True)
 
-        plt.plot(
-            data_frame.wind_kmhr.values,
-            data_frame["ros_active_fm10"].values,
+        dr_vals = np.unique(data_frame.drying_ratio.values)
+        for i, dr in enumerate(dr_vals):
+            dat = data_frame[data_frame["drying_ratio"] == dr]
+
+            plt.plot(
+            dat.wind_kmhr.values,
+            dat["ros_active_fm10"].values,
             lw=2,
-            color="k",
+            color=COLORS[i],
+            label = dr,
             )
 
         plt.xlabel("Wind speed (km hr$^{-1}$)", fontsize=11)
         plt.ylabel("Active crown fire ROS (m min$^{-1}$)", fontsize=11)
+        plt.legend(loc="upper right", title="Drying ratio")
 
         if save_fig:
             fig_name = os.path.join(plot_dir, "ros_active_plot.png")
@@ -204,6 +210,7 @@ class CrownFireTest(FunctionalTest):
         data_frame = pd.DataFrame(
             {
                 "CBD": data.CBD,
+                "drying_ratio": data.drying_ratio,
                 "CI_FM10": data.CI_FM10.values.flatten(),
             }
         )
@@ -215,15 +222,22 @@ class CrownFireTest(FunctionalTest):
 
         blank_plot(max_CBD, 0.0, max_CI, 0.0, draw_horizontal_lines=True)
 
-        plt.plot(
-            data_frame.CBD.values,
-            data_frame["CI_kmhr"].values,
+        dr_vals = np.unique(data_frame.drying_ratio.values)
+
+        for i, dr in enumerate(dr_vals):
+            dat = data_frame[data_frame["drying_ratio"] == dr]
+
+            plt.plot(
+            dat.CBD.values,
+            dat["CI_kmhr"].values,
             lw=2,
-            color="k",
-        )
+            color=COLORS[i],
+            label = dr
+            )
 
         plt.xlabel("Canopy bulk density (kg m$^{-3}$)", fontsize=11)
         plt.ylabel("Crowning index (km hr$^{-1}$)", fontsize=11)
+        plt.legend(loc = "upper right", title="Drying ratio")
 
         if save_fig:
             fig_name = os.path.join(plot_dir, "ci_plot.png")

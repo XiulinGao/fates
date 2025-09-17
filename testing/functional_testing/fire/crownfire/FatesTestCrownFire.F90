@@ -16,9 +16,9 @@ program FatesTestCrownFire
   real(r8),         allocatable      :: smp_alpha(:)                 ! coefficient associate with smp for LFMC [unitless]
   real(r8),         allocatable      :: wind(:)                      ! wind speed [km/hr]
   real(r8),         allocatable      :: passive_crown_fi(:,:)        ! min surface fire intensity to ignite crown fuel [kW/m]
-  real(r8),         allocatable      :: CI_FM10(:)                   ! open wind speed at which a fully active crown fire is maintained using fule model 10 [km/hr]
+  real(r8),         allocatable      :: CI_FM10(:,:)                 ! open wind speed at which a fully active crown fire is maintained using fule model 10 [km/hr]
   real(r8),         allocatable      :: LFMC(:,:)                    ! live fuel moisture content [%]
-  real(r8),         allocatable      :: ROS_active_FM10(:)         ! active crown fire spread rate using fuel model 10 [m/min] 
+  real(r8),         allocatable      :: ROS_active_FM10(:,:)         ! active crown fire spread rate using fuel model 10 [m/min] 
 
   ! CONSTANTS:
   character(len=*), parameter :: out_file = 'crownfire_out.nc' ! output file 
@@ -47,7 +47,7 @@ program FatesTestCrownFire
 
     end subroutine TestLiveFuelMoisture
 
-    subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
+    subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
 
         use FatesConstantsMod,        only : r8 => fates_r8 
         use FatesConstantsMod,        only : nearzero
@@ -55,13 +55,14 @@ program FatesTestCrownFire
         implicit none
         real(r8), allocatable, intent(out)   :: CBD(:)
         real(r8), allocatable, intent(out)   :: wind(:)
-        real(r8), allocatable, intent(out)   :: ROS_active_FM10(:)
-        real(r8), allocatable, intent(out)   :: CI_FM10(:)
+        real(r8), allocatable, intent(out)   :: drying_ratio(:)
+        real(r8), allocatable, intent(out)   :: ROS_active_FM10(:,:)
+        real(r8), allocatable, intent(out)   :: CI_FM10(:,:)
     
     end subroutine TestCrownFireFM10
 
     subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
-        smp, smp_alpha, LFMC, CBD, wind, ROS_active_FM10, CI_FM10)
+        smp, smp_alpha, LFMC, CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
 
         use FatesConstantsMod, only : r8 => fates_r8
         use FatesUnitTestIOMod,  only : OpenNCFile, CloseNCFile, RegisterNCDims
@@ -77,8 +78,9 @@ program FatesTestCrownFire
         real(r8),             intent(in)  :: LFMC(:,:)
         real(r8),             intent(in)  :: CBD(:)
         real(r8),             intent(in)  :: wind(:)
-        real(r8),             intent(in)  :: ROS_active_FM10(:)
-        real(r8),             intent(in)  :: CI_FM10(:)
+        real(r8),             intent(in)  :: drying_ratio(:)
+        real(r8),             intent(in)  :: ROS_active_FM10(:,:)
+        real(r8),             intent(in)  :: CI_FM10(:,:)
 
     end subroutine WriteCrownFireData
   
@@ -98,17 +100,18 @@ program FatesTestCrownFire
   call TestLiveFuelMoisture(smp, smp_alpha, LFMC)
 
   ! calculate active crown fire spread rate and crowning index using fuel model 10
-  call TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
+  call TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
 
   print *, 'CBD(mid)=', CBD((size(CBD)+1)/2)
   print *, 'wind(1:6)[m/min]=', wind(1:min(6,size(wind)))
-  print *, 'ROS(1:6)=', ROS_active_FM10(1:min(6,size(ROS_active_FM10)))
-  print *, 'CI (1:6)=', CI_FM10(1:min(6,size(CI_FM10)))
+  print *, 'drying_ratio(1:6)=', drying_ratio(1:min(6,size(wind)))
+  print *, 'ROS(1:6,1)=', ROS_active_FM10(1:min(6,size(ROS_active_FM10)),1)
+  print *, 'CI (1:6,1)=', CI_FM10(1:min(6,size(CI_FM10)),1)
 
 
   ! write out data
   call WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
-        smp, smp_alpha, LFMC, CBD, wind, ROS_active_FM10, CI_FM10)
+        smp, smp_alpha, LFMC, CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
 
   ! deallocate arrays
   if (allocated(CBH)) deallocate(CBH)
@@ -119,6 +122,7 @@ program FatesTestCrownFire
   if(allocated(LFMC)) deallocate(LFMC)
   if(allocated(CBD)) deallocate(CBD)
   if(allocated(wind)) deallocate(wind)
+  if(allocated(drying_ratio)) deallocate(drying_ratio)
   if(allocated(ROS_active_FM10)) deallocate(ROS_active_FM10)
   if(allocated(CI_FM10)) deallocate(CI_FM10)
 
@@ -224,7 +228,7 @@ end subroutine TestLiveFuelMoisture
 
 !=========================================================================================
 
-subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
+subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
   !
   ! DESCRIPTION:
   ! Calculate fully active crown fire spread rate using fule model 10 over a range of CBD and wind speed
@@ -233,40 +237,37 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
 
   use FatesConstantsMod,      only : r8 => fates_r8 
   use FatesConstantsMod,      only : nearzero
-  use SFEquationsMod,    only : OptimumPackingRatio, ReactionIntensity
-  use SFEquationsMod,    only : HeatofPreignition, EffectiveHeatingNumber
-  use SFEquationsMod,    only : WindFactor, PropagatingFlux
-  use SFEquationsMod,    only : ForwardRateOfSpread
-  use CrownFireEquationsMod,  only : CrownFireBehaveFM10
-  use SFParamsMod,                 only : SF_val_miner_total, SF_val_drying_ratio
+  use SFParamsMod,                 only : SF_val_miner_total
   use SFParamsMod,                 only : SF_val_part_dens
-  use SFParamsMod,                 only : SF_val_fuel_energy, SF_val_miner_damp
+  use CrownFireEquationsMod,  only : CrownFireBehaveFM10
+  
 
   implicit none
 
   ! ARGUMENTS:
-  real(r8), allocatable, intent(out) :: CBD(:)                  ! canopy bulk density in biomass [kg/m3]
-  real(r8), allocatable, intent(out) :: wind(:)                 ! wind speed [km/hr]
-  real(r8), allocatable, intent(out) :: ROS_active_FM10(:)      ! fully active crown fire spread rate using fule model 10
-  real(r8), allocatable, intent(out) :: CI_FM10(:)              ! crowning index using fule model 10 [km/hr]
+  real(r8), allocatable, intent(out) :: CBD(:)                    ! canopy bulk density in biomass [kg/m3]
+  real(r8), allocatable, intent(out) :: wind(:)                   ! wind speed [km/hr]
+  real(r8), allocatable, intent(out) :: drying_ratio(:)           ! drying ratio that controls how fast fuel dries out [unitless]
+  real(r8), allocatable, intent(out) :: ROS_active_FM10(:,:)      ! fully active crown fire spread rate using fule model 10
+  real(r8), allocatable, intent(out) :: CI_FM10(:,:)              ! crowning index using fule model 10 [km/hr]
 
   ! CONSTANTS:
   real(r8), parameter                :: CBD_min = 0.0_r8        ! min canopy bulk density [kg/m3]
   real(r8), parameter                :: CBD_max = 0.3_r8        ! max canopy bulk density [kg/m3]
   real(r8), parameter                :: CBD_inc = 0.01_r8       ! CBD increment to scale [unitless]
-  real(r8), parameter                :: wind_min = 0.0_r8
-  real(r8), parameter                :: wind_max = 50.0_r8
-  real(r8), parameter                :: wind_inc = 1.0_r8
-  real(r8), parameter                :: cbd_ref = 0.2_r8
-  real(r8), parameter                :: wind_ref = 350.0_r8
+  real(r8), parameter                :: wind_min = 0.0_r8       ! min open wind speed [km/hr]
+  real(r8), parameter                :: wind_max = 50.0_r8      ! max open wind speed [km/hr]
+  real(r8), parameter                :: wind_inc = 1.0_r8       ! wind increment to scale [km/hr]
+  real(r8), parameter, dimension(5)  :: dratio_vals = (/1000.0_r8, 3000.0_r8, 8000.0_r8, 15000.0_r8, 45000.0_r8/) ! drying ratio values to use
+  real(r8), parameter                :: cbd_ref = 0.2_r8        ! reference canopy bulk density [kg/m3]
+  real(r8), parameter                :: wind_ref = 350.0_r8     ! reference wind speed [m/min]
   real(r8), parameter                :: fire_weather_index = 10000.0_r8 ! Nesterove fire weather index [unitless]
   real(r8), parameter                :: kmhr_to_mmin = 16.6667_r8  ! convert km/hour to m/min for wind speed
-  real(r8), parameter                :: drying_ratio = 4000.0_r8
   
   ! LOCALS:
   integer            :: num_CBD     ! size of canopy bulk density array
-  integer            :: num_wind
-  integer            :: i, j           ! looping indicies
+  integer            :: num_wind    ! size of wind speed array
+  integer            :: i, j        ! looping indicies
   real(r8)           :: ROS_active  ! ROS_active output from CrownFireBehaveFM10 [m/min]
   real(r8)           :: CI          ! CI output from CrownFireBehaveFM10 [m/min]
 
@@ -275,25 +276,32 @@ subroutine TestCrownFireFM10(CBD, wind, ROS_active_FM10, CI_FM10)
   num_wind = int((wind_max - wind_min) / wind_inc + 1)
   allocate(CBD(num_CBD))
   allocate(wind(num_wind))
-  allocate(ROS_active_FM10(num_wind))
-  allocate(CI_FM10(num_CBD))
+  allocate(drying_ratio(size(dratio_vals)))
+  allocate(ROS_active_FM10(num_wind, size(dratio_vals)))
+  allocate(CI_FM10(num_CBD, size(dratio_vals)))
 
   do i = 1, num_CBD
     CBD(i) = CBD_min + CBD_inc * (i-1)
 
-    call CrownFireBehaveFM10(drying_ratio, fire_weather_index, SF_val_miner_total, &
-      SF_val_part_dens, wind_ref, CBD(i), ROS_active, CI)
-    CI_FM10(i) = CI
+    do j = 1, size(dratio_vals)
+      drying_ratio(j) = dratio_vals(j)
+      call CrownFireBehaveFM10(drying_ratio(j), fire_weather_index, SF_val_miner_total, &
+      SF_val_part_dens, wind_ref, CBD(i), ROS_active, CI)  
+      CI_FM10(i, j) = CI
 
+    end do  
   end do
 
-  do j = 1, num_wind
-    wind(j) = (wind_min + wind_inc * (j-1)) * kmhr_to_mmin  ! convert wind speed to m/min
+  do i = 1, num_wind
+    wind(i) = (wind_min + wind_inc * (i-1)) * kmhr_to_mmin  ! convert wind speed to m/min
 
-    call CrownFireBehaveFM10(drying_ratio, fire_weather_index, SF_val_miner_total, &
+    do j = 1, size(dratio_vals)
+      drying_ratio(j) = dratio_vals(j)
+      call CrownFireBehaveFM10(drying_ratio(j), fire_weather_index, SF_val_miner_total, &
       SF_val_part_dens, wind(j), cbd_ref, ROS_active, CI)
+      ROS_active_FM10(i, j) = ROS_active
 
-    ROS_active_FM10(j) = ROS_active
+    end do
   end do
 
 end subroutine TestCrownFireFM10
@@ -301,7 +309,7 @@ end subroutine TestCrownFireFM10
 !=========================================================================================
 
 subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
-        smp, smp_alpha, LFMC, CBD, wind, ROS_active_FM10, CI_FM10)
+        smp, smp_alpha, LFMC, CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
   !
   ! DESCRIPTION:
   ! write out data from the test
@@ -323,13 +331,14 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   real(r8),             intent(in)  :: LFMC(:,:)
   real(r8),             intent(in)  :: CBD(:)
   real(r8),             intent(in)  :: wind(:)
-  real(r8),             intent(in)  :: ROS_active_FM10(:)
-  real(r8),             intent(in)  :: CI_FM10(:)
+  real(r8),             intent(in)  :: drying_ratio(:)
+  real(r8),             intent(in)  :: ROS_active_FM10(:,:)
+  real(r8),             intent(in)  :: CI_FM10(:,:)
 
   ! LOCALS:
   integer           :: ncid         ! netcdf id
-  character(len=20) :: dim_names(6) ! dimension names
-  integer           :: dimIDs(6)    ! dimension IDs
+  character(len=20) :: dim_names(7) ! dimension names
+  integer           :: dimIDs(7)    ! dimension IDs
   integer           :: CBHID
   integer           :: CWCID
   integer           :: pasv_crwn_ID
@@ -338,18 +347,19 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   integer           :: LFMCID
   integer           :: CBDID
   integer           :: windID
+  integer           :: dratioID
   integer           :: ROSACT_FM10_ID
   integer           :: CI_FM10_ID
 
   ! dimension names
-  dim_names = [character(len=20) :: 'CBH', 'CWC', 'smp', 'smp_alpha', 'CBD', 'wind']
+  dim_names = [character(len=20) :: 'CBH', 'CWC', 'smp', 'smp_alpha', 'CBD', 'wind', 'dratio']
 
   ! open file
   call OpenNCFile(trim(out_file), ncid, 'readwrite')
 
   ! register dimensions
   call RegisterNCDims(ncid, dim_names, (/size(CBH), size(CWC), size(smp),        &
-    size(smp_alpha), size(CBD), size(wind)/), 6, dimIDs)
+    size(smp_alpha), size(CBD), size(wind), size(drying_ratio)/), 7, dimIDs)
 
   ! first register dimension variables
     ! register CBH 
@@ -382,6 +392,11 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   [character(len=20)  :: 'units', 'long_name'],               &
   [character(len=150) :: 'm/min', 'open wind speed'], 2, windID)
 
+  ! register drying ratio
+  call RegisterVar(ncid, 'dratio', dimIDs(7:7), type_double,    &
+  [character(len=20)  :: 'units', 'long_name'],               &
+  [character(len=150) :: '', 'drying ratio'], 2, dratioID)
+
   ! then register actual variables
 
   ! register min surface fire intensity for igniting crown fuels
@@ -397,15 +412,15 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
     3, LFMCID)
     
   ! register active crown fire spread rate using fuel model 10
-  call RegisterVar(ncid, 'ROSACT_FM10', dimIDs(6:6), type_double,  &
+  call RegisterVar(ncid, 'ROSACT_FM10', dimIDs(6:7), type_double,  &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],         &
-    [character(len=150) :: 'wind', 'm/min', 'active crown fire ROS using fuel model 10'], &
+    [character(len=150) :: 'wind dratio', 'm/min', 'active crown fire ROS using fuel model 10'], &
     3, ROSACT_FM10_ID)
     
   ! register crowning index
-  call RegisterVar(ncid, 'CI_FM10', dimIDs(5:5), type_double,  &
+  call RegisterVar(ncid, 'CI_FM10', dimIDs(/dimIDs(5),dimIDs(7)/), type_double,  &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],         &
-    [character(len=150) :: 'CBD', 'm/min', 'wind speed at which a active crown fire is sustained'], &
+    [character(len=150) :: 'CBD dratio', 'm/min', 'wind speed at which a active crown fire is sustained'], &
     3, CI_FM10_ID)
     
     
@@ -421,8 +436,9 @@ subroutine WriteCrownFireData(out_file, CBH, CWC, passive_crown_fi, &
   call WriteVar(ncid, LFMCID, LFMC(:,:))
   call WriteVar(ncid, CBDID, CBD(:))
   call WriteVar(ncid, windID, wind(:))
-  call WriteVar(ncid, ROSACT_FM10_ID, ROS_active_FM10(:))
-  call WriteVar(ncid, CI_FM10_ID, CI_FM10(:))
+  call WriteVar(ncid, dratioID, drying_ratio(:))
+  call WriteVar(ncid, ROSACT_FM10_ID, ROS_active_FM10(:,:))
+  call WriteVar(ncid, CI_FM10_ID, CI_FM10(:,:))
   
   ! close file
   call CloseNCFile(ncid)
