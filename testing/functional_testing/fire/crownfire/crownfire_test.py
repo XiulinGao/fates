@@ -8,8 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from functional_class import FunctionalTest
-from utils import blank_plot
-from matplotlib.ticker import ScalarFormatter
+from utils_plotting import blank_plot
 
 COLORS = ["#793922", "#99291F", "#CC9728", "#6B8939", "#2C778A", "#2C378A"]
 MPERMIN_TO_KMPERHOUR = 0.06
