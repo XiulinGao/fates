@@ -86,8 +86,9 @@ class CanopyFuelTest(FunctionalTest):
         varname: str,
         units: str,
         save_figs: bool,
-        plot_dir: bool,
+        plot_dir: str,
         by_fuel_model: bool = False,
+        stacked: bool = False,
 
     ):
         """ Plot canopy fuel test outputs as bar plot
@@ -101,6 +102,18 @@ class CanopyFuelTest(FunctionalTest):
         by_fuel_model (bool, optional): whether or not the bar plot is grouped by fuel model, default to True
 
         """
+        assert var in cfuel_dat, f"{var!r} not found in dataset variables."
+        da = cfuel_dat[var]
+
+        # figure out the dimensions we care about
+        has_patch = "patch_type" in da.dims
+        has_fm    = "fuel_model" in da.dims
+
+        if not has_patch:
+            raise ValueError(f"{var} is missing 'patch_type' dimension; got dims {da.dims}")
+    
+        patch_types = [str(p) for p in cfuel_dat["patch_type"].values]
+
         fuel_models = [
             "FM10",
         ]
@@ -109,38 +122,57 @@ class CanopyFuelTest(FunctionalTest):
             "black",
         ]
 
-        patch_types = [str(f) for f in cfuel_dat.patch_type.values]
+        if by_fuel_model and has_fm:
+            da2 = da.transpose("patch_type", "fuel_model")
+            arr = da2.to_numpy()
+            fm_labels = [str(f) for f in cfuel_dat["fuel_model"].values]
 
-        if by_fuel_model:
-            data_dict = {
-                fm: cfuel_dat.isel(fuel_model=i)[var].values
-                for i, fm in enumerate(fuel_models)
-            }
+            fig, ax = plt.subplots(figsize=(8, 4.6))
+            x = np.arange(len(patch_types))
+            n_fm = arr.shape[1]
+            width = 0.8 / n_fm
+
+            if stacked:
+                bottom = np.zeros(len(patch_types))
+                for j in range(n_fm):
+                    ax.bar(
+                        x,
+                        arr[:, j],
+                        width=0.8, 
+                        bottom=bottom,
+                        label=fm_labels[j],
+                    )
+                    bottom += arr[:, j]
+            else:
+                for j in range(n_fm):
+                    offset = (j - (n_fm - 1) / 2) * width
+                    ax.bar(
+                        x + offset,
+                        arr[:, j],
+                        width=width,
+                        label=fm_labels[j],
+                        )
+            ax.set_xticks(x)
+            ax.set_xticklabels(patch_types, rotation=90)
+            ax.legend(title="fuel_model", loc="center left", bbox_to_anchor=(1, 0.5))
         else:
-            data_dict = cfuel_dat[var].values
+            if has_fm:
+                da_plot = da.mean(dim="fuel_model")
+            else:
+                da_plot = da
+            
+            da_plot = da_plot.transpose("patch_type", ...)
+            y = da_plot.to_numpy()
+            fig, ax = plt.subplots(figsize=(7.5, 4.2))
+            ax.bar(patch_types, y)
+            ax.set_xticklabels(patch_types, rotation=90)
 
-        _, ax = plt.subplots()
-        if by_fuel_model:
-            bottom = np.zeros(len(patch_types))
-            for i, (fuel_model, dat) in enumerate(data_dict.items()):
-                ax.bar(
-                    patch_types,
-                    dat,
-                    0.5,
-                    label=fuel_model,
-                    bottom=bottom,
-                    color=colors[i],
-                )
-                bottom += dat
-            plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-        else:
-            ax.bar(patch_types, data_dict, color="darkcyan")
+        ax.set_ylabel(f"{varname} ({units})", fontsize=11)
+        ax.set_xlabel("Patch Type")
+        ax.set_title(varname)
+        plt.tight_layout()
 
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
-        plt.ylabel(f"{varname} ({units})", fontsize=11)
-        plt.xticks(rotation=90)
-        plt.xlabel("Patch Type")
+
 
         if save_figs:
             fig_name = os.path.join(plot_dir, f"{varname}_plot.png")
