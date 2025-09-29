@@ -199,8 +199,8 @@ program FatesTestCanopyFuel
     end do
     
     ! allocate and initialize biom_martix
-    allocate(biom_matrix(1:int(max_height)))
-    biom_matrix(:) = 0.0_r8
+    allocate(biom_matrix(0:int(max_height)))
+    biom_matrix = 0.0_r8
 
     ! derive canopy fuel load 
     cohort => patch%tallest
