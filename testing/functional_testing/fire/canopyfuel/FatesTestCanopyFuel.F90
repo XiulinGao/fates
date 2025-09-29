@@ -8,6 +8,8 @@ program FatesTestCanopyFuel
     use FatesFactoryMod,             only : InitializeGlobals, GetSyntheticPatch
     use SyntheticPatchTypes,         only : synthetic_patch_array_type
     use FatesTestFireMod,            only : SetUpFuel
+    use SFFireWeatherMod,            only : fire_weather
+    use SFNesterovMod,               only : nesterov_index
     use SyntheticFuelModels,         only : fuel_models_array_class
     use FatesFuelClassesMod,         only : num_fuel_classes, fuel_classes
     use FatesFuelMod,                only : fuel_type
@@ -16,7 +18,7 @@ program FatesTestCanopyFuel
     use CrownFireEquationsMod,       only : PassiveCrownFireIntensity, CrownFireBehaveFM10
     use CrownFireEquationsMod,       only : HeatReleasePerArea, CrownFractionBurnt
     use CrownFireEquationsMod,       only : CrownFireIntensity
-    use SFEquationsMod,              only : ReactionIntensity
+    use SFEquationsMod,              only : ReactionIntensity, FireIntensity
     use FatesAllometryMod,           only : CrownDepth
     use PRTGenericMod,               only : leaf_organ
     use PRTGenericMod,               only : sapw_organ
@@ -37,6 +39,7 @@ program FatesTestCanopyFuel
   type(fates_unit_test_param_reader)             :: param_reader ! param reader instance
   type(synthetic_patch_array_type)               :: patch_data   ! array of synthetic patches
   type(fuel_models_array_class)                  :: fuel_models_array    ! array of fuel models
+  class(fire_weather),               pointer     :: fireWeather          ! fire weather object
   type(fuel_type),                   allocatable :: fuel(:)              ! fuel objects  
   character(len=:),                  allocatable :: param_file   ! input parameter file
   character(len=100),                allocatable :: fuel_names(:)        ! names of fuel models
@@ -127,6 +130,12 @@ program FatesTestCanopyFuel
   call param_reader%Init(param_file)
   call param_reader%RetrieveParameters()
 
+  ! set up fire weather class
+  ! here we just assign a pre-defined value
+  allocate(nesterov_index :: fireWeather)
+  call fireWeather%Init()
+  fireWeather%fire_weather_index = NI
+
   ! set up fuel objects and calculate loading
   allocate(fuel(num_fuel_models))
   call fuel_models_array%GetFuelModels()
@@ -144,7 +153,7 @@ program FatesTestCanopyFuel
     call fuel(f)%AverageSAV_NoTrunks(SF_val_SAV)
 
     ! calculate fuel moisture content
-    call fuel(f)%UpdateFuelMoisture(SF_val_SAV, SF_val_drying_ratio, NI)
+    call fuel(f)%UpdateFuelMoisture(SF_val_SAV, SF_val_drying_ratio, fireWeather)
 
   end do
 
@@ -184,9 +193,9 @@ program FatesTestCanopyFuel
     ! search for max height
     do while (associated(cohort))
       if (prt_params%woody(cohort%pft) == itrue) then 
-        call MaxHeight(cohort%height)
+        call MaxHeight(cohort%height, max_height)
       end if
-      cohort => patch%shorter
+      cohort => cohort%shorter
     end do
     
     ! allocate and initialize biom_martix
@@ -195,7 +204,7 @@ program FatesTestCanopyFuel
 
     ! derive canopy fuel load 
     cohort => patch%tallest
-    do while (associate(cohort))
+    do while (associated(cohort))
       if(prt_params%woody(cohort%pft) == itrue) then
         call CrownDepth(cohort%height, cohort%pft, crown_depth)
         cbh_co = cohort%height - crown_depth
@@ -219,7 +228,7 @@ program FatesTestCanopyFuel
         ! 1m biomass bin
         call BiomassBin(cbh_co, cohort%height, crown_depth, canopy_fuel_1h, biom_matrix)
       end if     
-      cohort => patch%shorter 
+      cohort => cohort%shorter 
     end do
   
     ! calculate canopy bulk density
@@ -270,7 +279,7 @@ program FatesTestCanopyFuel
 
         ! update ROS and FI 
         if(crown_frac_burnt > 0.0_r8)then
-          ROS_final(p,f) = ROS_front(p,f) + crown_frac_burnt*(ROS_actfm10 - ROS_front(p,f))
+          ROS_final(p,f) = ROS_front(p,f) + crown_frac_burnt*(ROS_actfm10(p,f) - ROS_front(p,f))
           FI_final(p,f) = CrownFireIntensity(HPA, fuel(f)%canopy_fuel_load, &
           patch%area, crown_frac_burnt, ROS_final(p,f))
         else 
@@ -283,7 +292,7 @@ program FatesTestCanopyFuel
   end do
 
   ! write out data
-  call WriteCanopyFuelData(out_file, num_fuel_models, num_patch_types, CBD, CBH  &
+  call WriteCanopyFuelData(out_file, num_fuel_models, num_patch_types, CBD, CBH, &
   canopy_fuel_load, ROS_front, FI, FI_init, ROS_actfm10, ROS_critical, CFB,      &
   ROS_final, FI_final, fuel_models, carriers, patch_ids, pa_carriers)
 
