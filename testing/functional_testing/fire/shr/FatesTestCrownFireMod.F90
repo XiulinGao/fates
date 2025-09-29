@@ -186,7 +186,7 @@ contains
     ! register variables
 
     ! register patch carrier
-    call RegisterVar(ncid, 'pa_carrier', dimIDs(2:2), type_char,        &
+    call RegisterVar(ncid, 'pa_carrier', dimIDs(1:1), type_char,        &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
     [character(len=150) :: 'patch_type_index', '', 'carrier of patch'],  &
     3, pID)
