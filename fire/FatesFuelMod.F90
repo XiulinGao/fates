@@ -449,7 +449,7 @@ module FatesFuelMod
 
       ! ARGUMENTS:
       class(fuel_type), intent(inout) :: this                  ! fuel class
-      real(r8),         intent(in)    :: biom_matrix(:)        ! 1m biomass bin (kg/m3) in the vertical space to sort the canopy fule 
+      real(r8),         intent(in)    :: biom_matrix(0:)        ! 1m biomass bin (kg/m3) in the vertical space to sort the canopy fule 
                                                                ! across cohorts, used to search for CBH
       real(r8),         intent(in)    :: max_height            ! the max. cohort height at current patch [m]
 
