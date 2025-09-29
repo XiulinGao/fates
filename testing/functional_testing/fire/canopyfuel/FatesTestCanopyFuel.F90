@@ -29,7 +29,7 @@ program FatesTestCanopyFuel
     use SFParamsMod,                 only : SF_val_CWD_frac
     use FatesLitterMod,              only : adjust_SF_CWD_frac
     use FatesLitterMod,              only : ncwd
-    use SFParamsMod,                 only : SF_val_SAV, SF_val_drying_ratio
+    use SFParamsMod,                 only : SF_val_SAV
     use SFParamsMod,                 only : SF_val_FBD, SF_val_fire_threshold
     use SFParamsMod,                 only : SF_val_part_dens, SF_val_miner_total
 
@@ -93,6 +93,7 @@ program FatesTestCanopyFuel
   real(r8), parameter :: NI = 5000.0_r8        ! fire weather index to use
   real(r8), parameter :: wind = 500.0_r8       ! wind speed to use [m/min]
   real(r8), parameter :: CWC = 70.0_r8         ! canopy water content [%]
+  real(r8), parameter :: drying_ratio = 3000.0_r8
   real(r8), parameter :: wind_atten_tree = 0.4_r8               ! wind attenuation factor for tree fraction
   real(r8), parameter :: wind_atten_grass = 0.6_r8              ! wind attenuation factor for grass fraction
   character(len=*), parameter :: out_file = 'canopyfuel_out.nc' ! output file
@@ -153,7 +154,7 @@ program FatesTestCanopyFuel
     call fuel(f)%AverageSAV_NoTrunks(SF_val_SAV)
 
     ! calculate fuel moisture content
-    call fuel(f)%UpdateFuelMoisture(SF_val_SAV, SF_val_drying_ratio, fireWeather)
+    call fuel(f)%UpdateFuelMoisture(SF_val_SAV, drying_ratio, fireWeather)
 
   end do
 
@@ -260,7 +261,7 @@ program FatesTestCanopyFuel
       FI(p,f) = FireIntensity(tfc_ros/0.45_r8, ROS_front(p,f)/60.0_r8)
 
       if(FI(p,f) > SF_val_fire_threshold .and. FI(p,f) > FI_init(p))then
-        call CrownFireBehaveFM10(SF_val_drying_ratio, NI, &
+        call CrownFireBehaveFM10(drying_ratio, NI, &
         SF_val_miner_total, SF_val_part_dens, wind, &
         fuel(f)%canopy_bulk_density, ROS_active, CI)
         ROS_actfm10(p,f) = ROS_active
@@ -301,9 +302,19 @@ program FatesTestCanopyFuel
 
   end do
 
-  print *, 'CBD(mid)=', CBD((size(CBD)+1)/2)
+  print *, 'CBD(mid)=', CBD(1:2)
   print *, 'ROS_actfm10(1:2,1)=', ROS_actfm10(1:min(2,size(ROS_actfm10)),1)
   print *, 'ROS_critical (1:2)=', ROS_critical(1:min(2,size(ROS_critical)))
+  print *, 'ROS_front (1:2,1)=', ROS_front(1:min(2,size(ROS_front)),1)
+  print *, 'FI (1:2,1)=', FI(1:min(2,size(FI)),1)
+  print *, 'FI_init (1:2)=', ROS_front(1:min(2,size(ROS_front)))
+  print *, 'CFB (1:2,1)=', CFB(1:min(2,size(CFB)),1)
+  print *, 'ROS_final (1:2,1)=', ROS_final(1:min(2,size(ROS_final)),1)
+  print *, 'FI_final (1:2,1)=', FI_final(1:min(2,size(FI_final)),1)
+
+
+
+
 
   ! write out data
   call WriteCanopyFuelData(out_file, num_fuel_models, num_patch_types, CBD, CBH, &
