@@ -99,7 +99,7 @@ program FatesTestCanopyFuel
   character(len=*), parameter :: out_file = 'canopyfuel_out.nc' ! output file
   
   ! fuel models and patch types to test
-  integer, parameter, dimension(1) :: fuel_models = (/10/)
+  integer, parameter, dimension(2) :: fuel_models = (/10, 11/)
   integer, parameter, dimension(4) :: patch_ids = (/1, 5, 6, 7/)
   character(len=*), parameter, dimension(4) :: patch_types = (/'temperate', 'tropical', 'low density', 'high density'/)
   
