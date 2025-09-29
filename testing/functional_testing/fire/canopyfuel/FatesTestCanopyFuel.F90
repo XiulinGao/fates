@@ -80,7 +80,7 @@ program FatesTestCanopyFuel
   real(r8),               allocatable            :: ROS_final(:,:)      ! final ROS by stand type and surface fuel model [m/min]
   real(r8),               allocatable            :: FI_final(:,:)       ! final fire intensity by stand type and surface fuel model [kW/m]
   real(r8),               allocatable            :: CFB(:,:)            ! crown fraction burned by stand type and surface fuel model [fraction]
-  integer                                        :: p, f, i            ! patch array location
+  integer                                        :: p, f, i, h_idx      ! looping indices
   integer                                        :: num_fuel_models      ! number of fuel models to test
   integer                                        :: num_patch_types      ! number of patch types to test
   integer                                        :: active_crownfire     ! 1 = active crown fire
