@@ -463,10 +463,9 @@ module FatesFuelMod
                                                                   ! Scott and Reinhardt 2001 RMRS-RP-29
 
       ! loop from 1m to 70m to find CBH
-      do ih=0,int(max_height)
+      do ih=1,int(max_height)
         if (biom_matrix(ih) > min_density_canopy_fuel) then
-          this%canopy_base_height = dble(ih) + 1.0_r8   ! the dimension index of biom_matrix is a ronded-down integer of cohort height
-                                                   ! add 1 to be conservative when searching for CBH
+          this%canopy_base_height = dble(ih)    
 
           exit
         else                                            ! when this is an open stand that there is no such a height, use max_height
@@ -478,9 +477,9 @@ module FatesFuelMod
       ! XLG: I modified the way how canopy bulk density is calculated by reducing the maximum canopy height
       ! to the highest point where the minimum bulk density is met. 
   
-      do ih = int(max_height), 0, -1
+      do ih = int(max_height), 1, -1
         if (biom_matrix(ih) > min_density_canopy_fuel) then
-          canopy_top_height = dble(ih) + 1.0_r8 
+          canopy_top_height = dble(ih) 
           exit
         else
           canopy_top_height = max_height 
@@ -490,7 +489,7 @@ module FatesFuelMod
       ! XLG: We now only calculate canopy bulk density for fuels between
       ! canopy base and top height 
       if ((canopy_top_height - this%canopy_base_height) > nearzero) then
-        this%canopy_bulk_density = sum(biom_matrix(int(this%canopy_base_height-1.0_r8):int(canopy_top_height-1.0_r8))) / &
+        this%canopy_bulk_density = sum(biom_matrix(int(this%canopy_base_height):int(canopy_top_height))) / &
         (canopy_top_height - this%canopy_base_height)
       else
         this%canopy_bulk_density = 0.0_r8
