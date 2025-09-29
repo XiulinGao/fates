@@ -320,7 +320,7 @@ program FatesTestCanopyFuel
   ! write out data
   call WriteCanopyFuelData(out_file, num_fuel_models, num_patch_types, CBD, CBH, &
   canopy_fuel_load, ROS_front, FI, FI_init, ROS_actfm10, ROS_critical, CFB,      &
-  ROS_final, FI_final, fuel_models, carriers, patch_ids, pa_carriers)
+  ROS_final, FI_final, fuel_models, patch_ids)
 
 
 end program FatesTestCanopyFuel

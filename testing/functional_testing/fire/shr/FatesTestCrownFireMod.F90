@@ -123,8 +123,7 @@ contains
   ! ======================================================================================
 
   subroutine WriteCanopyFuelData(out_file, nfuelmods, nstands, CBD, CBH, canopy_fuel_load, ROS_front, FI, &
-    FI_init, ROS_actfm10, ROS_critical, CFB, ROS_final, FI_final, fuel_models, carrier, patch_types, &
-    pa_carrier)
+    FI_init, ROS_actfm10, ROS_critical, CFB, ROS_final, FI_final, fuel_models,  patch_types)
     !
     ! DESCRIPTION:
     ! write out data from canopy fuel functional test
@@ -147,8 +146,8 @@ contains
     real(r8),           intent(in) :: FI_final(:,:)
     integer,            intent(in) :: fuel_models(:)
     integer,            intent(in) :: patch_types(:)
-    character(len=2),   intent(in) :: carrier(:)
-    character(len=2),   intent(in) :: pa_carrier(:)
+  !  character(len=2),   intent(in) :: carrier(:)
+   ! character(len=2),   intent(in) :: pa_carrier(:)
 
     ! LOCALS:
     integer           :: ncid         ! netcdf id
@@ -159,7 +158,7 @@ contains
     integer           :: ROS_frontID, ROS_actID, ROS_minID, ROS_finID
     integer           :: FIID, FI_initID, FI_finID
     integer           :: CFBID
-    integer           :: cID, pID
+   ! integer           :: cID, pID
 
     ! dimension names
     dim_names = [character(len=20) :: 'patch_type', 'fuel_model']
@@ -186,16 +185,16 @@ contains
     ! register variables
 
     ! register patch carrier
-    call RegisterVar(ncid, 'pa_carrier', dimIDs(1:1), type_char,        &
-    [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
-    [character(len=150) :: 'patch_type', '', 'carrier of patch'],  &
-    3, pID)
+ !   call RegisterVar(ncid, 'pa_carrier', dimIDs(1:1), type_char,        &
+ !   [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
+ !   [character(len=150) :: 'patch_type', '', 'carrier of patch'],  &
+ !   3, pID)
 
     ! register fuel model carrier
-    call RegisterVar(ncid, 'mod_carrier', dimIDs(2:2), type_char,       &
-    [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
-    [character(len=150) :: 'fuel_model', '', 'carrier of fuel'],  &
-    3, cID)
+ !   call RegisterVar(ncid, 'mod_carrier', dimIDs(2:2), type_char,       &
+ !   [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
+ !   [character(len=150) :: 'fuel_model', '', 'carrier of fuel'],  &
+ !   3, cID)
 
     ! register actual variables
     ! register CBD
@@ -270,8 +269,8 @@ contains
     ! write out data
     call WriteVar(ncid, patchID, patch_types(:))
     call WriteVar(ncid, modID, fuel_models(:))
-    call WriteVar(ncid, pID, pa_carrier(:))
-    call WriteVar(ncid, cID, carrier(:))
+ !   call WriteVar(ncid, pID, pa_carrier(:))
+ !   call WriteVar(ncid, cID, carrier(:))
     call WriteVar(ncid, CBDID, CBD(:))
     call WriteVar(ncid, CBHID, CBH(:))
     call WriteVar(ncid, cflID, canopy_fuel_load(:))
