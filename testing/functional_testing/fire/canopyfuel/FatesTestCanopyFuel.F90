@@ -276,16 +276,23 @@ program FatesTestCanopyFuel
         call CrownFractionBurnt(ROS_active, ROS_critical(p), ROS_front(p,f), &
         ROS_init, ROS, active_crownfire, passive_crownfire, crown_frac_burnt)
         CFB(p,f) = crown_frac_burnt
+      else
+        ROS_actfm10(p,f) = 0.0_r8
+        crown_frac_burnt = 0.0_r8
+        CFB(p,f) = 0.0_r8
+      end if
 
-        ! update ROS and FI 
-        if(crown_frac_burnt > 0.0_r8)then
-          ROS_final(p,f) = ROS_front(p,f) + crown_frac_burnt*(ROS_actfm10(p,f) - ROS_front(p,f))
-          FI_final(p,f) = CrownFireIntensity(HPA, fuel(f)%canopy_fuel_load, &
-          patch%area, crown_frac_burnt, ROS_final(p,f))
-        else 
-          ROS_final(p,f) = ROS_front(p,f)
-          FI_final(p,f) = FI(p,f)
-        end if
+      ! update ROS and FI 
+      if(crown_frac_burnt > 0.0_r8)then
+        ROS_final(p,f) = ROS_front(p,f) + crown_frac_burnt*(ROS_actfm10(p,f) - ROS_front(p,f))
+        FI_final(p,f) = CrownFireIntensity(HPA, fuel(f)%canopy_fuel_load, &
+        patch%area, crown_frac_burnt, ROS_final(p,f))
+      else 
+        ROS_final(p,f) = ROS_front(p,f)
+        FI_final(p,f) = FI(p,f)
+      end if
+
+       
 
     end do
 
