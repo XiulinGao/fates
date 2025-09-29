@@ -56,7 +56,7 @@ program FatesTestCanopyFuel
   real(r8)                                       :: struct_c     ! strcutural carbon [kg C]
   real(r8)                                       :: woody_c      ! aboveground sap wood + structural carbon [kg C]
   real(r8)                                       :: canopy_fuel_1h ! leaf + 1-hour woody fuel [kg C]
-  real(r8), dimension(:), allocatable            :: biom_matrix ! array to hold biomass at 1m interval [kg biomass]
+  real(r8),               allocatable            :: biom_matrix(:) ! array to hold biomass at 1m interval [kg biomass]
   real(r8)                                       :: crown_depth  ! crown length of a cohort [m]
   real(r8)                                       :: cbh_co       ! cohort base height, different from path level base height [m]
   real(r8)                                       :: cwd_frac_adj(ncwd) ! adjusted fractional allocation of woody biomass to coarse wood debris pool
@@ -200,7 +200,7 @@ program FatesTestCanopyFuel
     
     ! allocate and initialize biom_martix
     allocate(biom_matrix(0:int(max_height)))
-    biom_matrix = 0.0_r8
+    biom_matrix(:) = 0.0_r8
 
     ! derive canopy fuel load 
     cohort => patch%tallest
@@ -226,7 +226,10 @@ program FatesTestCanopyFuel
         cohort%canopy_fuel_1h = canopy_fuel_1h
         
         ! 1m biomass bin
-        call BiomassBin(cbh_co, cohort%height, crown_depth, canopy_fuel_1h, biom_matrix)
+        !call BiomassBin(cbh_co, cohort%height, crown_depth, canopy_fuel_1h, biom_matrix)
+        do h_idx = int(cbh_co), int(cohort%height)
+          biom_matrix(h_idx) = biom_matrix(h_idx) + canopy_fuel_1h / crown_depth
+        end do
       end if     
       cohort => cohort%shorter 
     end do
