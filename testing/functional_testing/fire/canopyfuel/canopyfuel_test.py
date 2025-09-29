@@ -64,6 +64,26 @@ class CanopyFuelTest(FunctionalTest):
         )
         self.plot_barchart(
             cfuel_dat,
+            "FI_init",
+            "Fire intensity to initiate crown fire",
+            "kW m$^{-1}$",
+            save_figs,
+            plot_dir,
+            by_fuel_model=False,
+            stacked= False,
+        )
+        self.plot_barchart(
+            cfuel_dat,
+            "FI",
+            "Fire intensity of surface fire",
+            "kW m$^{-1}$",
+            save_figs,
+            plot_dir,
+            by_fuel_model=False,
+            stacked= False,
+        )
+        self.plot_barchart(
+            cfuel_dat,
             "ROS_active",
             "Active crown fire ROS",
             "m min$^{-1}$",
