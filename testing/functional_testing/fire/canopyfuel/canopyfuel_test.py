@@ -79,7 +79,7 @@ class CanopyFuelTest(FunctionalTest):
             "kW m$^{-1}$",
             save_figs,
             plot_dir,
-            by_fuel_model=False,
+            by_fuel_model=True,
             stacked= False,
         )
         self.plot_barchart(
@@ -89,7 +89,7 @@ class CanopyFuelTest(FunctionalTest):
             "m min$^{-1}$",
             save_figs,
             plot_dir,
-            by_fuel_model=False,
+            by_fuel_model=True,
             stacked= False,
         )
         self.plot_barchart(
@@ -109,7 +109,7 @@ class CanopyFuelTest(FunctionalTest):
             "m min$^{-1}$",
             save_figs,
             plot_dir,
-            by_fuel_model=False,
+            by_fuel_model=True,
             stacked= False,
         )
         self.plot_barchart(
@@ -119,7 +119,7 @@ class CanopyFuelTest(FunctionalTest):
             "kW m$^{-1}$",
             save_figs,
             plot_dir,
-            by_fuel_model=False,
+            by_fuel_model=True,
             stacked= False,
         )
 
