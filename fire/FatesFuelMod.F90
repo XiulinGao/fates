@@ -420,14 +420,14 @@ module FatesFuelMod
       real(r8),         intent(in)    :: cwd_frac_adj(ncwd)      ! adjusted coarse woody debris fraction [fraction]
       real(r8),         intent(out)   :: canopy_fuel_1h          ! leaf + 1-hour woody biomass of current cohort [kg biomass]
 
+
       ! calculate sapling fuel load, only used as surface live woody fuels for  WRF-fire 
       if(height <= 1.5_r8)then
-        this%fuel_sapling = this%fuel_sapling + woody_c*(cwd_frac_adj(1) + cwd_frac_adj(2) +  & 
+        this%canopy_fuel_load_sapling = this%canopy_fuel_load_sapling + woody_c*(cwd_frac_adj(1) + cwd_frac_adj(2) +  & 
         cwd_frac_adj(3)) + leaf_c
       end if
       ! calculate canopy fuel load for FATES crown fire
-      woody_c = woody_c * cwd_frac_adj(1)
-      canopy_fuel_1h = woody_c + leaf_c
+      canopy_fuel_1h = woody_c * cwd_frac_adj(1) + leaf_c
       this%canopy_fuel_load = this%canopy_fuel_load + canopy_fuel_1h
 
       

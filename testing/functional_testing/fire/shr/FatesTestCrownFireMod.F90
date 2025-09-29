@@ -4,7 +4,7 @@ module FatesTestCrownFireMod
   ! modules to support testing crown fire 
   !
 
-  use FatesConstantsMod,      only : r8 => fates_r8
+  use FatesConstantsMod,      only : r8 => fates_r8, nearzero
   use FatesUnitTestIOMod,     only : OpenNCFile, GetVar, CloseNCFile, RegisterNCDims
   use FatesUnitTestIOMod,     only : RegisterVar, EndNCDef, WriteVar
   use FatesUnitTestIOMod,     only : type_double, type_char, type_int
@@ -19,7 +19,7 @@ module FatesTestCrownFireMod
 
   public :: ROSWrapper
   public :: EffectiveWindWrapper
-  public :: WriteCrownFireData
+  public :: WriteCanopyFuelData
 
   ! ======================================================================================
 
@@ -45,11 +45,11 @@ contains
     real(r8)                        :: beta         ! packing ratio [unitless]
     real(r8)                        :: beta_op      ! optimum packing ratio [unitless]
     real(r8)                        :: beta_ratio   ! relative packing ratio [unitless]
-    real(r8)                        :: i_r          ! reaction intensity [kJ/m2/min]
     real(r8)                        :: xi           ! propagating flux ratio [unitless]
     real(r8)                        :: eps          ! effective heating number [unitless]
     real(r8)                        :: phi_wind     ! wind factor [unitless]
     real(r8)                        :: q_ig         ! heat of pre-ignition [kJ/kg]
+    real(r8)                        :: fuel_net     ! fuel load excluding mineral content [kgC/m2]
 
     ! fraction of fuel array occupied by fuels and optimum packing ratio
     beta = bd / SF_val_part_dens
@@ -62,10 +62,10 @@ contains
     end if
 
     ! remove mineral content
-    fuel_load = fuel_load*(1.0_r8 - SF_val_miner_total) 
+    fuel_net = fuel_load*(1.0_r8 - SF_val_miner_total) 
 
     ! reaction intensity 
-    i_r = ReactionIntensity(fuel_load/0.45_r8, SAV, beta_ratio,  &
+    i_r = ReactionIntensity(fuel_net/0.45_r8, SAV, beta_ratio,  &
     fmc, mef)
 
     ! heat of preignition
@@ -106,7 +106,7 @@ contains
     real(r8)    :: bare_frac          ! bare ground fraction of the test patch [0-1] 
     !
     ! CONSTANTS:
-    real(r8), parameter   :: wind_atten_treed = 0.4_r8 ! wind attenuation factor for tree fraction
+    real(r8), parameter   :: wind_atten_tree = 0.4_r8 ! wind attenuation factor for tree fraction
     real(r8), parameter   :: wind_atten_grass = 0.6_r8 ! wind attenuation factor for grass fraction
 
     tree_frac = tree_area / area
@@ -114,7 +114,7 @@ contains
     grass_frac = min(grass_frac, 1.0_r8 - tree_frac)
     bare_frac = 1.0_r8 - tree_frac - grass_frac
 
-    effec_wind = wind * (tree_frac*wind_atten_tree +         &
+    effect_wind = wind * (tree_frac*wind_atten_tree +         &
     (grass_frac + bare_frac)*wind_atten_grass )
 
 
