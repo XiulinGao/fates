@@ -100,8 +100,8 @@ program FatesTestCanopyFuel
   
   ! fuel models and patch types to test
   integer, parameter, dimension(1) :: fuel_models = (/10/)
-  integer, parameter, dimension(2) :: patch_ids = (/1, 5, 6, 7/)
-  character(len=*), parameter, dimension(2) :: patch_types = (/'temperate', 'tropical', 'low density', 'high density'/)
+  integer, parameter, dimension(4) :: patch_ids = (/1, 5, 6, 7/)
+  character(len=*), parameter, dimension(4) :: patch_types = (/'temperate', 'tropical', 'low density', 'high density'/)
   
   ! number of fuel models  and patch types to test
   num_fuel_models = size(fuel_models)
