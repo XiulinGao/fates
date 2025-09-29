@@ -20,7 +20,7 @@ module CrownFireEquationsMod
   public :: LiveFuelMoistureContent
   public :: MaxHeight
   public :: CrownFireBehaveFM10
-  public :: BiomassBin
+ ! public :: BiomassBin
   public :: CrownFractionBurnt
 
   contains
@@ -328,32 +328,32 @@ module CrownFireEquationsMod
   !---------------------------------------------------------------------------------------
 
 
-  subroutine BiomassBin(cbh, height, crown_depth, canopy_fuel_1h, biom_matrix)
+!  subroutine BiomassBin(cbh, height, crown_depth, canopy_fuel_1h, biom_matrix)
     !
     ! DESCRIPTION:
     ! accumulate biomass at 1 m interval across cohorts and return 
     ! the biomass array
     !
     ! ARGUMENTS:
-    real(r8), intent(in)                 :: cbh                 ! canopy base height [m]
-    real(r8), intent(in)                 :: height              ! cohort height [m]
-    real(r8), intent(in)                 :: crown_depth         ! crown length of a cohort [m]
-    real(r8), intent(in)                 :: canopy_fuel_1h     ! leaf + 1-hour woody biomass of a cohort [kg biomass]
-    real(r8), intent(inout)              :: biom_matrix(0:)      ! array that holds biomass by 1m interval across all cohorts on a patch [kg biomass]
+!    real(r8), intent(in)                 :: cbh                 ! canopy base height [m]
+!    real(r8), intent(in)                 :: height              ! cohort height [m]
+!    real(r8), intent(in)                 :: crown_depth         ! crown length of a cohort [m]
+!    real(r8), intent(in)                 :: canopy_fuel_1h     ! leaf + 1-hour woody biomass of a cohort [kg biomass]
+!    real(r8), intent(inout)              :: biom_matrix(0:)      ! array that holds biomass by 1m interval across all cohorts on a patch [kg biomass]
 
     ! LOCALS:
-    integer           :: h_idx                ! looping index
-    real(r8)          :: crown_fuel_per_m     ! biomass by 1m interval [kg biomass]
+!    integer           :: h_idx                ! looping index
+!    real(r8)          :: crown_fuel_per_m     ! biomass by 1m interval [kg biomass]
 
     ! calculate biomass by 1m interval 
-    crown_fuel_per_m = canopy_fuel_1h / crown_depth
+ !   crown_fuel_per_m = canopy_fuel_1h / crown_depth
 
-    do h_idx = int(cbh), int(height)
-      biom_matrix(h_idx) = biom_matrix(h_idx) + crown_fuel_per_m
-    end do
+ !   do h_idx = int(cbh), int(height)
+ !     biom_matrix(h_idx) = biom_matrix(h_idx) + crown_fuel_per_m
+ !   end do
 
 
-  end subroutine BiomassBin
+ ! end subroutine BiomassBin
 
   !---------------------------------------------------------------------------------------
 
