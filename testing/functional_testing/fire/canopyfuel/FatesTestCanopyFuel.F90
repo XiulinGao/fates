@@ -56,7 +56,7 @@ program FatesTestCanopyFuel
   real(r8)                                       :: struct_c     ! strcutural carbon [kg C]
   real(r8)                                       :: woody_c      ! aboveground sap wood + structural carbon [kg C]
   real(r8)                                       :: canopy_fuel_1h ! leaf + 1-hour woody fuel [kg C]
-  real(r8),               allocatable            :: biom_matrix(:) ! array to hold biomass at 1m interval [kg biomass]
+  real(r8), dimension(:), allocatable            :: biom_matrix ! array to hold biomass at 1m interval [kg biomass]
   real(r8)                                       :: crown_depth  ! crown length of a cohort [m]
   real(r8)                                       :: cbh_co       ! cohort base height, different from path level base height [m]
   real(r8)                                       :: cwd_frac_adj(ncwd) ! adjusted fractional allocation of woody biomass to coarse wood debris pool
