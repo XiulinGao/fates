@@ -86,7 +86,7 @@ class CanopyFuelTest(FunctionalTest):
         varname: str,
         units: str,
         save_figs: bool,
-        plot_dir: str,
+        plot_dir: bool,
         by_fuel_model: bool = False,
         stacked: bool = False,
 
@@ -114,13 +114,6 @@ class CanopyFuelTest(FunctionalTest):
     
         patch_types = [str(p) for p in cfuel_dat["patch_type"].values]
 
-        fuel_models = [
-            "FM10",
-        ]
-
-        colors = [
-            "black",
-        ]
 
         if by_fuel_model and has_fm:
             da2 = da.transpose("patch_type", "fuel_model")
