@@ -50,6 +50,7 @@ class CanopyFuelTest(FunctionalTest):
             save_figs,
             plot_dir,
             by_fuel_model=False,
+            stacked= False,
         )
         self.plot_barchart(
             cfuel_dat,
@@ -59,6 +60,7 @@ class CanopyFuelTest(FunctionalTest):
             save_figs,
             plot_dir,
             by_fuel_model=False,
+            stacked= False,
         )
         self.plot_barchart(
             cfuel_dat,
@@ -68,15 +70,37 @@ class CanopyFuelTest(FunctionalTest):
             save_figs,
             plot_dir,
             by_fuel_model=False,
+            stacked= False,
         )
         self.plot_barchart(
             cfuel_dat,
             "ROS_min",
-            "Critical ROS",
+            "Critical rate of spread",
             "m min$^{-1}$",
             save_figs,
             plot_dir,
             by_fuel_model=False,
+            stacked= False,
+        )
+        self.plot_barchart(
+            cfuel_dat,
+            "ROS_final",
+            "Final rate of spread",
+            "m min$^{-1}$",
+            save_figs,
+            plot_dir,
+            by_fuel_model=False,
+            stacked= False,
+        )
+        self.plot_barchart(
+            cfuel_dat,
+            "FI_final",
+            "Final fire intensity",
+            "kW m$^{-1}$",
+            save_figs,
+            plot_dir,
+            by_fuel_model=False,
+            stacked= False,
         )
 
     @staticmethod
@@ -89,8 +113,7 @@ class CanopyFuelTest(FunctionalTest):
         plot_dir: bool,
         by_fuel_model: bool = False,
         stacked: bool = False,
-
-    ):
+          ):
         """ Plot canopy fuel test outputs as bar plot
         Args:
         cfuel_dat (xr.Dataset): canopy fuel test data output
