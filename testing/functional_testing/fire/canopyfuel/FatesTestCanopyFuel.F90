@@ -200,7 +200,7 @@ program FatesTestCanopyFuel
     
     ! allocate and initialize biom_martix
     allocate(biom_matrix(0:int(max_height)))
-    biom_matrix(:) = 0.0_r8
+    biom_matrix = 0.0_r8
 
     ! derive canopy fuel load 
     cohort => patch%tallest
@@ -235,7 +235,7 @@ program FatesTestCanopyFuel
     end do
   
     ! calculate canopy bulk density
-    biom_matrix(:) = biom_matrix(:) / patch%area ! kg biomass / m3
+    biom_matrix = biom_matrix / patch%area ! kg biomass / m3
 
     do f = 1, num_fuel_models
       call fuel(f)%CalculateCanopyBulkDensity(biom_matrix, max_height)
