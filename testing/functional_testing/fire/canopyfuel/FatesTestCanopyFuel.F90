@@ -305,6 +305,7 @@ program FatesTestCanopyFuel
   print *, 'CBD(mid)=', CBD(1:2)
   print *, 'ROS_actfm10(1:2,1)=', ROS_actfm10(1:min(2,size(ROS_actfm10)),1)
   print *, 'ROS_critical (1:2)=', ROS_critical(1:min(2,size(ROS_critical)))
+  print *, 'ROS_front size: ', size(ROS_front)
   print *, 'ROS_front (1:2,1)=', ROS_front(1:min(2,size(ROS_front)),1)
   print *, 'FI (1:2,1)=', FI(1:min(2,size(FI)),1)
   print *, 'FI_init (1:2)=', ROS_front(1:min(2,size(ROS_front)))
