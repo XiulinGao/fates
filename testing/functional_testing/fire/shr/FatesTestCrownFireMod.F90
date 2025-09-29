@@ -188,13 +188,13 @@ contains
     ! register patch carrier
     call RegisterVar(ncid, 'pa_carrier', dimIDs(1:1), type_char,        &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
-    [character(len=150) :: 'patch_type_index', '', 'carrier of patch'],  &
+    [character(len=150) :: 'patch_type', '', 'carrier of patch'],  &
     3, pID)
 
     ! register fuel model carrier
     call RegisterVar(ncid, 'mod_carrier', dimIDs(2:2), type_char,       &
     [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
-    [character(len=150) :: 'fuel_model_index', '', 'carrier of fuel'],  &
+    [character(len=150) :: 'fuel_model', '', 'carrier of fuel'],  &
     3, cID)
 
     ! register actual variables
