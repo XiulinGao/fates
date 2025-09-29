@@ -308,7 +308,7 @@ program FatesTestCanopyFuel
   print *, 'ROS_front size: ', size(ROS_front)
   print *, 'ROS_front (1:2,1)=', ROS_front(1:min(2,size(ROS_front)),1)
   print *, 'FI (1:2,1)=', FI(1:min(2,size(FI)),1)
-  print *, 'FI_init (1:2)=', ROS_front(1:min(2,size(ROS_front)))
+  print *, 'FI_init (1:2)=', FI_init(1:min(2,size(FI_init)))
   print *, 'CFB (1:2,1)=', CFB(1:min(2,size(CFB)),1)
   print *, 'ROS_final (1:2,1)=', ROS_final(1:min(2,size(ROS_final)),1)
   print *, 'FI_final (1:2,1)=', FI_final(1:min(2,size(FI_final)),1)
