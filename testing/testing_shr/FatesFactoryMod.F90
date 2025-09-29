@@ -225,6 +225,7 @@ module FatesFactoryMod
     integer,                          intent(in), optional :: canopy_layer ! canopy layer
     real(r8),                         intent(in), optional :: elong_factor ! site-level elongation factor
     real(r8),                         intent(in), optional :: patch_area   ! patch area [m2]
+    !real(r8),                         intent(in), optional :: canopy_fuel  ! 1-hour canopy fuel [kg biomss]
     
     ! LOCALS:
     class(prt_vartypes), pointer :: prt                ! PARTEH object
@@ -237,6 +238,7 @@ module FatesFactoryMod
     real(r8)                     :: age_local          ! local age [yrs]
     real(r8)                     :: elong_fact_local   ! local elongation factor
     real(r8)                     :: patch_area_local   ! local patch area [m2]
+    !real(r8)                     :: canopy_fuel_local  ! local canopy fuel [kg biomass]
     real(r8)                     :: height             ! height [m]
     real(r8)                     :: can_area           ! canopy area [m2]
     real(r8)                     :: c_struct           ! structural carbon [kgC]
@@ -260,6 +262,7 @@ module FatesFactoryMod
     real(r8), parameter :: elong_factor_default = 1.0_r8 ! default elongation factor
     integer,  parameter :: canopy_layer_default = 1      ! default canopy layer
     real(r8), parameter :: patch_area_default = 100.0_r8 ! default patch area [m2]
+   ! real(r8), parameter :: canopy_fuel_default = 0.1_r8  ! default canopy fuel [kg biomass]
     
     ! set local values
     if (present(dbh)) then
@@ -309,6 +312,12 @@ module FatesFactoryMod
     else 
       canopy_layer_local = canopy_layer_default 
     end if
+
+  !  if (present(canopy_fuel)) then
+  !    canopy_fuel_local = canopy_fuel
+  !  else
+  !    canopy_fuel_local = canopy_fuel_default
+  !  end if
     
     ! set leaf elongation factors
     phen_select: select case (prt_params%phen_leaf_habit(pft))
