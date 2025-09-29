@@ -14,7 +14,7 @@ program FatesTestCanopyFuel
     use FatesFuelClassesMod,         only : num_fuel_classes, fuel_classes
     use FatesFuelMod,                only : fuel_type
     use FatesTestCrownFireMod,       only : ROSWrapper, EffectiveWindWrapper, WriteCanopyFuelData
-    use CrownFireEquationsMod,       only : MaxHeight, BiomassBin
+    use CrownFireEquationsMod,       only : MaxHeight !, BiomassBin
     use CrownFireEquationsMod,       only : PassiveCrownFireIntensity, CrownFireBehaveFM10
     use CrownFireEquationsMod,       only : HeatReleasePerArea, CrownFractionBurnt
     use CrownFireEquationsMod,       only : CrownFireIntensity
