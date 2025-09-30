@@ -8,10 +8,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from functional_class import FunctionalTest
-from utils_plotting import blank_plot
-
-COLORS = ["#793922", "#99291F", "#CC9728", "#6B8939", "#2C778A", "#2C378A"]
-
 
 class CanopyFuelTest(FunctionalTest):
     """Canopy fuel test class"""
@@ -130,7 +126,7 @@ class CanopyFuelTest(FunctionalTest):
         varname: str,
         units: str,
         save_figs: bool,
-        plot_dir: bool,
+        plot_dir: str,
         by_fuel_model: bool = False,
         stacked: bool = False,
           ):
@@ -140,7 +136,7 @@ class CanopyFuelTest(FunctionalTest):
         var (str): variable to plot
         varname (str): variable name for y-axis
         units (str): unit expression
-        save_figs (bool): whether to save figure or not
+        save_figs (str): dir to save figure
         plot_dir (bool): which dir to save figs
         by_fuel_model (bool, optional): whether or not the bar plot is grouped by fuel model, default to True
 
