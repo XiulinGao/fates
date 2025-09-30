@@ -28,7 +28,7 @@ contains
   subroutine ROSWrapper(bd, SAV, fuel_load, fmc, mef, fire_weather, effect_wind, ROS, i_r)
     !
     ! DESCRIPTION
-    ! Calls a dequence of functions for surface fire rate of spread 
+    ! Calls a sequence of functions to calculate surface fire rate of spread 
     !
     ! ARGUMENTS:
     real(r8), intent(in)            :: bd           ! fuel bulk density no trunk [kg/m3]
@@ -91,7 +91,7 @@ contains
   subroutine EffectiveWindWrapper(tree_area, grass_area, area, wind, effect_wind)
     !
     ! DESCRIPTION
-    ! Call a sequence of function to calculate effective wind speed
+    ! Call a sequence of calculations to get effective wind speed
     !
     ! ARGUMENTS
     real(r8), intent(in)                  :: tree_area             ! total tree area of the test patch [m2]
@@ -146,8 +146,6 @@ contains
     real(r8),           intent(in) :: FI_final(:,:)
     integer,            intent(in) :: fuel_models(:)
     integer,            intent(in) :: patch_types(:)
-  !  character(len=2),   intent(in) :: carrier(:)
-   ! character(len=2),   intent(in) :: pa_carrier(:)
 
     ! LOCALS:
     integer           :: ncid         ! netcdf id
@@ -158,7 +156,6 @@ contains
     integer           :: ROS_frontID, ROS_actID, ROS_minID, ROS_finID
     integer           :: FIID, FI_initID, FI_finID
     integer           :: CFBID
-   ! integer           :: cID, pID
 
     ! dimension names
     dim_names = [character(len=20) :: 'patch_type', 'fuel_model']
@@ -183,18 +180,6 @@ contains
     [character(len=150) :: '', 'fuel model index'], 2, modID)
 
     ! register variables
-
-    ! register patch carrier
- !   call RegisterVar(ncid, 'pa_carrier', dimIDs(1:1), type_char,        &
- !   [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
- !   [character(len=150) :: 'patch_type', '', 'carrier of patch'],  &
- !   3, pID)
-
-    ! register fuel model carrier
- !   call RegisterVar(ncid, 'mod_carrier', dimIDs(2:2), type_char,       &
- !   [character(len=20)  :: 'coordinates', 'units', 'long_name'],        &
- !   [character(len=150) :: 'fuel_model', '', 'carrier of fuel'],  &
- !   3, cID)
 
     ! register actual variables
     ! register CBD
@@ -269,8 +254,6 @@ contains
     ! write out data
     call WriteVar(ncid, patchID, patch_types(:))
     call WriteVar(ncid, modID, fuel_models(:))
- !   call WriteVar(ncid, pID, pa_carrier(:))
- !   call WriteVar(ncid, cID, carrier(:))
     call WriteVar(ncid, CBDID, CBD(:))
     call WriteVar(ncid, CBHID, CBH(:))
     call WriteVar(ncid, cflID, canopy_fuel_load(:))

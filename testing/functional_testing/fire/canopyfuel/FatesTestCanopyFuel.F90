@@ -45,7 +45,6 @@ program FatesTestCanopyFuel
   character(len=100),                allocatable :: fuel_names(:)        ! names of fuel models
   character(len=2),                  allocatable :: carriers(:)      ! carriers of fuel models
   character(len=100),                allocatable :: patch_names(:)       ! names of patch types
-  character(len=2),                  allocatable :: pa_carriers(:)       ! carriers of patch types
   type(fates_patch_type),            pointer     :: patch        ! patch
   type(fates_cohort_type),           pointer     :: cohort       ! cohort
   
@@ -101,7 +100,7 @@ program FatesTestCanopyFuel
   ! fuel models and patch types to test
   integer, parameter, dimension(2) :: fuel_models = (/10, 11/)
   integer, parameter, dimension(4) :: patch_ids = (/1, 5, 6, 7/)
-  character(len=*), parameter, dimension(4) :: patch_types = (/'temperate', 'tropical', 'low density', 'high density'/)
+ ! character(len=*), parameter, dimension(4) :: patch_types = (/'temperate', 'tropical', 'low density', 'high density'/)
   
   ! number of fuel models  and patch types to test
   num_fuel_models = size(fuel_models)
@@ -114,7 +113,6 @@ program FatesTestCanopyFuel
   allocate(fuel_names(num_fuel_models))
   allocate(carriers(num_fuel_models))
   allocate(patch_names(num_patch_types))
-  allocate(pa_carriers(num_patch_types))
   allocate(FI(num_patch_types, num_fuel_models))
   allocate(FI_init(num_patch_types))
   allocate(canopy_fuel_load(num_patch_types))
@@ -167,7 +165,6 @@ program FatesTestCanopyFuel
   do p = 1, num_patch_types
     i = patch_data%PatchDataPosition(patch_id=patch_ids(p))
     call GetSyntheticPatch(patch_data%patches(i), num_levsoil, patch)
-    pa_carriers(p) = patch_types(p)
     
     ! update patch tree and grass area
     call patch%UpdateTreeGrassArea()
@@ -274,9 +271,10 @@ program FatesTestCanopyFuel
         call ROSWrapper(fuel(f)%bulk_density_notrunks, fuel(f)%SAV_notrunks,    &
         fuel(f)%non_trunk_loading, fuel(f)%average_moisture_notrunks,   &
         fuel(f)%MEF_notrunks, NI, effect_wind, ROS, i_r)
+
         HPA = HeatReleasePerArea(fuel(f)%SAV_notrunks, i_r)
         ROS_init = (60.0_r8 * FI_init(p)) / HPA
-
+        ! calculate crown fraction burnt
         call CrownFractionBurnt(ROS_active, ROS_critical(p), ROS_front(p,f), &
         ROS_init, ROS, active_crownfire, passive_crownfire, crown_frac_burnt)
         CFB(p,f) = crown_frac_burnt
@@ -314,9 +312,6 @@ program FatesTestCanopyFuel
   print *, 'FI_final (1:2,1)=', FI_final(1:min(2,size(FI_final)),1)
 
 
-
-
-
   ! write out data
   call WriteCanopyFuelData(out_file, num_fuel_models, num_patch_types, CBD, CBH, &
   canopy_fuel_load, ROS_front, FI, FI_init, ROS_actfm10, ROS_critical, CFB,      &
@@ -324,8 +319,3 @@ program FatesTestCanopyFuel
 
 
 end program FatesTestCanopyFuel
-
-
-
-
-
