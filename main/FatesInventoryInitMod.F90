@@ -158,6 +158,8 @@ contains
 
       real(r8),                        allocatable :: inv_lat_list(:)      ! list of lat coords
       real(r8),                        allocatable :: inv_lon_list(:)      ! list of lon coords
+      real(r8),                        allocatable :: delta_lon_list(:)    ! list of delta lon between model grid and inv sites [0-180 degree]
+      real(r8),                        allocatable :: dist_list(:)         ! list of distance between model grid and inventory sites
       integer                                      :: invsite              ! index of inventory site
                                                                            ! closest to actual site
       integer                                      :: el                   ! loop counter for number of elements
@@ -167,6 +169,7 @@ contains
       character(len=patchname_strlen), allocatable :: patch_name_vec(:)    ! vector of patch ID strings
       real(r8)                                     :: basal_area_postf     ! basal area before fusion (m2/ha)
       real(r8)                                     :: basal_area_pref      ! basal area after fusion (m2/ha)
+      
     
       ! I. Load the inventory list file, do some file handle checks
       ! ------------------------------------------------------------------------------------------
@@ -219,8 +222,6 @@ contains
             inv_pss_list, inv_css_list, &
             inv_lat_list, inv_lon_list)
 
-      inv_lon_list(:) = inv_lon_list(:) - 360.0_r8
-
       ! We can close the list file now
       close(sitelist_file_unit, iostat = ios)
       if( ios /= 0 ) then
@@ -234,13 +235,14 @@ contains
       ! For each site, identify the most proximal PSS/CSS couplet, read-in the data
       ! allocate linked lists and assign to memory
       do s = 1, nsites
-         invsite = &
-               minloc( (sites(s)%lat-inv_lat_list(:))**2.0_r8 + &
-               (sites(s)%lon-inv_lon_list(:))**2.0_r8 , dim=1)
+         delta_lon_list = abs(modulo((sites(s)%lon - inv_lon_list(:)) + & 
+         180.0_r8, 360.0_r8)-180.0_r8)
+         dist_list = (sites(s)%lat - inv_lat_list(:))**2.0_r8 + &
+         delta_lon_list**2.0_r8
+         invsite = minloc(dist_list, dim=1)
 
          ! Do a sanity check on the distance separation between physical site and model site
-         if ( sqrt( (sites(s)%lat-inv_lat_list(invsite))**2.0_r8 + &
-               (sites(s)%lon-inv_lon_list(invsite))**2.0_r8 ) > max_site_adjacency_deg ) then
+         if ( sqrt(dist_list) > max_site_adjacency_deg ) then
             write(fates_log(), *) 'Model site at lat:',sites(s)%lat,' lon:',sites(s)%lon
             write(fates_log(), *) 'has no reasonably proximal site in the inventory site list.'
             write(fates_log(), *) 'Closest is at lat:',inv_lat_list(invsite),' lon:',inv_lon_list(invsite)
