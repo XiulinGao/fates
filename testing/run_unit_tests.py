@@ -29,9 +29,8 @@ add_cime_lib_to_path()
 from CIME.utils import run_cmd_no_fail  # pylint: disable=wrong-import-position,import-error,wrong-import-order
 
 # constants for this script
-_FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-_CMAKE_BASE_DIR = os.path.join(_FILE_DIR, os.pardir)
-_DEFAULT_CONFIG_FILE = os.path.join(_FILE_DIR, "unit_tests.cfg")
+_CMAKE_BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../")
+_DEFAULT_CONFIG_FILE = "unit_tests.cfg"
 _TEST_SUB_DIR = "testing"
 
 
@@ -57,13 +56,6 @@ def commandline_args():
         default=os.path.join(_CMAKE_BASE_DIR, "_build"),
         help="Directory where tests are built.\n"
         "Will be created if it does not exist.\n",
-    )
-
-    parser.add_argument(
-        "--config-file",
-        type=str,
-        default=_DEFAULT_CONFIG_FILE,
-        help=f"Configuration file where test list is defined. Default: '{_DEFAULT_CONFIG_FILE}'",
     )
 
     parser.add_argument(
@@ -137,8 +129,9 @@ def main():
     Reads in command-line arguments and then runs the tests.
     """
 
+    full_test_dict = config_to_dict(_DEFAULT_CONFIG_FILE)
+
     args = commandline_args()
-    full_test_dict = config_to_dict(args.config_file)
     test_dict = parse_test_list(full_test_dict, args.test_list)
 
     run_unit_tests(

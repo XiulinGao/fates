@@ -5,17 +5,16 @@ import os
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-from functional_class_with_drivers import FunctionalTestWithDrivers
+from functional_class import FunctionalTest
 
 
-class FuelTest(FunctionalTestWithDrivers):
+class FuelTest(FunctionalTest):
     """Fuel test class"""
 
     name = "fuel"
 
     def __init__(self, test_dict):
         super().__init__(
-            test_dict["datm_file"],
             FuelTest.name,
             test_dict["test_dir"],
             test_dict["test_exe"],

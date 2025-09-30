@@ -1,7 +1,7 @@
 program FatesTestQuadSolvers
 
   use FatesConstantsMod, only : r8 => fates_r8
-  use FatesUtilsMod,     only : QuadraticRootsNSWC
+  use FatesUtilsMod,     only : QuadraticRootsNSWC, QuadraticRootsSridharachary
   use FatesUtilsMod,     only : GetNeighborDistance
 
   implicit none
@@ -15,7 +15,6 @@ program FatesTestQuadSolvers
   real(r8) :: a(n), b(n), c(n) ! coefficients for quadratic solvers
   real(r8) :: root1(n)         ! real part of first root of quadratic solver
   real(r8) :: root2(n)         ! real part of second root of quadratic solver
-  logical  :: err              ! error
 
   interface
 
@@ -43,7 +42,7 @@ program FatesTestQuadSolvers
   c = (/1.0_r8, 12.0_r8, 3.0_r8, 1.1_r8/)
 
   do i = 1, n
-    call QuadraticRootsNSWC(a(i), b(i), c(i), root1(i), root2(i), err)
+    call QuadraticRootsNSWC(a(i), b(i), c(i), root1(i), root2(i))
   end do
 
   call WriteQuadData(out_file, n, a, b, c, root1, root2)
