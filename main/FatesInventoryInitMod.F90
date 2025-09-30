@@ -242,7 +242,7 @@ contains
          invsite = minloc(dist_list, dim=1)
 
          ! Do a sanity check on the distance separation between physical site and model site
-         if ( sqrt(dist_list) > max_site_adjacency_deg ) then
+         if ( sqrt(dist_list(invsite)) > max_site_adjacency_deg ) then
             write(fates_log(), *) 'Model site at lat:',sites(s)%lat,' lon:',sites(s)%lon
             write(fates_log(), *) 'has no reasonably proximal site in the inventory site list.'
             write(fates_log(), *) 'Closest is at lat:',inv_lat_list(invsite),' lon:',inv_lon_list(invsite)
