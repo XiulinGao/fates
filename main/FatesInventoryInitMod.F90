@@ -11,15 +11,15 @@ module FatesInventoryInitMod
    !   site, or a small collection of sparse/irregularly spaced group of sites
    !
    ! Created: Ryan Knox June 2017
-   ! This code borrows heavily in concept from what is done in ED2.  
+   ! This code borrows heavily in concept from what is done in ED2.
    ! At the time of writing this ED2 is unlicensed, and only concepts were borrowed with no direct
    ! code copied.
    !
    !
    ! Update: Jessica Needham October 2023
    ! As discussed in FATES issue #1062 we decided to remove columns not used in FATES from the
-   ! PSS and CSS files. 
-  !-----------------------------------------------------------------------------------------------
+   ! PSS and CSS files.
+   !-----------------------------------------------------------------------------------------------
 
    ! CIME GLOBALS
 
@@ -100,9 +100,9 @@ module FatesInventoryInitMod
 
 
    real(r8), parameter :: max_site_adjacency_deg = 0.05_r8 ! The maximum distance in degrees
-                                                           ! allowed between a site's coordinate
-                                                           ! defined in model memory and a physical
-                                                           ! site listed in the file
+   ! allowed between a site's coordinate
+   ! defined in model memory and a physical
+   ! site listed in the file
 
    logical, parameter :: do_inventory_out = .false.
 
@@ -161,7 +161,7 @@ contains
       real(r8),                        allocatable :: delta_lon_list(:)    ! list of delta lon between model grid and inv sites [0-180 degree]
       real(r8),                        allocatable :: dist_list(:)         ! list of distance between model grid and inventory sites
       integer                                      :: invsite              ! index of inventory site
-                                                                           ! closest to actual site
+      ! closest to actual site
       integer                                      :: el                   ! loop counter for number of elements
       character(len=patchname_strlen)              :: patch_name           ! patch ID string in the file
       integer                                      :: npatches             ! number of patches found in PSS
@@ -169,8 +169,8 @@ contains
       character(len=patchname_strlen), allocatable :: patch_name_vec(:)    ! vector of patch ID strings
       real(r8)                                     :: basal_area_postf     ! basal area before fusion (m2/ha)
       real(r8)                                     :: basal_area_pref      ! basal area after fusion (m2/ha)
-      
-    
+
+
       ! I. Load the inventory list file, do some file handle checks
       ! ------------------------------------------------------------------------------------------
 
@@ -219,8 +219,8 @@ contains
       ! Check through the sites that are listed and do some sanity checks
       ! ------------------------------------------------------------------------------------------
       call assess_inventory_sites(sitelist_file_unit, nfilesites, inv_format_list, &
-            inv_pss_list, inv_css_list, &
-            inv_lat_list, inv_lon_list)
+         inv_pss_list, inv_css_list, &
+         inv_lat_list, inv_lon_list)
 
       ! We can close the list file now
       close(sitelist_file_unit, iostat = ios)
@@ -235,10 +235,10 @@ contains
       ! For each site, identify the most proximal PSS/CSS couplet, read-in the data
       ! allocate linked lists and assign to memory
       do s = 1, nsites
-         delta_lon_list = abs(modulo((sites(s)%lon - inv_lon_list(:)) + & 
-         180.0_r8, 360.0_r8)-180.0_r8)
+         delta_lon_list = abs(modulo((sites(s)%lon - inv_lon_list(:)) + &
+            180.0_r8, 360.0_r8)-180.0_r8)
          dist_list = (sites(s)%lat - inv_lat_list(:))**2.0_r8 + &
-         delta_lon_list**2.0_r8
+            delta_lon_list**2.0_r8
          invsite = minloc(dist_list, dim=1)
 
          ! Do a sanity check on the distance separation between physical site and model site
@@ -258,7 +258,7 @@ contains
 
          pss_file_unit = shr_file_getUnit()
          open(unit=pss_file_unit,file=trim(inv_pss_list(invsite)), &
-               status='OLD',action='READ',form='FORMATTED')
+            status='OLD',action='READ',form='FORMATTED')
          rewind(pss_file_unit)
          read(pss_file_unit,fmt=*) header_str
 
@@ -336,7 +336,7 @@ contains
                      olderpatch => currentpatch%older
                      if(associated(currentpatch%older)) then
                         if(newpatch%age >= currentpatch%age .and. &
-                              newpatch%age < olderpatch%age) then
+                           newpatch%age < olderpatch%age) then
                            ! Set the new patches pointers
                            newpatch%older   => currentpatch%older
                            newpatch%younger => currentpatch
@@ -369,12 +369,12 @@ contains
             enddo
          end if
 
-         
+
          ! OPEN THE CSS FILE
          ! ---------------------------------------------------------------------------------------
          css_file_unit = shr_file_getUnit()
          open(unit=css_file_unit,file=trim(inv_css_list(invsite)), &
-               status='OLD',action='READ',form='FORMATTED')
+            status='OLD',action='READ',form='FORMATTED')
          rewind(css_file_unit)
          read(css_file_unit,fmt=*) header_str
 
@@ -387,7 +387,7 @@ contains
          invcohortloop: do
             if ( inv_format_list(invsite) == 1 ) then
                call set_inventory_cohort_type1(sites(s),bc_in(s),css_file_unit, &
-                     npatches, patch_pointer_vec,patch_name_vec, ios)
+                  npatches, patch_pointer_vec,patch_name_vec, ios)
             end if
             if ( ios/=0 ) exit
          end do invcohortloop
@@ -410,7 +410,7 @@ contains
             currentcohort => currentpatch%tallest
             do while(associated(currentcohort))
                basal_area_pref = basal_area_pref + &
-                    currentcohort%n*0.25*((currentcohort%dbh/100.0_r8)**2.0_r8)*pi_const
+                  currentcohort%n*0.25*((currentcohort%dbh/100.0_r8)**2.0_r8)*pi_const
                currentcohort => currentcohort%shorter
             end do
             currentPatch => currentpatch%older
@@ -421,7 +421,7 @@ contains
          write(fates_log(),*) 'Lat: ',sites(s)%lat,' Lon: ',sites(s)%lon
          write(fates_log(),*) basal_area_pref,' [m2/ha]'
          write(fates_log(),*) '-------------------------------------------------------'
-                  
+
          ! Update the patch index numbers and fuse the cohorts in the patches
          ! ----------------------------------------------------------------------------------------
          ipa=1
@@ -462,10 +462,10 @@ contains
             currentcohort => currentpatch%tallest
             do while(associated(currentcohort))
                basal_area_postf = basal_area_postf + &
-                     currentcohort%n*0.25*((currentcohort%dbh/100.0_r8)**2.0_r8)*pi_const
+                  currentcohort%n*0.25*((currentcohort%dbh/100.0_r8)**2.0_r8)*pi_const
                currentcohort => currentcohort%shorter
             end do
-            
+
             currentPatch => currentpatch%older
          enddo
 
@@ -479,13 +479,13 @@ contains
 
          ! If this is flagged as true, the post-fusion inventory will be written to file
          ! in the run directory.
-         
+
          if(do_inventory_out)then
-             call write_inventory_type1(sites(s))
+            call write_inventory_type1(sites(s))
          end if
 
       end do
-      
+
       deallocate(inv_format_list, inv_pss_list, inv_css_list, inv_lat_list, inv_lon_list)
 
       return
@@ -525,8 +525,8 @@ contains
    ! ==============================================================================================
 
    subroutine assess_inventory_sites(sitelist_file_unit,nsites, inv_format_list, &
-         inv_pss_list,inv_css_list, &
-         inv_lat_list,inv_lon_list)
+      inv_pss_list,inv_css_list, &
+      inv_lat_list,inv_lon_list)
 
       ! -------------------------------------------------------------------------------------------
       ! This subroutine looks through the inventory descriptor file
@@ -699,9 +699,9 @@ contains
       real(r8)                                    :: pftfrac    ! the inverse of the total number of PFTs
 
       character(len=30),parameter    :: hd_fmt = &
-            '(A5,2X,A20,2X,A4,2X,A5,2X,A17)'
+         '(A5,2X,A20,2X,A4,2X,A5,2X,A17)'
       character(len=47),parameter    :: wr_fmt = &
-            '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14)'
+         '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14)'
 
       read(pss_file_unit,fmt=*,iostat=ios) p_time, p_name, p_trk, p_age, p_area
 
@@ -711,9 +711,9 @@ contains
 
       if( debug_inv) then
          write(*,fmt=hd_fmt) &
-               ' time','               patch',' trk','  age','             area'
+            ' time','               patch',' trk','  age','             area'
          write(*,fmt=wr_fmt) &
-               p_time, p_name, p_trk, p_age, p_area
+            p_time, p_name, p_trk, p_age, p_area
       end if
 
       ! Fill in the patch's memory structures
@@ -740,13 +740,21 @@ contains
 
       do el=1,num_elements
          litt => newpatch%litter(el)
-
-         call litt%InitConditions(init_leaf_fines=0._r8, &
-              init_root_fines=0._r8, &
-              init_ag_cwd=0._r8,     &
-              init_bg_cwd=0._r8,     &
-              init_seed=0._r8,   &
-              init_seed_germ=0._r8)
+         if(el == 1)then
+            call litt%InitConditions(init_leaf_fines=0.2_r8, &
+               init_root_fines=0._r8, &
+               init_ag_cwd=0.5_r8,     &
+               init_bg_cwd=0._r8,     &
+               init_seed=0._r8,   &
+               init_seed_germ=0._r8)
+         else
+            call litt%InitConditions(init_leaf_fines=0._r8, &
+               init_root_fines=0._r8, &
+               init_ag_cwd=0._r8,     &
+               init_bg_cwd=0._r8,     &
+               init_seed=0._r8,   &
+               init_seed_germ=0._r8)
+         end if
 
       end do
 
@@ -757,7 +765,7 @@ contains
    ! ==============================================================================================
 
    subroutine set_inventory_cohort_type1(csite,bc_in,css_file_unit,npatches, &
-                                           patch_pointer_vec,patch_name_vec,ios)
+      patch_pointer_vec,patch_name_vec,ios)
 
       ! --------------------------------------------------------------------------------------------
       ! This subroutine reads in a line of an inventory cohort file (css)
@@ -808,7 +816,7 @@ contains
       integer                                     :: c_pft         ! plant functional type index
       real(r8)                                    :: c_nplant      ! plant density (/m2)
       real(r8)                                    :: site_spread   ! initial guess of site spread
-                                                                   ! should be quickly re-calculated
+      ! should be quickly re-calculated
       integer,parameter                           :: rstatus = 0   ! recruit status
 
       type(fates_patch_type), pointer                :: cpatch        ! current patch pointer
@@ -835,11 +843,11 @@ contains
       real(r8) :: fnrt_drop_fraction ! Fine-root abscission fraction
       real(r8) :: stem_drop_fraction ! Stem abscission fraction
       integer  :: i_pft, ncohorts_to_create
-     
+
       character(len=35),parameter    :: hd_fmt = &
-           '(A7,2X,A20,2X,A5,2X,A6,2X,A4,2X,A9)'
+         '(A7,2X,A20,2X,A5,2X,A6,2X,A4,2X,A9)'
       character(len=43),parameter    :: wr_fmt = &
-           '(F7.1,2X,A20,2X,F5.2,2X,F6.2,2X,I4,2X,F9.6)'
+         '(F7.1,2X,A20,2X,F5.2,2X,F6.2,2X,I4,2X,F9.6)'
 
       real(r8), parameter :: abnormal_large_nplant = 1000.0_r8  ! Used to catch bad values
       real(r8), parameter :: abnormal_large_dbh    = 500.0_r8   ! I've never heard of a tree > 3m
@@ -848,17 +856,17 @@ contains
       logical, parameter :: old_type1_override = .false.
 
       if(old_type1_override) then
-         ! time patch cohort dbh hite pft nplant bdead alive Avgrg 
+         ! time patch cohort dbh hite pft nplant bdead alive Avgrg
          read(css_file_unit,fmt=*,iostat=ios) c_time, p_name, c_name, c_dbh, &
-              c_height, c_pft, c_nplant
+            c_height, c_pft, c_nplant
       else
          read(css_file_unit,fmt=*,iostat=ios) c_time, p_name, c_dbh, &
-              c_height, c_pft, c_nplant
+            c_height, c_pft, c_nplant
       end if
-         
+
       if( debug_inv) then
          write(*,fmt=wr_fmt) &
-              c_time, p_name, c_dbh, c_height, c_pft, c_nplant
+            c_time, p_name, c_dbh, c_height, c_pft, c_nplant
       end if
 
       if (ios/=0) return
@@ -877,7 +885,7 @@ contains
          write(fates_log(),fmt=hd_fmt) &
             '   time','               patch','  dbh','height',' pft','   nplant'
          write(fates_log(),fmt=wr_fmt) &
-               c_time, p_name, c_dbh, c_height, c_pft, c_nplant
+            c_time, p_name, c_dbh, c_height, c_pft, c_nplant
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
@@ -911,7 +919,7 @@ contains
          write(fates_log(), *) 'are both positive. One must be zero or negative.'
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
-      
+
       if (c_dbh > abnormal_large_dbh ) then
          write(fates_log(), *) 'inventory dbh: ', c_nplant
          write(fates_log(), *) 'The inventory produced a cohort with very large diameter [cm]'
@@ -951,16 +959,16 @@ contains
          allocate(temp_cohort)   ! A temporary cohort is needed because we want to make
 
          if (c_pft .ne. 0 ) then
-             ! normal case: assign each cohort to its specified PFT
-             temp_cohort%pft         = c_pft
+            ! normal case: assign each cohort to its specified PFT
+            temp_cohort%pft         = c_pft
          else
-             ! special case, make an identical cohort for each PFT
-             temp_cohort%pft         = i_pft
+            ! special case, make an identical cohort for each PFT
+            temp_cohort%pft         = i_pft
          endif
 
          temp_cohort%n           = c_nplant * cpatch%area / real(ncohorts_to_create,r8)
-         
-         temp_cohort%crowndamage = 1  ! assume undamaged 
+
+         temp_cohort%crowndamage = 1  ! assume undamaged
 
          if( c_dbh> 0._r8)then
             temp_cohort%dbh         = c_dbh
@@ -977,8 +985,8 @@ contains
          stem_drop_fraction = prt_params%phen_stem_drop_fraction(temp_cohort%pft)
 
          if( prt_params%season_decid(temp_cohort%pft) == itrue .and. &
-              any(csite%cstatus == [phen_cstat_nevercold,phen_cstat_iscold])) then
-            ! Cold deciduous and season is for leaves off. Set leaf status and 
+            any(csite%cstatus == [phen_cstat_nevercold,phen_cstat_iscold])) then
+            ! Cold deciduous and season is for leaves off. Set leaf status and
             ! elongation factors accordingly
             temp_cohort%efleaf_coh = 0.0_r8
             temp_cohort%effnrt_coh = 1._r8 - fnrt_drop_fraction
@@ -990,9 +998,9 @@ contains
             ! Drought deciduous.  For the default approach, elongation factor is either
             ! zero (full abscission) or one (fully flushed), but this can also be a
             ! fraction in other approaches. Here we assume that leaves are "on" (i.e.
-            ! either fully flushed or growing) if elongation factor is not 0 for the 
+            ! either fully flushed or growing) if elongation factor is not 0 for the
             ! initial conditions.
-            ! 
+            !
             ! For tissues other than leaves, the actual drop fraction is a combination
             ! of the elongation factor (e) and the drop fraction (x), which will ensure
             ! that the remaining tissue biomass will be exactly e when x=1, and exactly
@@ -1018,25 +1026,25 @@ contains
          end if
 
          call bagw_allom(temp_cohort%dbh,temp_cohort%pft, &
-              temp_cohort%crowndamage, temp_cohort%efstem_coh, c_agw)
+            temp_cohort%crowndamage, temp_cohort%efstem_coh, c_agw)
          ! Calculate coarse root biomass from allometry
          call bbgw_allom(temp_cohort%dbh,temp_cohort%pft, temp_cohort%efstem_coh, c_bgw)
 
          ! Calculate the leaf biomass (calculates a maximum first, then applies canopy trim
          ! and sla scaling factors)
          call bleaf(temp_cohort%dbh,temp_cohort%pft,temp_cohort%crowndamage,&
-              temp_cohort%canopy_trim, temp_cohort%efleaf_coh, c_leaf)
-         
+            temp_cohort%canopy_trim, temp_cohort%efleaf_coh, c_leaf)
+
          ! Calculate fine root biomass
 
          temp_cohort%l2fr = prt_params%allom_l2fr(temp_cohort%pft)
          call bfineroot(temp_cohort%dbh,temp_cohort%pft,temp_cohort%canopy_trim,temp_cohort%l2fr, &
-              temp_cohort%effnrt_coh, c_fnrt)
+            temp_cohort%effnrt_coh, c_fnrt)
 
          ! Calculate sapwood biomass
          call bsap_allom(temp_cohort%dbh,temp_cohort%pft,temp_cohort%crowndamage, &
-              temp_cohort%canopy_trim, temp_cohort%efstem_coh, a_sapw, c_sapw)
-         
+            temp_cohort%canopy_trim, temp_cohort%efstem_coh, a_sapw, c_sapw)
+
          call bdead_allom( c_agw, c_bgw, c_sapw, temp_cohort%pft, c_struct )
          call bstore_allom(temp_cohort%dbh, temp_cohort%pft, temp_cohort%crowndamage,temp_cohort%canopy_trim, c_store)
 
@@ -1047,7 +1055,7 @@ contains
          ! Allocate running mean functions
          !allocate(temp_cohort%tveg_lpa)
          !call temp_cohort%tveg_lpa%InitRMean(ema_lpa,init_value=cpatch%tveg_lpa%GetMean())
-         
+
          do el = 1,num_elements
 
             element_id = element_list(el)
@@ -1055,7 +1063,7 @@ contains
             ! If this is carbon12, then the initialization is straight forward
             ! otherwise, we use stoichiometric ratios
             select case(element_id)
-            case(carbon12_element)
+             case(carbon12_element)
 
                m_struct = c_struct
                m_leaf   = c_leaf
@@ -1064,38 +1072,38 @@ contains
                m_store  = c_store
                m_repro  = 0._r8
 
-            case(nitrogen_element)
+             case(nitrogen_element)
 
                ! For inventory runs, initialize nutrient contents half way between max and min stoichiometries
                m_struct = c_struct * &
-                    prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(struct_organ))
+                  prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(struct_organ))
 
                m_leaf   = c_leaf * &
-                    prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(leaf_organ))
+                  prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(leaf_organ))
 
                m_fnrt   = c_fnrt * &
-                    prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(fnrt_organ))
+                  prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(fnrt_organ))
 
                m_sapw   = c_sapw * &
-                    prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(sapw_organ))
+                  prt_params%nitr_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(sapw_organ))
 
                m_repro  = 0._r8
 
                m_store = StorageNutrientTarget(temp_cohort%pft, element_id, m_leaf, m_fnrt, m_sapw, m_struct)
 
-            case(phosphorus_element)
+             case(phosphorus_element)
 
                m_struct = c_struct * &
-                    prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(struct_organ))
+                  prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(struct_organ))
 
                m_leaf   = c_leaf * &
-                    prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(leaf_organ))
+                  prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(leaf_organ))
 
                m_fnrt   = c_fnrt * &
-                    prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(fnrt_organ))
-                    
+                  prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(fnrt_organ))
+
                m_sapw   = c_sapw * &
-                    prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(sapw_organ))
+                  prt_params%phos_stoich_p1(temp_cohort%pft,prt_params%organ_param_id(sapw_organ))
 
                m_repro  = 0._r8
 
@@ -1104,7 +1112,7 @@ contains
             end select
 
             select case(hlm_parteh_mode)
-            case (prt_carbon_allom_hyp,prt_cnp_flex_allom_hyp )
+             case (prt_carbon_allom_hyp,prt_cnp_flex_allom_hyp )
 
                ! Equally distribute leaf mass into available age-bins
                do iage = 1,nleafage
@@ -1117,7 +1125,7 @@ contains
                call SetState(prt_obj,struct_organ, element_id, m_struct)
                call SetState(prt_obj,repro_organ, element_id, m_repro)
 
-            case default
+             case default
                write(fates_log(),*) 'Unspecified PARTEH module during inventory intitialization'
                call endrun(msg=errMsg(sourcefile, __LINE__))
             end select
@@ -1127,110 +1135,110 @@ contains
          call prt_obj%CheckInitialConditions()
 
          call create_cohort(csite, cpatch, temp_cohort%pft, temp_cohort%n, temp_cohort%height, &
-              temp_cohort%coage, temp_cohort%dbh, &
-              prt_obj, temp_cohort%efleaf_coh, temp_cohort%effnrt_coh, &
-              temp_cohort%efstem_coh, temp_cohort%status_coh, rstatus, &
-              temp_cohort%canopy_trim,temp_cohort%c_area, &
-              1, temp_cohort%crowndamage, csite%spread, bc_in)
+            temp_cohort%coage, temp_cohort%dbh, &
+            prt_obj, temp_cohort%efleaf_coh, temp_cohort%effnrt_coh, &
+            temp_cohort%efstem_coh, temp_cohort%status_coh, rstatus, &
+            temp_cohort%canopy_trim,temp_cohort%c_area, &
+            1, temp_cohort%crowndamage, csite%spread, bc_in)
 
          deallocate(temp_cohort) ! get rid of temporary cohort
 
       end do
 
       return
-    end subroutine set_inventory_cohort_type1
+   end subroutine set_inventory_cohort_type1
 
    ! ====================================================================================
 
    subroutine write_inventory_type1(currentSite)
 
-       ! --------------------------------------------------------------------------------
-       ! This subroutine writes the cohort/patch inventory type files in the "type 1"
-       ! format.
-       ! The files will have a lat/long tag added to their name, and will be
-       ! generated in the run folder.
-       ! JFN Oct 2023 - updated to get rid of unused ED columns      
-       ! --------------------------------------------------------------------------------
+      ! --------------------------------------------------------------------------------
+      ! This subroutine writes the cohort/patch inventory type files in the "type 1"
+      ! format.
+      ! The files will have a lat/long tag added to their name, and will be
+      ! generated in the run folder.
+      ! JFN Oct 2023 - updated to get rid of unused ED columns
+      ! --------------------------------------------------------------------------------
 
-       use shr_file_mod, only        : shr_file_getUnit
-       use shr_file_mod, only        : shr_file_freeUnit
+      use shr_file_mod, only        : shr_file_getUnit
+      use shr_file_mod, only        : shr_file_freeUnit
 
-       ! Arguments
-       type(ed_site_type), target :: currentSite
+      ! Arguments
+      type(ed_site_type), target :: currentSite
 
-       ! Locals
-       type(fates_patch_type), pointer          :: currentpatch
-       type(fates_cohort_type), pointer         :: currentcohort
+      ! Locals
+      type(fates_patch_type), pointer          :: currentpatch
+      type(fates_cohort_type), pointer         :: currentcohort
 
-       character(len=128)                    :: pss_name_out         ! output file string
-       character(len=128)                    :: css_name_out         ! output file string
-       integer                               :: pss_file_out
-       integer                               :: css_file_out
-       integer                               :: ilat_int,ilat_dec    ! for output string parsing
-       integer                               :: ilon_int,ilon_dec    ! for output string parsing
-       character(len=32)                     :: patch_str
-       character(len=32)                     :: cohort_str
-       integer                               :: ipatch
-       integer                               :: icohort
-       character(len=1)                      :: ilat_sign,ilon_sign
+      character(len=128)                    :: pss_name_out         ! output file string
+      character(len=128)                    :: css_name_out         ! output file string
+      integer                               :: pss_file_out
+      integer                               :: css_file_out
+      integer                               :: ilat_int,ilat_dec    ! for output string parsing
+      integer                               :: ilon_int,ilon_dec    ! for output string parsing
+      character(len=32)                     :: patch_str
+      character(len=32)                     :: cohort_str
+      integer                               :: ipatch
+      integer                               :: icohort
+      character(len=1)                      :: ilat_sign,ilon_sign
 
-       ! Generate pss/css file name based on the location of the site
-       ilat_int = abs(int(currentSite%lat))
-       ilat_dec = int(100000*(abs(currentSite%lat) - real(ilat_int,r8)))
-       ilon_int = abs(int(currentSite%lon))
-       ilon_dec = int(100000*(abs(currentSite%lon) - real(ilon_int,r8)))
+      ! Generate pss/css file name based on the location of the site
+      ilat_int = abs(int(currentSite%lat))
+      ilat_dec = int(100000*(abs(currentSite%lat) - real(ilat_int,r8)))
+      ilon_int = abs(int(currentSite%lon))
+      ilon_dec = int(100000*(abs(currentSite%lon) - real(ilon_int,r8)))
 
-       if(currentSite%lat>=0._r8)then
-           ilat_sign = 'N'
-       else
-           ilat_sign = 'S'
-       end if
-       if(currentSite%lon>=0._r8)then
-           ilon_sign = 'E'
-       else
-           ilon_sign = 'W'
-       end if
- 
-       write(pss_name_out,'(A8,I2.2,A1,I5.5,A1,A1,I3.3,A1,I5.5,A1,A4)') &
-             'pss_out_',ilat_int,'.',ilat_dec,ilat_sign,'_',ilon_int,'.',ilon_dec,ilon_sign,'.txt'
-       write(css_name_out,'(A8,I2.2,A1,I5.5,A1,A1,I3.3,A1,I5.5,A1,A4)') &
-             'css_out_',ilat_int,'.',ilat_dec,ilat_sign,'_',ilon_int,'.',ilon_dec,ilon_sign,'.txt'
+      if(currentSite%lat>=0._r8)then
+         ilat_sign = 'N'
+      else
+         ilat_sign = 'S'
+      end if
+      if(currentSite%lon>=0._r8)then
+         ilon_sign = 'E'
+      else
+         ilon_sign = 'W'
+      end if
 
-       pss_file_out       = shr_file_getUnit()
-       css_file_out       = shr_file_getUnit()
+      write(pss_name_out,'(A8,I2.2,A1,I5.5,A1,A1,I3.3,A1,I5.5,A1,A4)') &
+         'pss_out_',ilat_int,'.',ilat_dec,ilat_sign,'_',ilon_int,'.',ilon_dec,ilon_sign,'.txt'
+      write(css_name_out,'(A8,I2.2,A1,I5.5,A1,A1,I3.3,A1,I5.5,A1,A4)') &
+         'css_out_',ilat_int,'.',ilat_dec,ilat_sign,'_',ilon_int,'.',ilon_dec,ilon_sign,'.txt'
 
-       open(unit=pss_file_out,file=trim(pss_name_out), status='UNKNOWN',action='WRITE',form='FORMATTED')
-       open(unit=css_file_out,file=trim(css_name_out), status='UNKNOWN',action='WRITE',form='FORMATTED')
+      pss_file_out       = shr_file_getUnit()
+      css_file_out       = shr_file_getUnit()
 
-       write(pss_file_out,*) 'time patch trk age area'
-       write(css_file_out,*) 'time patch dbh height pft nplant'
+      open(unit=pss_file_out,file=trim(pss_name_out), status='UNKNOWN',action='WRITE',form='FORMATTED')
+      open(unit=css_file_out,file=trim(css_name_out), status='UNKNOWN',action='WRITE',form='FORMATTED')
 
-       ipatch=0
-       currentpatch => currentSite%youngest_patch
-       do while(associated(currentpatch))
-           ipatch=ipatch+1
+      write(pss_file_out,*) 'time patch trk age area'
+      write(css_file_out,*) 'time patch dbh height pft nplant'
 
-           write(patch_str,'(A7,i4.4,A)') '<patch_',ipatch,'>'
+      ipatch=0
+      currentpatch => currentSite%youngest_patch
+      do while(associated(currentpatch))
+         ipatch=ipatch+1
 
-           write(pss_file_out,*) '0000 ',trim(patch_str),' 2 ',currentPatch%age,currentPatch%area/AREA
+         write(patch_str,'(A7,i4.4,A)') '<patch_',ipatch,'>'
 
-           icohort=0
-           currentcohort => currentpatch%tallest
-           do while(associated(currentcohort))
-               icohort=icohort+1
-               write(css_file_out,*) '0000 ',trim(patch_str), &
-                     currentCohort%dbh,-3.0_r8,currentCohort%pft,currentCohort%n/currentPatch%area
+         write(pss_file_out,*) '0000 ',trim(patch_str),' 2 ',currentPatch%age,currentPatch%area/AREA
 
-               currentcohort => currentcohort%shorter
-           end do
-           currentPatch => currentpatch%older
-       enddo
+         icohort=0
+         currentcohort => currentpatch%tallest
+         do while(associated(currentcohort))
+            icohort=icohort+1
+            write(css_file_out,*) '0000 ',trim(patch_str), &
+               currentCohort%dbh,-3.0_r8,currentCohort%pft,currentCohort%n/currentPatch%area
 
-       close(css_file_out)
-       close(pss_file_out)
+            currentcohort => currentcohort%shorter
+         end do
+         currentPatch => currentpatch%older
+      enddo
 
-       call shr_file_freeUnit(css_file_out)
-       call shr_file_freeUnit(pss_file_out)
+      close(css_file_out)
+      close(pss_file_out)
+
+      call shr_file_freeUnit(css_file_out)
+      call shr_file_freeUnit(pss_file_out)
 
    end subroutine write_inventory_type1
 
