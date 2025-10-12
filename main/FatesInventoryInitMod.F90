@@ -705,7 +705,7 @@ contains
       real(r8)                                    :: pftfrac    ! the inverse of the total number of PFTs
 
       character(len=30),parameter    :: hd_fmt = &
-         '(A5,2X,A20,2X,A4,2X,A5,2X,A17,2X,A20,2X,A10,2X,A10,2X,A10,2X,A10)'
+         '(A5,2X,A20,2X,A4,2X,A5,2X,A17,2X,A17,2X,A17,2X,A17,2X,A17,2X,A17)'
       character(len=47),parameter    :: wr_fmt = &
          '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14,2X,F17.14,2X,F17.14,2X,F17.14,2X,F17.14,&
          2X,F17.14)'
