@@ -719,9 +719,9 @@ contains
 
       if( debug_inv) then
          write(*,fmt=hd_fmt) &
-            ' time','               patch',' trk','  age','             area',   &
-            ' leaf litter','        1-hour cwd','        10-hour cwd','       100-hour cwd',  &
-            '       1000-hour cwd'
+            ' time',' patch',' trk','  age',' area',   &
+            ' leaf litter',' 1-hour cwd',' 10-hour cwd',' 100-hour cwd',  &
+            '1000-hour cwd'
          write(*,fmt=wr_fmt) &
             p_time, p_name, p_trk, p_age, p_area, p_lit_fine, p_lit_1h, p_lit_10h,  &
             p_lit_100h, p_lit_1000h
