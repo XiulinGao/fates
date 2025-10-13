@@ -704,7 +704,7 @@ contains
       integer                                     :: ipft       ! index for counting PFTs
       real(r8)                                    :: pftfrac    ! the inverse of the total number of PFTs
 
-      character(len=60),parameter    :: hd_fmt = &
+      character(len=100),parameter    :: hd_fmt = &
          '(A5,2X,A20,2X,A4,2X,A5,2X,A17,2X,A17,2X,A17,2X,A17,2X,A17,2X,A17)'
       character(len=100),parameter    :: wr_fmt = &
          '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14,2X,F17.14,2X,F17.14,2X,F17.14,2X,F17.14,&
@@ -719,8 +719,8 @@ contains
 
       if( debug_inv) then
          write(*,fmt=hd_fmt) &
-            ' time',' patch',' trk','  age',' area',   &
-            ' leaf litter',' 1-hour cwd',' 10-hour cwd',' 100-hour cwd',  &
+            'time','patch','trk','age','area',   &
+            'leaf litter','1-hour cwd','10-hour cwd','100-hour cwd',  &
             '1000-hour cwd'
          write(*,fmt=wr_fmt) &
             p_time, p_name, p_trk, p_age, p_area, p_lit_fine, p_lit_1h, p_lit_10h,  &
