@@ -156,6 +156,10 @@ program FatesTestCanopyFuel
       call SetUpFuel(fuel(f), fuel_models_array, fuel_models(f), fuel_names(f), carriers(f))
       ! weighting factor
       call fuel(f)%CalculateWeightingFactor(SF_val_SAV, SF_val_part_dens)
+      write(*,*) 'fuel weighting factor:'
+      write (*,*)  fuel(f)%weighting_factor
+      write(*,*) 'fuel mean SAV:'
+      write(*,*) fuel(f)%SAV_weighted
       ! sum up fuel and calculate loading
       call fuel(f)%SumLoading(SF_val_SAV, SF_val_part_dens)
       call fuel(f)%CalculateFractionalLoading(SF_val_SAV, SF_val_part_dens)

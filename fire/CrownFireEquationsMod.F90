@@ -278,10 +278,9 @@ contains
       call fuel_fm10%UpdateFuelMoisture(fuel_sav, drying_ratio, fireWeatherClass)
       call fuel_fm10%AverageSAV(fuel_sav)
       ! use total fuel and fuel bed depth to calculate fuel bulk density
-      fuel_depth       = fuel_depth_ft * ft_to_meter           !convert to meters
-      fuel_bd          = fuel_fm10%non_trunk_loading/fuel_depth                 !fuel bulk density (kg biomass/m3)
+      fuel_depth       = fuel_depth_ft * ft_to_meter            !convert to meters
+      fuel_bd          = fuel_fm10%non_trunk_loading/fuel_depth !fuel bulk density (kg biomass/m3)
       ! remove mineral content
-      fuel_fm10%non_trunk_loading = fuel_fm10%non_trunk_loading*(1.0_r8 - SF_val_miner_total)
       fuel_fm10%weighted_loading_dead = fuel_fm10%weighted_loading_dead*(1.0_r8 - SF_val_miner_total)
       fuel_fm10%weighted_loading_live = fuel_fm10%weighted_loading_live*(1.0_r8 - SF_val_miner_total)
 
@@ -293,9 +292,9 @@ contains
          beta_ratio_fm10 = beta_fm10 / beta_op_fm10
       end if
       ! calculate reaction intensity for dead and live fuel separately
-      ir_dead = ReactionIntensity(fuel_fm10%weighted_loading_dead/0.45_r8, fuel_fm10%SAV_weighted, &
+      ir_dead = ReactionIntensity(fuel_fm10%weighted_loading_dead, fuel_fm10%SAV_weighted, &
          beta_ratio_fm10, fuel_fm10%average_moisture_dead, fuel_fm10%MEF_dead)
-      ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live/0.45_r8, fuel_fm10%SAV_weighted, &
+      ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live, fuel_fm10%SAV_weighted, &
          beta_ratio_fm10, fuel_fm10%average_moisture_live, fuel_fm10%MEF_live)
       i_r_fm10 = ir_dead + ir_live
       ! calculate heat of preignition and effective heating number per fuel class
