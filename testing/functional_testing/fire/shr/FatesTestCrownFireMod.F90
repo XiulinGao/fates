@@ -9,11 +9,11 @@ module FatesTestCrownFireMod
    use FatesUnitTestIOMod,     only : OpenNCFile, GetVar, CloseNCFile, RegisterNCDims
    use FatesUnitTestIOMod,     only : RegisterVar, EndNCDef, WriteVar
    use FatesUnitTestIOMod,     only : type_double, type_char, type_int
-   use SFParamsMod,            only : SF_val_miner_total, SF_val_part_dens
+   use SFParamsMod,            only : SF_val_miner_total, SF_val_part_dens, SF_val_SAV
    use SFEquationsMod,         only : OptimumPackingRatio, ReactionIntensity
    use SFEquationsMod,         only : HeatofPreignition, EffectiveHeatingNumber
    use SFEquationsMod,         only : WindFactor, PropagatingFlux
-   use SFEquationsMod,         only : ForwardRateOfSpread
+   use SFEquationsMod,         only : HeatSink, ForwardRateOfSpread
 
    implicit none
    private
@@ -26,35 +26,41 @@ module FatesTestCrownFireMod
 
 contains
 
-   subroutine ROSWrapper(bd, SAV, fuel_load, fmc, mef, fire_weather, effect_wind, ROS, i_r)
+   subroutine ROSWrapper(fuelType, fire_weather, effect_wind, ROS, i_r)
       !
       ! DESCRIPTION
       ! Calls a sequence of functions to calculate surface fire rate of spread
       !
       ! ARGUMENTS:
-      real(r8), intent(in)            :: bd           ! fuel bulk density no trunk [kg/m3]
-      real(r8), intent(in)            :: SAV          ! fuel surface area to volume ratio [/cm]
-      real(r8), intent(in)            :: fuel_load    ! fuel amount excluding trunks [kgC/m2]
-      real(r8), intent(in)            :: fmc          ! weighted average fuel moisture content across non-trunk fuel classes [m3/m3]
-      real(r8), intent(in)            :: mef          ! weighted average of moisture of extinction across non-trunk fuel classes [m3/m3]
-      real(r8), intent(in)            :: fire_weather ! fire weather index [unitless]
-      real(r8), intent(in)            :: effect_wind   ! effective wind speed [m/min]
-      real(r8), intent(out)           :: ROS          ! forward rate of spread [m/min]
-      real(r8), intent(out)           :: i_r          ! reaction intensity [kJ/m2/min], required for calculating HPA
+      type(fuel_type), intent(in)            :: fuelType         ! fuel type
+      ! real(r8),        intent(in)            :: bd           ! fuel bulk density no trunk [kg/m3]
+      ! real(r8),        intent(in)            :: SAV          ! fuel surface area to volume ratio [/cm]
+      ! real(r8),        intent(in)            :: fuel_load    ! fuel amount excluding trunks [kgC/m2]
+      ! real(r8),        intent(in)            :: fmc          ! weighted average fuel moisture content across non-trunk fuel classes [m3/m3]
+      ! real(r8),        intent(in)            :: mef          ! weighted average of moisture of extinction of non-trunk fuel classes [m3/m3]
+      real(r8),        intent(in)            :: fire_weather ! fire weather index [unitless]
+      real(r8),        intent(in)            :: effect_wind   ! effective wind speed [m/min]
+      real(r8),        intent(out)           :: ROS          ! forward rate of spread [m/min]
+      real(r8),        intent(out)           :: i_r          ! reaction intensity [kJ/m2/min], required for calculating HPA
       !
       ! LOCALS:
-      real(r8)                        :: beta         ! packing ratio [unitless]
-      real(r8)                        :: beta_op      ! optimum packing ratio [unitless]
-      real(r8)                        :: beta_ratio   ! relative packing ratio [unitless]
-      real(r8)                        :: xi           ! propagating flux ratio [unitless]
-      real(r8)                        :: eps          ! effective heating number [unitless]
-      real(r8)                        :: phi_wind     ! wind factor [unitless]
-      real(r8)                        :: q_ig         ! heat of pre-ignition [kJ/kg]
-      real(r8)                        :: fuel_net     ! fuel load excluding mineral content [kgC/m2]
+      real(r8)                        :: beta           ! packing ratio [unitless]
+      real(r8)                        :: beta_op        ! optimum packing ratio [unitless]
+      real(r8)                        :: beta_ratio     ! relative packing ratio [unitless]
+      real(r8)                        :: xi             ! propagating flux ratio [unitless]
+      real(r8)                        :: phi_wind       ! wind factor [unitless]
+      real(r8)                        :: ir_dead        ! reaction intensity of dead fuel [kJ m-2 min-1]
+      real(r8)                        :: ir_live        ! reaction intensity of live fuel [kJ m-2 min-1]
+      real(r8)                        :: fuel_net_dead  ! dead fuel load excluding mineral content [kgC/m2]
+      real(r8)                        :: fuel_net_live  ! live fuel load excluding mineral content [kgC/m2]
+      real(r8)                        :: heat_sink      ! energy required to ignite per unit volume fuel bed [kJ m-3]
+      real(r8)                        :: q_ig(num_fuel_classes)  ! heat of pre-ignition [kJ/kg]
+      real(r8)                        :: eps(num_fuel_classes)   ! effective heating number [unitless]
+      integer                         :: i                       ! looping index
 
       ! fraction of fuel array occupied by fuels and optimum packing ratio
-      beta = bd / SF_val_part_dens
-      beta_op = OptimumPackingRatio(SAV)
+      beta = fuelType%bulk_density_weighted / SF_val_part_dens
+      beta_op = OptimumPackingRatio(fuelType%SAV_weighted)
       ! relative packing ratio
       if (beta_op < nearzero) then
          beta_ratio = 0.0_r8
@@ -63,26 +69,33 @@ contains
       end if
 
       ! remove mineral content
-      fuel_net = fuel_load*(1.0_r8 - SF_val_miner_total)
+      fuel_net_dead = fuelType%weighted_loading_dead*(1.0_r8 - SF_val_miner_total)
+      fuel_net_live = fuelType%weighted_loading_live*(1.0_r8 - SF_val_miner_total)
 
       ! reaction intensity
-      i_r = ReactionIntensity(fuel_net/0.45_r8, SAV, beta_ratio,  &
-         fmc, mef)
+      ir_dead = ReactionIntensity(fuel_net_dead/0.45_r8, fuelType%SAV_weighted, &
+         beta_ratio, fuelType%average_moisture_dead, fuelType%MEF_dead)
+      ir_live = ReactionIntensity(fuel_net_live/0.45_r8, fuelType%SAV_weighted, &
+         beta_ratio, fuelType%average_moisture_live, fuelType%MEF_live)
+      i_r = ir_dead + ir_live
+      ! heat of preignition and effective heating number
+      do i = 1, num_fuel_classes
+         q_ig(i) = HeatofPreignition(fuelType%moisture(i))
+         eps(i) = EffectiveHeatingNumber(SF_val_SAV(i))
+      end do
 
-      ! heat of preignition
-      q_ig = HeatofPreignition(fmc)
-
-      ! effective heating number
-      eps = EffectiveHeatingNumber(SAV)
+      ! heat sink
+      heat_sink = HeatSink(q_ig, eps, fuelType%weighting_factor, &
+         fuelType%bulk_density_weighted, fuelType%wf_dead, fuelType%wf_live)
 
       ! wind factor
-      phi_wind = WindFactor(effect_wind, beta_ratio, SAV)
+      phi_wind = WindFactor(effect_wind, beta_ratio, fuelType%SAV_weighted)
 
       ! propogation flux
-      xi = PropagatingFlux(beta, SAV)
+      xi = PropagatingFlux(beta, fuelType%SAV_weighted)
 
       ! forward rate of spread [m/min]
-      ROS = ForwardRateOfSpread(bd, eps, q_ig, i_r, xi, phi_wind)
+      ROS = ForwardRateOfSpread(heat_sink, i_r, xi, phi_wind)
 
    end subroutine ROSWrapper
 

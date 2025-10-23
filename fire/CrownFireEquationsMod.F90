@@ -180,7 +180,7 @@ contains
    !---------------------------------------------------------------------------------------
 
 
-   subroutine CrownFireBehaveFM10(fireWeatherClass, wind, canopy_bulk_density, ROS_active, CI)
+   subroutine CrownFireBehaveFM10(fireWeatherClass, drying_ratio, wind, canopy_bulk_density, ROS_active, CI)
       !
       ! DESCRIPTION
       ! Calculate theoretical rate of spread for a active crown fire using
@@ -192,10 +192,11 @@ contains
       use SFEquationsMod,      only : HeatSink, ForwardRateOfSpread
       use FatesFuelMod,        only : fuel_type
       use FatesFuelClassesMod, only : num_fuel_classes, fuel_classes
-      use SFParamsMod,         only : SF_val_part_dens, SF_val_drying_ratio, SF_val_miner_total
+      use SFParamsMod,         only : SF_val_part_dens, SF_val_miner_total
 
       ! ARGUMENTS:
       class(fire_weather), intent(in)  :: fireWeatherClass    ! fireWeatherClass
+      real(r8), intent(in)             :: drying_ratio        ! parameter controls for fuel moisture [unitless]
       real(r8), intent(in)             :: wind                ! Site wind speed [m/s]
       real(r8), intent(in)             :: canopy_bulk_density ! Canopy fuel bulk density [kg biomass / m3]               !
       real(r8), intent(out)            :: ROS_active          ! Rate of spread of active crown fire using fuel model 10  [m/min]
@@ -267,7 +268,7 @@ contains
       call fuel_fm10%CalculateWeightingFactor(fuel_sav, SF_val_part_dens)
       call fuel_fm10%SumLoading()
       call fuel_fm10%CalculateFractionalLoading()
-      call fuel_fm10%UpdateFuelMoisture(fuel_sav, SF_val_drying_ratio, fireWeatherClass)
+      call fuel_fm10%UpdateFuelMoisture(fuel_sav, drying_ratio, fireWeatherClass)
       call fuel_fm10%AverageSAV(fuel_sav)
       ! use total fuel and fuel bed depth to calculate fuel bulk density
       fuel_depth       = fuel_depth_ft * ft_to_meter           !convert to meters

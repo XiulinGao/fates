@@ -154,14 +154,15 @@ program FatesTestCanopyFuel
    do f = 1, num_fuel_models
       ! uses data from fuel_models to initialize fuel
       call SetUpFuel(fuel(f), fuel_models_array, fuel_models(f), fuel_names(f), carriers(f))
-
+      ! weighting factor
+      call fuel(f)%CalculateWeightingFactor(SF_val_SAV, SF_val_part_dens)
       ! sum up fuel and calculate loading
       call fuel(f)%SumLoading()
       call fuel(f)%CalculateFractionalLoading()
 
       ! calculate geometric properties
-      call fuel(f)%AverageBulkDensity_NoTrunks(SF_val_FBD)
-      call fuel(f)%AverageSAV_NoTrunks(SF_val_SAV)
+      call fuel(f)%AverageBulkDensity(SF_val_FBD)
+      call fuel(f)%AverageSAV(SF_val_SAV)
    end do
 
    ! initialize some global data we need
@@ -197,9 +198,7 @@ program FatesTestCanopyFuel
                ! first update fuel moisture content
                call fuel(f)%UpdateFuelMoisture(SF_val_SAV, drying_ratio, fireWeather)
 
-               call ROSWrapper(fuel(f)%bulk_density_notrunks, fuel(f)%SAV_notrunks,    &
-                  fuel(f)%non_trunk_loading, fuel(f)%average_moisture_notrunks,   &
-                  fuel(f)%MEF_notrunks, NI(n), effect_wind, ROS, i_r)
+               call ROSWrapper(fuel(f), NI(n), effect_wind, ROS, i_r)
                ROS_front(w, n, p, f) = ROS
 
             end do
@@ -280,13 +279,11 @@ program FatesTestCanopyFuel
 
                   if(FI(w,n,p,f) > SF_val_fire_threshold .and. &
                      FI(w,n,p,f) > FI_init(p,c))then
-                     call CrownFireBehaveFM10(drying_ratio, NI(n), &
-                        SF_val_miner_total, SF_val_part_dens, Wind(w), &
+                     call CrownFireBehaveFM10(fireWeather, Wind(w), &
                         CBD(p), ROS_active, CI)
                      ROS_actfm10(w,n,p,c,f) = ROS_active
                      CI_cp = CI
-                     call CrownFireBehaveFM10(drying_ratio, NI(n), &
-                        SF_val_miner_total, SF_val_part_dens, CI_cp, &
+                     call CrownFireBehaveFM10(fireWeather, CI_cp, &
                         CBD(p), ROS_active, CI)
                      ROS_actCI(w,n,p,c,f) = ROS_active
 
@@ -295,11 +292,9 @@ program FatesTestCanopyFuel
                         patch%area, CI, effect_wind)
 
                      ! calculate ROS_SA, which is the returned ROS
-                     call ROSWrapper(fuel(f)%bulk_density_notrunks, fuel(f)%SAV_notrunks,    &
-                        fuel(f)%non_trunk_loading, fuel(f)%average_moisture_notrunks,   &
-                        fuel(f)%MEF_notrunks, NI(n), effect_wind, ROS, i_r)
+                     call ROSWrapper(fuel(f), NI(n), effect_wind, ROS, i_r)
 
-                     HPA = HeatReleasePerArea(fuel(f)%SAV_notrunks, i_r)
+                     HPA = HeatReleasePerArea(fuel(f)%SAV_weighted, i_r)
                      ROS_init = (60.0_r8 * FI_init(p,c)) / HPA
 
                      ! calculate crown fraction burnt
