@@ -160,6 +160,9 @@ program FatesTestCanopyFuel
       write (*,*)  fuel(f)%weighting_factor
       write(*,*) 'fuel mean SAV:'
       write(*,*) fuel(f)%SAV_weighted
+      write(*,*) 'fuel loading:'
+      write(*,*) fuel(f)%loading
+
       ! sum up fuel and calculate loading
       call fuel(f)%SumLoading(SF_val_SAV, SF_val_part_dens)
       call fuel(f)%CalculateFractionalLoading(SF_val_SAV, SF_val_part_dens)
