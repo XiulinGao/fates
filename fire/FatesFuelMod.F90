@@ -515,11 +515,22 @@ contains
             md_d = md_d + fuel_load(i)*exp(-4.5264_r8/sav_val(i))
          else
             w_d = w_d + fuel_load(i)*exp(-16.4042_r8/sav_val(i))
+
          end if
 
       end do
-      W = w_n/w_d
-      moist_dead = md_n/md_d
+
+      if(w_d > nearzero)then
+         W = w_n/w_d
+      else
+         W = 0.0_r8
+      end if
+
+      if(md_d > nearzero)then
+         moist_dead = md_n/md_d
+      else
+         moist_dead = 0.0_r8
+      end if
       mef_live = 2.9_r8 * W * (1.0_r8 - moist_dead/mef_dead) - 0.226_r8
 
    end subroutine LiveFuelMoistureOfExtinction
