@@ -59,7 +59,7 @@ program FatesTestCanopyFuel
    real(r8),               allocatable            :: biom_matrix(:) ! array to hold biomass at 1m interval [kg biomass]
    real(r8)                                       :: crown_depth  ! crown length of a cohort [m]
    real(r8)                                       :: cbh_co       ! cohort base height, different from path level base height [m]
-   real(r8)                                       :: cwd_frac_adj(ncwd) ! adjusted fractional allocation of woody biomass to coarse wood debris pool
+   real(r8)                                       :: cwd_frac_adj(ncwd) ! adjusted fractional allocation of woody biomass to CWD pool
    real(r8)                                       :: ROS                 ! surface fire forward rate of spread [m/min]
    real(r8)                                       :: fuel_consumed(num_fuel_classes) ! fuel consumed by fuel class [kgC/m2]
    real(r8)                                       :: tfc_ros             ! overall fuel consumed by spreading fire ignoring trunks [kgC/m2]
@@ -279,12 +279,10 @@ program FatesTestCanopyFuel
 
                   if(FI(w,n,p,f) > SF_val_fire_threshold .and. &
                      FI(w,n,p,f) > FI_init(p,c))then
-                     call CrownFireBehaveFM10(fireWeather, Wind(w), &
-                        CBD(p), ROS_active, CI)
+                     call CrownFireBehaveFM10(fireWeather, drying_ratio, Wind(w), CBD(p), ROS_active, CI)
                      ROS_actfm10(w,n,p,c,f) = ROS_active
                      CI_cp = CI
-                     call CrownFireBehaveFM10(fireWeather, CI_cp, &
-                        CBD(p), ROS_active, CI)
+                     call CrownFireBehaveFM10(fireWeather, drying_ratio, CI_cp, CBD(p), ROS_active, CI)
                      ROS_actCI(w,n,p,c,f) = ROS_active
 
                      ! calculate effective wind speed using CI
