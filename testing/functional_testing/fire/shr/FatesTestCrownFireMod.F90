@@ -9,6 +9,8 @@ module FatesTestCrownFireMod
    use FatesUnitTestIOMod,     only : OpenNCFile, GetVar, CloseNCFile, RegisterNCDims
    use FatesUnitTestIOMod,     only : RegisterVar, EndNCDef, WriteVar
    use FatesUnitTestIOMod,     only : type_double, type_char, type_int
+   use FatesFuelMod,           only : fuel_type
+   use FatesFuelClassesMod,    only : num_fuel_classes
    use SFParamsMod,            only : SF_val_miner_total, SF_val_part_dens, SF_val_SAV
    use SFEquationsMod,         only : OptimumPackingRatio, ReactionIntensity
    use SFEquationsMod,         only : HeatofPreignition, EffectiveHeatingNumber

@@ -191,6 +191,7 @@ contains
       use SFEquationsMod,      only : WindFactor, PropagatingFlux
       use SFEquationsMod,      only : HeatSink, ForwardRateOfSpread
       use FatesFuelMod,        only : fuel_type
+      use SFFireWeatherMod,    only : fire_weather
       use FatesFuelClassesMod, only : num_fuel_classes, fuel_classes
       use SFParamsMod,         only : SF_val_part_dens, SF_val_miner_total
 
@@ -225,6 +226,8 @@ contains
       real(r8)              :: xi_fm10           ! propagating flux ratio for FM 10 [unitless]
       real(r8)              :: eps_fm10(num_fuel_classes)  ! effective heating number for FM 10 [unitless]
       real(r8)              :: q_ig_fm10(num_fuel_classes) ! heat of pre-ignition for FM 10 [kJ/kg]
+      real(r8)              :: eps_mean          ! average eps across fuel classes
+      real(r8)              :: q_ig_mean         ! average heat of preignition across fuel classes
       real(r8)              :: phi_wind_fm10     ! wind factor for FM 10 [unitless]
       real(r8)              :: heatsink_fm10     ! energy required to ignite per unit fuel bed [kJ m-3]
       integer               :: i                 ! looping index
@@ -249,6 +252,10 @@ contains
       real(r8),parameter  :: ft_to_meter = 0.3048_r8                     ! convert ft to meter
       real(r8),parameter  :: km_per_hr_to_m_per_min = 16.6667_r8         ! convert km/hour to m/min for wind speed
 
+      ! initialize mean heat of preignition and effective heating number
+      q_ig_mean = 0.0_r8
+      eps_mean = 0.0_r8
+
       ! set up fuels. Since currently FATES fuel classes don't include
       ! live woody fuels, we assign the live fuels from FM10 (only live woody no live grass)
       ! to live grass. Also, 1h to dead leaf, 10h to small branch, and 100h to large branch
@@ -266,8 +273,8 @@ contains
       ! update fuel chracteristics
       call fuel_fm10%UpdateLoading(fuel_1h, 0.0_r8, fuel_10h, fuel_100h, 0.0_r8, fuel_live)
       call fuel_fm10%CalculateWeightingFactor(fuel_sav, SF_val_part_dens)
-      call fuel_fm10%SumLoading()
-      call fuel_fm10%CalculateFractionalLoading()
+      call fuel_fm10%SumLoading(fuel_sav, SF_val_part_dens)
+      call fuel_fm10%CalculateFractionalLoading(fuel_sav, SF_val_part_dens)
       call fuel_fm10%UpdateFuelMoisture(fuel_sav, drying_ratio, fireWeatherClass)
       call fuel_fm10%AverageSAV(fuel_sav)
       ! use total fuel and fuel bed depth to calculate fuel bulk density
@@ -295,7 +302,10 @@ contains
       do i = 1, num_fuel_classes
          q_ig_fm10(i) = HeatofPreignition(fuel_fm10%moisture(i))
          eps_fm10(i) = EffectiveHeatingNumber(fuel_sav(i))
+         q_ig_mean = q_ig_mean + fuel_fm10%weighting_factor(i)*q_ig_fm10(i)
+         eps_mean = eps_mean + fuel_fm10%weighting_factor(i)*eps_fm10(i)
       end do
+      ! calculate heat required to ignite per unit volume fuel bed
       heatsink_fm10 = HeatSink(q_ig_fm10, eps_fm10, fuel_fm10%weighting_factor, &
          fuel_fm10%bulk_density_weighted, fuel_fm10%wf_dead, fuel_fm10%wf_live)
 
@@ -312,7 +322,7 @@ contains
       ROS_active = ROS_active * 3.34_r8
 
       ! Calculate crowning index, which is used for calculating ROS_SA
-      CI = CrowningIndex(eps_fm10, q_ig_fm10, i_r_fm10, &
+      CI = CrowningIndex(eps_mean, q_ig_mean, i_r_fm10, &
          canopy_bulk_density )
       CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
 
