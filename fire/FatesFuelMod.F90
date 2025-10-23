@@ -220,9 +220,17 @@ contains
       ! calculate weighting factor, EQ. 56 in Rothermel 1972
       do i = 1, num_fuel_classes
          if(i /= fuel_classes%live_grass()) then
-            this%weighting_factor(i) = this%mean_total_SA(i)/A_dead
+            if(A_dead > nearzero)then
+               this%weighting_factor(i) = this%mean_total_SA(i)/A_dead
+            else
+               this%weighting_factor(i) = 0.0_r8
+            end if
          else
-            this%weighting_factor(i) = this%mean_total_SA(i)/A_live
+            if(A_live > nearzero)then
+               this%weighting_factor(i) = this%mean_total_SA(i)/A_live
+            else
+               this%weighting_factor(i) = 0.0_r8
+            end if
          end if
       end do
 
