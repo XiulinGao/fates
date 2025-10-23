@@ -158,8 +158,6 @@ program FatesTestCanopyFuel
       call fuel(f)%CalculateWeightingFactor(SF_val_SAV, SF_val_part_dens)
       write(*,*) 'fuel weighting factor:'
       write (*,*)  fuel(f)%weighting_factor
-      write(*,*) 'fuel mean SAV:'
-      write(*,*) fuel(f)%SAV_weighted
       write(*,*) 'fuel loading:'
       write(*,*) fuel(f)%loading
 
@@ -170,6 +168,9 @@ program FatesTestCanopyFuel
       ! calculate geometric properties
       call fuel(f)%AverageBulkDensity(SF_val_FBD)
       call fuel(f)%AverageSAV(SF_val_SAV)
+
+      write(*,*) 'fuel mean SAV:'
+      write(*,*) fuel(f)%SAV_weighted
    end do
 
    ! initialize some global data we need
