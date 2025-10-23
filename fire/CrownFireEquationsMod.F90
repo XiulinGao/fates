@@ -269,7 +269,7 @@ contains
       fuel_sav100h = sav_100h_ft * sqft_cubicft_to_sqm_cubicm
       fuel_savlive  = sav_live_ft * sqft_cubicft_to_sqm_cubicm
       ! since live fuel moisture is calculated using SA:V of twig, we assign fuel_savlive to twig too
-      fuel_sav = (/fuel_savlive, fuel_sav10h, fuel_sav100h, 0.0_r8, fuel_sav1h, fuel_savlive/)
+      fuel_sav = (/fuel_savlive, fuel_sav10h, fuel_sav100h, 0.002_r8, fuel_sav1h, fuel_savlive/)
       ! update fuel chracteristics
       call fuel_fm10%UpdateLoading(fuel_1h, 0.0_r8, fuel_10h, fuel_100h, 0.0_r8, fuel_live)
       call fuel_fm10%CalculateWeightingFactor(fuel_sav, SF_val_part_dens)
