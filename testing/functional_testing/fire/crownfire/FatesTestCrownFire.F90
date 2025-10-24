@@ -235,6 +235,8 @@ subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
    use CrownFireEquationsMod,  only : CrownFireBehaveFM10
    use SFFireWeatherMod,       only : fire_weather
    use SFNesterovMod,          only : nesterov_index
+   use FatesFuelMod,                only : fuel_type
+   use FatesFuelClassesMod,         only : num_fuel_classes
 
 
    implicit none
