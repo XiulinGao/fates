@@ -520,7 +520,7 @@ contains
          if(i /= fuel_classes%live_grass())then
             w_n = w_n + fuel_load(i)*exp(-4.5276_r8/sav_val(i))
             md_n = md_n + fmc(i)*fuel_load(i)*exp(-4.5276_r8/sav_val(i))
-            md_d = md_d + fuel_load(i)*exp(-4.5264_r8/sav_val(i))
+            md_d = md_d + fuel_load(i)*exp(-4.5276_r8/sav_val(i))
          else
             w_d = w_d + fuel_load(i)*exp(-16.4042_r8/sav_val(i))
 
@@ -539,7 +539,7 @@ contains
       else
          moist_dead = 0.0_r8
       end if
-      mef_live = 2.9_r8 * W * (1.0_r8 - moist_dead/mef_dead) - 0.226_r8
+      mef_live = min(mef_dead, 2.9_r8 * W * (1.0_r8 - moist_dead/mef_dead) - 0.226_r8)
 
    end subroutine LiveFuelMoistureOfExtinction
 
