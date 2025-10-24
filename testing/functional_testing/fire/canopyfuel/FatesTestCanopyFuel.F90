@@ -42,6 +42,7 @@ program FatesTestCanopyFuel
    type(fuel_models_array_class)                  :: fuel_models_array    ! array of fuel models
    class(fire_weather),               pointer     :: fireWeather          ! fire weather object
    type(fuel_type),                   allocatable :: fuel(:)              ! fuel objects
+   type(fuel_type)                                :: fuel_fm10            ! fuel object for fuel model 10
    character(len=:),                  allocatable :: param_file   ! input parameter file
    character(len=100),                allocatable :: fuel_names(:)        ! names of fuel models
    character(len=2),                  allocatable :: carriers(:)      ! carriers of fuel models
@@ -70,6 +71,9 @@ program FatesTestCanopyFuel
    real(r8)                                       :: HPA                 ! heat release per area [kW/m2]
    real(r8)                                       :: ROS_init            ! ROS for initiating crown fire [m/min]
    real(r8)                                       :: crown_frac_burnt    ! crown fraction burnt by crown fire [0-1]
+   real(r8)                                       :: heatsink_fm10
+   real(r8)                                       :: xi_fm10
+   real(r8)                                       :: beta_ratio_fm10
    real(r8),               allocatable            :: Wind(:)             ! wind speed [m/min]
    real(r8),               allocatable            :: NI(:)               ! Nestrove index
    real(r8),               allocatable            :: CWC(:)              ! canopy water content [%]
@@ -287,10 +291,23 @@ program FatesTestCanopyFuel
 
                   if(FI(w,n,p,f) > SF_val_fire_threshold .and. &
                      FI(w,n,p,f) > FI_init(p,c))then
-                     call CrownFireBehaveFM10(fireWeather, drying_ratio, Wind(w), CBD(p), ROS_active, CI)
+                     call CrownFireBehaveFM10(fireWeather, drying_ratio, Wind(w), CBD(p), ROS_active, CI, &
+                        fuel_fm10, heatsink_fm10, xi_fm10, beta_ratio_fm10)
                      ROS_actfm10(w,n,p,c,f) = ROS_active
                      CI_cp = CI
-                     call CrownFireBehaveFM10(fireWeather, drying_ratio, CI_cp, CBD(p), ROS_active, CI)
+
+                     write(*,*) 'fuel model 10 SAV:' fuel_fm10%SAV_weighted
+                     write(*,*) 'fuel model 10 DFMC:' fuel_fm10%average_moisture_dead
+                     write(*,*) 'fuel model 10 LFMC' fuel_fm10%average_moisture_live
+                     write(*,*) 'fuel model 10 MEF dead and live' fuel_fm10%MEF_dead, fuel_fm10%MEF_live
+                     write(*,*) 'heat sink' heatsink_fm10
+                     write(*,*) 'xi' xi_fm10
+                     write(*,*) 'beta ratio' beta_ratio_fm10
+
+
+
+                     call CrownFireBehaveFM10(fireWeather, drying_ratio, CI_cp, CBD(p), ROS_active, CI, &
+                        fuel_fm10, heatsink_fm10, xi_fm10, beta_ratio_fm10)
                      ROS_actCI(w,n,p,c,f) = ROS_active
 
                      ! calculate effective wind speed using CI

@@ -261,11 +261,16 @@ subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
 
    ! LOCALS:
    class(fire_weather), pointer     :: fireWeather          ! fire weather object
+   type(fuel_type)                  :: fuel_fm10
+   real(r8)                         :: heatsink_fm10
+   real(r8)                         :: xi_fm10
+   real(r8)                         :: beta_ratio_fm10
    integer                          :: num_CBD     ! size of canopy bulk density array
    integer                          :: num_wind    ! size of wind speed array
    integer                          :: i, j        ! looping indicies
    real(r8)                         :: ROS_active  ! ROS_active output from CrownFireBehaveFM10 [m/min]
    real(r8)                         :: CI          ! CI output from CrownFireBehaveFM10 [m/min]
+
 
 
    ! allocate arrays

@@ -708,6 +708,10 @@ contains
       real(r8)                        :: CI_effective      ! effective wind speed using CI [m/min]
       real(r8)                        :: phi_wind_SA       ! wind factor for calculating ROS_SA [unitless]
       real(r8)                        :: q_ig         ! heat of pre-ignition of current patch [kJ/kg]
+      type(fuel_type)                  :: fuel_fm10
+      real(r8)                         :: heatsink_fm10
+      real(r8)                         :: xi_fm10
+      real(r8)                         :: beta_ratio_fm10
 
       ! Local parameters
       real(r8), parameter :: wind_atten_tree = 0.4_r8                    ! wind attenuation factor for tree fraction
@@ -733,7 +737,8 @@ contains
             if (currentPatch%FI > FI_init ) then
                ! calculate ROS_active and CI using fuel characteristics from fuel model 10
                call CrownFireBehaveFM10(currentSite%fireWeather, SF_val_drying_ratio, &
-                  currentSite%wind, currentPatch%fuel%canopy_bulk_density, ROS_active, CI)
+                  currentSite%wind, currentPatch%fuel%canopy_bulk_density, ROS_active, CI, &
+                  fuel_fm10, heatsink_fm10, xi_fm10, beta_ratio_fm10)
 
                ! Calculate ROS_acitive_min, EQ 14 in Scott & Reinhardt 2001
                ROS_active_min = 3.0_r8 / currentPatch%fuel%canopy_bulk_density

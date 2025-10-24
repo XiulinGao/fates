@@ -180,7 +180,8 @@ contains
    !---------------------------------------------------------------------------------------
 
 
-   subroutine CrownFireBehaveFM10(fireWeatherClass, drying_ratio, wind, canopy_bulk_density, ROS_active, CI)
+   subroutine CrownFireBehaveFM10(fireWeatherClass, drying_ratio, wind, canopy_bulk_density, ROS_active, &
+      CI, fuel_fm10, heatsink_fm10, xi_fm10, beta_ratio_fm10)
       !
       ! DESCRIPTION
       ! Calculate theoretical rate of spread for a active crown fire using
@@ -202,9 +203,14 @@ contains
       real(r8), intent(in)             :: canopy_bulk_density ! Canopy fuel bulk density [kg biomass / m3]               !
       real(r8), intent(out)            :: ROS_active          ! Rate of spread of active crown fire using fuel model 10  [m/min]
       real(r8), intent(out)            :: CI                  ! Open wind speed to sustain an active crown fire using fuel model 10 [m/min]
+      type(fuel_type), intent(out)     :: fuel_fm10           ! fuel object initialized using fuel model 10 data
+      real(r8), intent(out)            :: heatsink_fm10       ! energy required to ignite per unit fuel bed [kJ m-3]
+      real(r8), intent(out)            :: xi_fm10             ! propagating flux ratio for FM 10 [unitless]
+      real(r8), intent(out)            :: beta_ratio_fm10   ! relative packing ratio for FM 10 [unitless]
+
+
 
       ! Local variables:
-      type(fuel_type)       :: fuel_fm10         ! fuel object initialized using fuel model 10 data
       real(r8)              :: fuel_1h           ! 1 hour fuel load using FM 10 [kg]
       real(r8)              :: fuel_10h          ! 10 hour fuel load using FM 10 [kg]
       real(r8)              :: fuel_100h         ! 100 hour fuel load using FM 10 [kg]
@@ -219,17 +225,14 @@ contains
       real(r8)              :: midflame_wind     ! 40% of open wind speed
       real(r8)              :: beta_fm10         ! packing ratio derived for fuel model 10 [unitless]
       real(r8)              :: beta_op_fm10      ! optimum packing ratio for FM 10 [unitless]
-      real(r8)              :: beta_ratio_fm10   ! relative packing ratio for FM 10 [unitless]
       real(r8)              :: ir_dead           ! reaction intensity of dead fuel [kJ m-2 min-1]
       real(r8)              :: ir_live           ! reaction intensity of live fuel [kJ m-2 min-1]
       real(r8)              :: i_r_fm10          ! reaction intensity for FM 10 [kJ/m2/min]
-      real(r8)              :: xi_fm10           ! propagating flux ratio for FM 10 [unitless]
       real(r8)              :: eps_fm10(num_fuel_classes)  ! effective heating number for FM 10 [unitless]
       real(r8)              :: q_ig_fm10(num_fuel_classes) ! heat of pre-ignition for FM 10 [kJ/kg]
       real(r8)              :: eps_mean          ! average eps across fuel classes
       real(r8)              :: q_ig_mean         ! average heat of preignition across fuel classes
       real(r8)              :: phi_wind_fm10     ! wind factor for FM 10 [unitless]
-      real(r8)              :: heatsink_fm10     ! energy required to ignite per unit fuel bed [kJ m-3]
       integer               :: i                 ! looping index
 
       ! Parameters for fuel model 10 to describe fuel characteristics; and some constants
@@ -268,8 +271,11 @@ contains
       fuel_sav10h = sav_10h_ft * sqft_cubicft_to_sqm_cubicm
       fuel_sav100h = sav_100h_ft * sqft_cubicft_to_sqm_cubicm
       fuel_savlive  = sav_live_ft * sqft_cubicft_to_sqm_cubicm
+
       ! since live fuel moisture is calculated using SA:V of twig, we assign fuel_savlive to twig too
+      ! SA:V cannot be zero when used for calculation of moisture, so we set trunk SA:V to a small value
       fuel_sav = (/fuel_savlive, fuel_sav10h, fuel_sav100h, 0.002_r8, fuel_sav1h, fuel_savlive/)
+
       ! update fuel chracteristics
       call fuel_fm10%UpdateLoading(fuel_1h, 0.0_r8, fuel_10h, fuel_100h, 0.0_r8, fuel_live)
       call fuel_fm10%CalculateWeightingFactor(fuel_sav, SF_val_part_dens)
@@ -277,9 +283,11 @@ contains
       call fuel_fm10%CalculateFractionalLoading(fuel_sav, SF_val_part_dens)
       call fuel_fm10%UpdateFuelMoisture(fuel_sav, drying_ratio, fireWeatherClass)
       call fuel_fm10%AverageSAV(fuel_sav)
+
       ! use total fuel and fuel bed depth to calculate fuel bulk density
       fuel_depth       = fuel_depth_ft * ft_to_meter            !convert to meters
       fuel_bd          = fuel_fm10%non_trunk_loading/fuel_depth !fuel bulk density (kg biomass/m3)
+
       ! remove mineral content
       fuel_fm10%weighted_loading_dead = fuel_fm10%weighted_loading_dead*(1.0_r8 - SF_val_miner_total)
       fuel_fm10%weighted_loading_live = fuel_fm10%weighted_loading_live*(1.0_r8 - SF_val_miner_total)
@@ -291,12 +299,14 @@ contains
       else
          beta_ratio_fm10 = beta_fm10 / beta_op_fm10
       end if
+
       ! calculate reaction intensity for dead and live fuel separately
       ir_dead = ReactionIntensity(fuel_fm10%weighted_loading_dead, fuel_fm10%SAV_weighted, &
          beta_ratio_fm10, fuel_fm10%average_moisture_dead, fuel_fm10%MEF_dead)
       ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live, fuel_fm10%SAV_weighted, &
          beta_ratio_fm10, fuel_fm10%average_moisture_live, fuel_fm10%MEF_live)
       i_r_fm10 = ir_dead + ir_live
+
       ! calculate heat of preignition and effective heating number per fuel class
       do i = 1, num_fuel_classes
          q_ig_fm10(i) = HeatofPreignition(fuel_fm10%moisture(i))
@@ -304,6 +314,7 @@ contains
          q_ig_mean = q_ig_mean + fuel_fm10%weighting_factor(i)*q_ig_fm10(i)
          eps_mean = eps_mean + fuel_fm10%weighting_factor(i)*eps_fm10(i)
       end do
+
       ! calculate heat required to ignite per unit volume fuel bed
       heatsink_fm10 = HeatSink(q_ig_fm10, eps_fm10, fuel_fm10%weighting_factor, &
          fuel_fm10%bulk_density_weighted, fuel_fm10%wf_dead, fuel_fm10%wf_live)
