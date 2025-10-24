@@ -317,7 +317,7 @@ contains
 
       ! calculate heat required to ignite per unit volume fuel bed
       heatsink_fm10 = HeatSink(q_ig_fm10, eps_fm10, fuel_fm10%weighting_factor, &
-         fuel_fm10%bulk_density_weighted, fuel_fm10%wf_dead, fuel_fm10%wf_live)
+         fuel_bd, fuel_fm10%wf_dead, fuel_fm10%wf_live)
 
       midflame_wind = wind * 0.40_r8 ! Scott & Reinhardt 2001 use 40% of open wind speed as effective wind speed
 
