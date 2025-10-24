@@ -302,6 +302,7 @@ program FatesTestCanopyFuel
                      write(*,*) 'fuel model 10 MEF dead and live', fuel_fm10%MEF_dead, fuel_fm10%MEF_live
                      write(*,*) 'fuel model 10 wf_dead wf_live', fuel_fm10%wf_dead, fuel_fm10%wf_live
                      write(*,*) 'fuel model 10 FBD', fuel_fm10%bulk_density_weighted
+                     write(*,*) 'fuel model 10 no-trunk load', fuel_fm10%non_trunk_loading
                      write(*,*) 'fuel model 10 weighting factor', fuel_fm10%weighting_factor
                      write(*,*) 'heat sink', heatsink_fm10
                      write(*,*) 'xi', xi_fm10
