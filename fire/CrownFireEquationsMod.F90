@@ -100,7 +100,7 @@ contains
       else
          CI_temp = (164.8_r8 * eps * q_ig) / (i_r * canopy_bulk_density) - 1.0_r8
       end if
-      CrowningIndex = 0.0457_r8 * ((CI_temp / 0.001612_r8)**0.7_r8)
+      CrowningIndex = 0.0183_r8 * ((CI_temp / 0.001612_r8)**0.7_r8)
 
    end function CrowningIndex
 
