@@ -296,6 +296,7 @@ program FatesTestCanopyFuel
                      ROS_actfm10(w,n,p,c,f) = ROS_active
                      CI_cp = CI
 
+                     write(*,*) 'fuel model 10 moisture by class:', fuel_fm10%moisture
                      write(*,*) 'fuel model 10 SAV:', fuel_fm10%SAV_weighted
                      write(*,*) 'fuel model 10 DFMC:', fuel_fm10%average_moisture_dead
                      write(*,*) 'fuel model 10 LFMC', fuel_fm10%average_moisture_live
