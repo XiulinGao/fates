@@ -254,6 +254,7 @@ contains
       real(r8),parameter  :: sqft_cubicft_to_sqm_cubicm = 0.03280844_r8  ! convert ft2/ft3 to m2/m3
       real(r8),parameter  :: ft_to_meter = 0.3048_r8                     ! convert ft to meter
       real(r8),parameter  :: km_per_hr_to_m_per_min = 16.6667_r8         ! convert km/hour to m/min for wind speed
+      real(r8),parameter  :: sav_test = 57.73_r8
 
       ! initialize mean heat of preignition and effective heating number
       q_ig_mean = 0.0_r8
@@ -293,7 +294,7 @@ contains
       fuel_fm10%weighted_loading_live = fuel_fm10%weighted_loading_live*(1.0_r8 - SF_val_miner_total)
 
       beta_fm10 = fuel_bd / SF_val_part_dens
-      beta_op_fm10 = OptimumPackingRatio(fuel_fm10%SAV_weighted)
+      beta_op_fm10 = OptimumPackingRatio(sav_test)
       if(beta_op_fm10 < nearzero) then
          beta_ratio_fm10 = 0.0_r8
       else
@@ -301,9 +302,9 @@ contains
       end if
 
       ! calculate reaction intensity for dead and live fuel separately
-      ir_dead = ReactionIntensity(fuel_fm10%weighted_loading_dead, fuel_fm10%SAV_weighted, &
+      ir_dead = ReactionIntensity(fuel_fm10%weighted_loading_dead, sav_test, &
          beta_ratio_fm10, fuel_fm10%average_moisture_dead, fuel_fm10%MEF_dead)
-      ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live, fuel_fm10%SAV_weighted, &
+      ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live, sav_test, &
          beta_ratio_fm10, fuel_fm10%average_moisture_live, fuel_fm10%MEF_live)
       i_r_fm10 = ir_dead + ir_live
 
@@ -321,9 +322,9 @@ contains
 
       midflame_wind = wind * 0.40_r8 ! Scott & Reinhardt 2001 use 40% of open wind speed as effective wind speed
 
-      phi_wind_fm10 = WindFactor(midflame_wind, beta_ratio_fm10, fuel_fm10%SAV_weighted)
+      phi_wind_fm10 = WindFactor(midflame_wind, beta_ratio_fm10, sav_test)
 
-      xi_fm10 = PropagatingFlux(beta_fm10, fuel_fm10%SAV_weighted)
+      xi_fm10 = PropagatingFlux(beta_fm10, sav_test)
 
       ! Calculate ROS_active, used for determining whether there is active or passtive crown fire
       ROS_active = ForwardRateOfSpread(heatsink_fm10, i_r_fm10, xi_fm10, phi_wind_fm10)
