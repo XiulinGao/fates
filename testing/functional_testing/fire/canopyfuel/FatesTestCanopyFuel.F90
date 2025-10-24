@@ -296,15 +296,13 @@ program FatesTestCanopyFuel
                      ROS_actfm10(w,n,p,c,f) = ROS_active
                      CI_cp = CI
 
-                     write(*,*) 'fuel model 10 SAV:' fuel_fm10%SAV_weighted
-                     write(*,*) 'fuel model 10 DFMC:' fuel_fm10%average_moisture_dead
-                     write(*,*) 'fuel model 10 LFMC' fuel_fm10%average_moisture_live
-                     write(*,*) 'fuel model 10 MEF dead and live' fuel_fm10%MEF_dead, fuel_fm10%MEF_live
-                     write(*,*) 'heat sink' heatsink_fm10
-                     write(*,*) 'xi' xi_fm10
-                     write(*,*) 'beta ratio' beta_ratio_fm10
-
-
+                     write(*,*) 'fuel model 10 SAV:', fuel_fm10%SAV_weighted
+                     write(*,*) 'fuel model 10 DFMC:', fuel_fm10%average_moisture_dead
+                     write(*,*) 'fuel model 10 LFMC', fuel_fm10%average_moisture_live
+                     write(*,*) 'fuel model 10 MEF dead and live', fuel_fm10%MEF_dead, fuel_fm10%MEF_live
+                     write(*,*) 'heat sink', heatsink_fm10
+                     write(*,*) 'xi', xi_fm10
+                     write(*,*) 'beta ratio', beta_ratio_fm10
 
                      call CrownFireBehaveFM10(fireWeather, drying_ratio, CI_cp, CBD(p), ROS_active, CI, &
                         fuel_fm10, heatsink_fm10, xi_fm10, beta_ratio_fm10)

@@ -239,6 +239,7 @@ subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
    use FatesFuelClassesMod,         only : num_fuel_classes
 
 
+
    implicit none
 
    ! ARGUMENTS:
@@ -295,7 +296,8 @@ subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
       do j = 1, size(dratio_vals)
          drying_ratio(j) = dratio_vals(j)
 
-         call CrownFireBehaveFM10(fireWeather, drying_ratio(j), wind_ref, CBD(i), ROS_active, CI)
+         call CrownFireBehaveFM10(fireWeather, drying_ratio(j), wind_ref, CBD(i), ROS_active, CI, &
+            fuel_fm10, heatsink_fm10, xi_fm10, beta_ratio_fm10)
          CI_FM10(i, j) = CI
 
       end do
@@ -306,7 +308,8 @@ subroutine TestCrownFireFM10(CBD, wind, drying_ratio, ROS_active_FM10, CI_FM10)
 
       do j = 1, size(dratio_vals)
          drying_ratio(j) = dratio_vals(j)
-         call CrownFireBehaveFM10(fireWeather, drying_ratio(j), wind(i), cbd_ref, ROS_active, CI)
+         call CrownFireBehaveFM10(fireWeather, drying_ratio(j), wind(i), cbd_ref, ROS_active, CI, &
+            fuel_fm10, heatsink_fm10, xi_fm10, beta_ratio_fm10)
          ROS_active_FM10(i, j) = ROS_active
 
       end do
