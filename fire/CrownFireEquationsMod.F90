@@ -80,7 +80,7 @@ contains
 
 
    !---------------------------------------------------------------------------------------
-   real(r8) function CrowningIndex(eps, q_ig, i_r, canopy_bulk_density)
+   real(r8) function CrowningIndex(heatsink, i_r, xi, beta_ratio, SAV, canopy_bulk_density)
       !
       ! DESCRIPTION:
       ! Calculate open wind speed [km/hr] at which a fully active crown fire is sustained
@@ -88,20 +88,26 @@ contains
       ! XLG: currently we are ignoring slope effect
       !
       ! ARGUMENTS:
-      real(r8), intent(in) :: eps                  ! effective heating number [unitless]
-      real(r8), intent(in) :: q_ig                 ! heat of preignition [kJ/kg]
+      real(r8), intent(in) :: heatsink             ! energy required to ignite per unit volume fuel bed [kJ m-3]
       real(r8), intent(in) :: i_r                  ! reaction intensity [kJ/m2/min]
+      real(r8), intent(in) :: xi                   ! propagating flux [unitless]
+      real(r8), intent(in) :: beta_ratio           ! ratio of packing ratio to optimum packing ratio [0-1]
+      real(r8), intent(in) :: SAV                  ! average fuel bed SA:V [cm-1]
       real(r8), intent(in) :: canopy_bulk_density  ! canopy fuel bulk density [kg biomass / m3]
       ! Locals:
       real(r8)   :: CI_temp      ! temporary variables
+      real(r8)   :: B,C,E        ! constants for calculating wind factor
 
-      if(i_r <= nearzero .or. canopy_bulk_density <= nearzero) then
+      if(i_r <= nearzero .or. xi <= nearzero .or. canopy_bulk_density <= nearzero) then
          CI_temp = 0.0_r8
       else
          ! convert reaction intensity from kJ/m2/min to kW/m2/s
-         CI_temp = (164.8_r8 * eps * q_ig) / (i_r/60.0_r8 * canopy_bulk_density) - 1.0_r8
+         CI_temp = 3.0_r8/canopy_bulk_density*heatsink/(3.34_r8*i_r*xi) - 1.0_r8
       end if
-      CrowningIndex = 0.0457_r8 * ((CI_temp / 0.001612_r8)**0.7_r8)
+      B = 0.15988_r8*(SAV**0.54_r8)
+      C = 7.47_r8*(exp(-0.8711_r8*(SAV**0.55_r8)))
+      E = 0.715_r8*(exp(-0.01094_r8*SAV))
+      CrowningIndex = (CI_temp/((C*beta_ratio)**(-1.0_r8*E)))**(1.0_r8/B) * 0.457_r8
 
    end function CrowningIndex
 
@@ -335,13 +341,8 @@ contains
       ROS_active = ROS_active * 3.34_r8
 
       ! Calculate crowning index, which is used for calculating ROS_SA
-      CI_temp = (3.0_r8/canopy_bulk_density * heatsink_fm10) / &
-         (3.34_r8*i_r_fm10*xi_fm10) - 1.0_r8
-      b = 0.15988_r8*(fuel_fm10%SAV_weighted**0.54_r8)
-      c = 7.47_r8*(exp(-0.8711_r8*(fuel_fm10%SAV_weighted**0.55_r8)))
-      e = 0.715_r8*(exp(-0.01094_r8*fuel_fm10%SAV_weighted))
-
-      CI = (CI_temp/(c*(beta_ratio_fm10)**-e))**(1/b) * 0.0457_r8
+      CI = CrowningIndex(heatsink_fm10, i_r_fm10, xi_fm10, beta_ratio_fm10, &
+         fuel_fm10%SAV_weighted, canopy_bulk_density)
 
       CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
 
