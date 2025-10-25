@@ -326,6 +326,9 @@ program FatesTestCanopyFuel
                      write(*,*) 'ROS_SA is ', ROS
                      write(*,*) 'ROS_front is ', ROS_front(w,n,p,f)
                      write(*,*) 'ROS_init is ', ROS_init
+                     write(*,*) 'ROS_act is ', ROS_actfm10(w,n,p,f)
+                     write(*,*) 'ROS_front is ', ROS_front(w,n,p,f)
+                     write(*,*) 'ROS_critical is ', ROS_critical(p)
 
                      ! calculate crown fraction burnt
                      call CrownFireCFB(ROS_active, ROS_critical(p), ROS_front(w,n,p,f), &
