@@ -98,9 +98,10 @@ contains
       if(i_r <= nearzero .or. canopy_bulk_density <= nearzero) then
          CI_temp = 0.0_r8
       else
-         CI_temp = (164.8_r8 * eps * q_ig) / (i_r * canopy_bulk_density) - 1.0_r8
+         ! convert reaction intensity from kJ/m2/min to kW/m2/s
+         CI_temp = (164.8_r8 * eps * q_ig) / (i_r/60.0_r8 * canopy_bulk_density) - 1.0_r8
       end if
-      CrowningIndex = 0.0183_r8 * ((CI_temp / 0.001612_r8)**0.7_r8)
+      CrowningIndex = 0.0457_r8 * ((CI_temp / 0.001612_r8)**0.7_r8)
 
    end function CrowningIndex
 
@@ -300,7 +301,7 @@ contains
          beta_ratio_fm10 = beta_fm10 / beta_op_fm10
       end if
 
-      ! calculate reaction intensity for dead and live fuel separately
+      ! calculate reaction intensity for dead and live fuel separately [kJ m-2 min-1]
       ir_dead = ReactionIntensity(fuel_fm10%weighted_loading_dead, fuel_fm10%SAV_weighted, &
          beta_ratio_fm10, fuel_fm10%average_moisture_dead, fuel_fm10%MEF_dead)
       ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live, fuel_fm10%SAV_weighted, &
