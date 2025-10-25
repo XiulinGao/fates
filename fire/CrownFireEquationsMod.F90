@@ -107,7 +107,7 @@ contains
       B = 0.15988_r8*(SAV**0.54_r8)
       C = 7.47_r8*(exp(-0.8711_r8*(SAV**0.55_r8)))
       E = 0.715_r8*(exp(-0.01094_r8*SAV))
-      CrowningIndex = (CI_temp/((C*beta_ratio)**(-1.0_r8*E)))**(1.0_r8/B) * 0.457_r8
+      CrowningIndex = (CI_temp/((C*beta_ratio)**(-1.0_r8*E)))**(1.0_r8/B) * 0.0457_r8
 
    end function CrowningIndex
 
