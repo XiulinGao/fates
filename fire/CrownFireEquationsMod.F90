@@ -252,7 +252,7 @@ contains
       real(r8),parameter  :: sav_1h_ft   = 2000.0_r8                     ! BEHAVE model 1-hr SAV (ft2/ft3)
       real(r8),parameter  :: sav_10h_ft  = 109.0_r8                      ! BEHAVE model 10-hr SAV (ft2/ft3)
       real(r8),parameter  :: sav_100h_ft = 30.0_r8                       ! BEHAVE model 100-hr SAV (ft2/ft3)
-      real(r8),parameter  :: sav_live_ft  = 1650.0_r8                    ! BEHAVE model live SAV (ft2/ft3)
+      real(r8),parameter  :: sav_live_ft  = 1400.0_r8                    ! BEHAVE model live SAV (ft2/ft3)
       real(r8),parameter  :: tonnes_acre_to_kg_m2 = 0.2241701_r8         ! convert tons/acre to kg/m2
       real(r8),parameter  :: sqft_cubicft_to_sqm_cubicm = 0.03280844_r8  ! convert ft2/ft3 to m2/m3
       real(r8),parameter  :: ft_to_meter = 0.3048_r8                     ! convert ft to meter
@@ -309,7 +309,6 @@ contains
       ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live, fuel_fm10%SAV_weighted, &
          beta_ratio_fm10, fuel_fm10%average_moisture_live, fuel_fm10%MEF_live)
       i_r_fm10 = ir_dead + ir_live
-      i_r_fm10 = i_r_fm10
 
       ! calculate heat of preignition and effective heating number per fuel class
       do i = 1, num_fuel_classes

@@ -105,7 +105,7 @@ program FatesTestCanopyFuel
    real(r8), parameter               :: wind_max = 800.0_r8       ! max. wind speed to use [m/min]
    real(r8), parameter               :: wind_min = 100.0_r8       ! min. wind speed to use [m/min]
    real(r8), parameter               :: wind_inc = 25.0_r8        ! wind speed increment to scale [m/min]
-   real(r8), parameter :: drying_ratio = 5000.0_r8
+   real(r8), parameter :: drying_ratio = 45000.0_r8
    real(r8), parameter :: wind_atten_tree = 0.4_r8               ! wind attenuation factor for tree fraction
    real(r8), parameter :: wind_atten_grass = 0.6_r8              ! wind attenuation factor for grass fraction
    character(len=*), parameter :: out_file = 'canopyfuel_out.nc' ! output file
