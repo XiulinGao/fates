@@ -235,6 +235,8 @@ contains
       real(r8)              :: q_ig_mean         ! average heat of preignition across fuel classes
       real(r8)              :: phi_wind_fm10     ! wind factor for FM 10 [unitless]
       integer               :: i                 ! looping index
+      real(r8)              :: CI_temp
+      real(r8)              :: b, c, e
 
       ! Parameters for fuel model 10 to describe fuel characteristics; and some constants
       ! fuel loading, MEF, and depth from Anderson 1982 Aids to determining fuel models for fire behavior
@@ -307,6 +309,7 @@ contains
       ir_live = ReactionIntensity(fuel_fm10%weighted_loading_live, fuel_fm10%SAV_weighted, &
          beta_ratio_fm10, fuel_fm10%average_moisture_live, fuel_fm10%MEF_live)
       i_r_fm10 = ir_dead + ir_live
+      i_r_fm10 = i_r_fm10
 
       ! calculate heat of preignition and effective heating number per fuel class
       do i = 1, num_fuel_classes
@@ -333,8 +336,14 @@ contains
       ROS_active = ROS_active * 3.34_r8
 
       ! Calculate crowning index, which is used for calculating ROS_SA
-      CI = CrowningIndex(eps_mean, q_ig_mean, i_r_fm10, &
-         canopy_bulk_density )
+      CI_temp = (3.0_r8/canopy_bulk_density * heatsink_fm10) / &
+         (3.34_r8*i_r_fm10*xi_fm10) - 1.0_r8
+      b = 0.15988_r8*(fuel_fm10%SAV_weighted**0.54_r8)
+      c = 7.47_r8*(exp(-0.8711_r8*(fuel_fm10%SAV_weighted**0.55_r8)))
+      e = 0.715_r8*(exp(-0.01094_r8*fuel_fm10%SAV_weighted))
+
+      CI = (CI_temp/(c*(beta_ratio_fm10)**-e))**(1/b) * 0.0457_r8
+
       CI = CI * km_per_hr_to_m_per_min  ! convert to m/min
 
    end subroutine CrownFireBehaveFM10
