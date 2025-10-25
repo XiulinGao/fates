@@ -96,18 +96,18 @@ contains
       real(r8), intent(in) :: canopy_bulk_density  ! canopy fuel bulk density [kg biomass / m3]
       ! Locals:
       real(r8)   :: CI_temp      ! temporary variables
-      real(r8)   :: B,C,E        ! constants for calculating wind factor
+      real(r8)   :: b,c,e        ! constants for calculating wind factor
 
       if(i_r <= nearzero .or. xi <= nearzero .or. canopy_bulk_density <= nearzero) then
          CI_temp = 0.0_r8
       else
          ! convert reaction intensity from kJ/m2/min to kW/m2/s
-         CI_temp = 3.0_r8/canopy_bulk_density*heatsink/(3.34_r8*i_r*xi) - 1.0_r8
+         CI_temp = (3.0_r8/canopy_bulk_density*heatsink) / (3.34_r8*i_r*xi) - 1.0_r8
       end if
-      B = 0.15988_r8*(SAV**0.54_r8)
-      C = 7.47_r8*(exp(-0.8711_r8*(SAV**0.55_r8)))
-      E = 0.715_r8*(exp(-0.01094_r8*SAV))
-      CrowningIndex = (CI_temp/((C*beta_ratio)**(-1.0_r8*E)))**(1.0_r8/B) * 0.0457_r8
+      b = 0.15988_r8*(SAV**0.54_r8)
+      c = 7.47_r8*(exp(-0.8711_r8*(SAV**0.55_r8)))
+      e = 0.715_r8*(exp(-0.01094_r8*SAV))
+      CrowningIndex = (CI_temp/(c*(beta_ratio)**(-1.0_r8*e)))**(1.0_r8/b) * 0.0457_r8
 
    end function CrowningIndex
 
