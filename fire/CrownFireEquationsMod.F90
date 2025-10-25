@@ -406,7 +406,7 @@ contains
          active_crownfire = 0
          passive_crownfire = 1
          ! calculate crown fraction burnt EQ. 28 in Scott & Reinhardt 2001
-         crown_frac_burnt = min(1.0_r8, (ROS_front - ROS_init) / (ROS_SA - ROS_init))
+         crown_frac_burnt = (ROS_front - ROS_init) / (ROS_SA - ROS_init)
       else
          active_crownfire = 0
          passive_crownfire = 0

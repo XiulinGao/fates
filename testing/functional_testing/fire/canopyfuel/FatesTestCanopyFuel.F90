@@ -320,8 +320,12 @@ program FatesTestCanopyFuel
                      ! calculate ROS_SA, which is the returned ROS
                      call ROSWrapper(fuel(f), NI(n), effect_wind, ROS, i_r)
 
+
                      HPA = HeatReleasePerArea(fuel(f)%SAV_weighted, i_r)
                      ROS_init = (60.0_r8 * FI_init(p,c)) / HPA
+                     write(*,*) 'ROS_SA is ', ROS
+                     write(*,*) 'ROS_front is ', ROS_front(w,n,p,f)
+                     write(*,*) 'ROS_init is ', ROS_init
 
                      ! calculate crown fraction burnt
                      call CrownFireCFB(ROS_active, ROS_critical(p), ROS_front(w,n,p,f), &
