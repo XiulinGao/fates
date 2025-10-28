@@ -177,8 +177,8 @@ contains
             call currentPatch%fuel%CalculateWeightingFactor()
 
             ! sum up fuel classes and calculate fractional loading for each
-            call currentPatch%fuel%SumLoading(SF_val_SAV, SF_val_part_dens)
-            call currentPatch%fuel%CalculateFractionalLoading(SF_val_SAV, SF_val_part_dens)
+            call currentPatch%fuel%SumLoading()
+            call currentPatch%fuel%CalculateFractionalLoading()
 
             ! calculate fuel moisture [m3/m3]
             call currentPatch%fuel%UpdateFuelMoisture(SF_val_SAV, SF_val_drying_ratio,       &
@@ -668,7 +668,7 @@ contains
       use SFEquationsMod, only : OptimumPackingRatio, ReactionIntensity
       use SFEquationsMod, only : HeatofPreignition, EffectiveHeatingNumber
       use SFEquationsMod, only : WindFactor, PropagatingFlux
-      use SFEquationsMod, only : ForwardRateOfSpread
+      use SFEquationsMod, only : HeatSink, ForwardRateOfSpread
       use CrownFireEquationsMod, only : CrownFireBehaveFM10
       use CrownFireEquationsMod, only : PassiveCrownFireIntensity, HeatReleasePerArea
       use CrownFireEquationsMod, only : CrowningIndex, CrownFireIntensity
@@ -697,20 +697,24 @@ contains
       real(r8)                        :: beta         ! packing ratio of current patch [unitless]
       real(r8)                        :: beta_op      ! optimum packing ratio of current patch [unitless]
       real(r8)                        :: beta_ratio   ! relative packing ratio of current patch [unitless]
+      real(r8)                        :: ir_dead      ! reaction intensity of dead fuels [kJ m2/min]
+      real(r8)                        :: ir_live      ! reaction intensity of live fuels [kJ m2/min]
       real(r8)                        :: i_r          ! reaction intensity of current patch [kJ/m2/min]
       real(r8)                        :: xi           ! propagating flux ratio of current patch [unitless]
-      real(r8)                        :: eps          ! effective heating number of current patch [unitless]
       real(r8)                        :: tree_fraction     ! site-level tree fraction [0-1]
       real(r8)                        :: grass_fraction    ! site-level grass fraction [0-1]
       real(r8)                        :: bare_fraction     ! site-level bare ground fraction [0-1]
       real(r8)                        :: CI                ! crowning index: open wind speed to sustain active crown fire [km/hr]
       real(r8)                        :: CI_effective      ! effective wind speed using CI [m/min]
       real(r8)                        :: phi_wind_SA       ! wind factor for calculating ROS_SA [unitless]
-      real(r8)                        :: q_ig         ! heat of pre-ignition of current patch [kJ/kg]
-      type(fuel_type)                  :: fuel_fm10
-      real(r8)                         :: heatsink_fm10
-      real(r8)                         :: xi_fm10
-      real(r8)                         :: beta_ratio_fm10
+      real(r8)                        :: q_ig[num_fuel_classes] ! heat of pre-ignition of current patch by fuel class [kJ/kg]
+      real(r8)                        :: eps[num_fuel_classes]  ! effective heating number of current patch by fuel class [unitless]
+      real(r8)                        :: heatsink               ! energy required to ignite per unit fuel bed, current patch [kJ m-3]
+      type(fuel_type)                 :: fuel_fm10              ! fuel type object using fuel model 10
+      real(r8)                        :: heatsink_fm10          ! energy required to ignite per unit volume fuel bed for FM 10[kJ m-3]
+      real(r8)                        :: xi_fm10                ! propagation flux ratio for FM10 [unitless]
+      real(r8)                        :: beta_ratio_fm10        ! relative packing ratio of FM10 [unitless]
+      integer                         :: i                      ! looping index
 
       ! Local parameters
       real(r8), parameter :: wind_atten_tree = 0.4_r8                    ! wind attenuation factor for tree fraction
@@ -743,8 +747,8 @@ contains
                ROS_active_min = 3.0_r8 / currentPatch%fuel%canopy_bulk_density
 
                ! Calculate ROS_SA using current patch fuel conditions
-               beta = currentPatch%fuel%bulk_density_notrunks/SF_val_part_dens
-               beta_op = OptimumPackingRatio(currentPatch%fuel%SAV_notrunks)
+               beta = currentPatch%fuel%bulk_density_weighted/SF_val_part_dens
+               beta_op = OptimumPackingRatio(currentPatch%fuel%SAV_weighted)
 
                if (beta_op < nearzero) then
                   beta_ratio = 0.0_r8
@@ -752,11 +756,26 @@ contains
                   beta_ratio = beta/beta_op
                end if
 
-               i_r = ReactionIntensity(currentPatch%fuel%non_trunk_loading/0.45_r8, &
-                  currentPatch%fuel%SAV_notrunks, beta_ratio,                        &
-                  currentPatch%fuel%average_moisture_notrunks, currentPatch%fuel%MEF_notrunks)
-               q_ig = HeatofPreignition(currentPatch%fuel%average_moisture_notrunks)
-               eps = EffectiveHeatingNumber(currentPatch%fuel%SAV_notrunks)
+               ir_dead = ReactionIntensity(currentPatch%fuel%weighted_loading_dead/0.45_r8, &
+                  currentPatch%fuel%SAV_weighted, beta_ratio,                         &
+                  currentPatch%fuel%average_moisture_dead, currentPatch%fuel%MEF_dead)
+               ir_live = ReactionIntensity(currentPatch%fuel%weighted_loading_live/0.45_r8, &
+                  currentPatch%fuel%SAV_weighted, beta_ratio,                         &
+                  currentPatch%fuel%average_moisture_live, currentPatch%fuel%MEF_live)
+
+               i_r = ir_dead + ir_live
+               do i = 1, num_fuel_classes
+                  ! heat of preignition per fuel class [kJ/kg]
+                  q_ig(i) = HeatofPreignition(currentPatch%fuel%moisture(i))
+
+                  ! effective heating number per fuel class [unitless]
+                  eps(i) = EffectiveHeatingNumber(SF_val_SAV(i))
+               end do
+
+               ! total heat required to ignite per unit fuel bed
+               heatsink = HeatSink(q_ig, eps, currentPatch%fuel%weighting_factor, &
+                  currentPatch%fuel%bulk_density_weighted, currentPatch%fuel%wf_dead, &
+                  currentPatch%fuel%wf_live)
 
 
                ! calculate effective wind speed at CI
@@ -770,15 +789,14 @@ contains
                   (grass_fraction + bare_fraction)*wind_atten_grass)
                ! phi_wind
                phi_wind_SA = WindFactor(CI_effective, beta_ratio,   &
-                  currentPatch%fuel%SAV_notrunks)
-               xi = PropagatingFlux(beta, currentPatch%fuel%SAV_notrunks)
+                  currentPatch%fuel%SAV_weighted)
+               xi = PropagatingFlux(beta, currentPatch%fuel%SAV_weighted)
                ! calculate surface fire spread rate at CI
-               ROS_SA = ForwardRateOfSpread(currentPatch%fuel%bulk_density_notrunks, &
-                  eps, q_ig, i_r, xi, phi_wind_SA)
+               ROS_SA = ForwardRateOfSpread(heatsink, i_r, xi, phi_wind_SA)
 
                ! Calculate ROS_init, EQ. 12 in Scott & Reinhardt 2001
                ! first calculate heat release per unit area [kW/m2]
-               HPA = HeatReleasePerArea(currentPatch%fuel%SAV_notrunks, i_r)
+               HPA = HeatReleasePerArea(currentPatch%fuel%SAV_weighted, i_r)
                ROS_init = (60.0_r8 * FI_init) / HPA
 
                ! Now check if there is passive or active crown fire and calculate crown fraction burnt (CFB)
