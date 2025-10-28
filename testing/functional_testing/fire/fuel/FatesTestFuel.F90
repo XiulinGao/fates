@@ -11,7 +11,7 @@ program FatesTestFuel
    use FatesFuelMod,                only : fuel_type
    use FatesFuelClassesMod,         only : num_fuel_classes
    use SFParamsMod,                 only : SF_val_SAV, SF_val_drying_ratio
-   use SFParamsMod,                 only : SF_val_FBD, SF_val_part_dens
+   use SFParamsMod,                 only : SF_val_FBD
 
    implicit none
 
@@ -48,7 +48,7 @@ program FatesTestFuel
    character(len=*), parameter :: out_file = 'fuel_out.nc' ! output file
 
    ! fuel models to test
-   integer, parameter, dimension(4) :: fuel_models = (/102, 121, 104, 149/)
+   integer, parameter, dimension(5) :: fuel_models = (/102, 183, 164, 104, 163/)
 
    ! number of fuel models to test
    num_fuel_models = size(fuel_models)
@@ -97,9 +97,9 @@ program FatesTestFuel
       call SetUpFuel(fuel(f), fuel_models_array, fuel_models(f), fuel_names(f), carriers(f))
 
       ! sum up fuel and calculate loading
-      call fuel(f)%CalculateWeightingFactor(SF_val_SAV, SF_val_part_dens)
-      call fuel(f)%SumLoading(SF_val_SAV, SF_val_part_dens)
-      call fuel(f)%CalculateFractionalLoading(SF_val_SAV, SF_val_part_dens)
+      call fuel(f)%CalculateWeightingFactor()
+      call fuel(f)%SumLoading()
+      call fuel(f)%CalculateFractionalLoading()
 
       ! calculate geometric properties
       call fuel(f)%AverageBulkDensity(SF_val_FBD)

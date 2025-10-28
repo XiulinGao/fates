@@ -174,7 +174,7 @@ contains
                litter%ag_cwd(1), litter%ag_cwd(2), litter%ag_cwd(3), litter%ag_cwd(4),        &
                currentPatch%livegrass)
             ! update weighting factors
-            call currentPatch%fuel%CalculateWeightingFactor(SF_val_SAV, SF_val_part_dens)
+            call currentPatch%fuel%CalculateWeightingFactor()
 
             ! sum up fuel classes and calculate fractional loading for each
             call currentPatch%fuel%SumLoading(SF_val_SAV, SF_val_part_dens)
@@ -496,7 +496,6 @@ contains
             end if
 
             ! remove mineral content from fuel load per Thonicke 2010
-            currentPatch%fuel%non_trunk_loading = currentPatch%fuel%non_trunk_loading*(1.0_r8 - SF_val_miner_total)
             currentPatch%fuel%weighted_loading_dead = currentPatch%fuel%weighted_loading_dead*(1.0_r8 - SF_val_miner_total)
             currentPatch%fuel%weighted_loading_live = currentPatch%fuel%weighted_loading_live*(1.0_r8 - SF_val_miner_total)
 
