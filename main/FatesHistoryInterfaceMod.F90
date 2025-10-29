@@ -69,7 +69,7 @@ module FatesHistoryInterfaceMod
    use FatesInterfaceTypesMod        , only : nlevcoage
    use FatesInterfaceTypesMod        , only : hlm_use_nocomp
    use FatesInterfaceTypesMod        , only : hlm_use_fixed_biogeog
-   use FatesRadiationMemMod          , only : ivis,inir
+   use FatesRadiationMemMod          , only : ivis,inir,ipar
    use FatesInterfaceTypesMod        , only : hlm_hist_level_hifrq,hlm_hist_level_dynam
    use FatesIOVariableKindMod, only : site_r8, site_soil_r8, site_size_pft_r8
    use FatesIOVariableKindMod, only : site_size_r8, site_pft_r8, site_age_r8
