@@ -29,6 +29,9 @@ module SFMainMod
    use FatesLitterMod,         only : litter_type
    use FatesFuelClassesMod,    only : num_fuel_classes
    use PRTGenericMod,          only : carbon12_element
+   use PRTGenericMod,          only : leaf_organ
+   use PRTGenericMod,          only : sapw_organ
+   use PRTGenericMod,          only : struct_organ
    use FatesInterfaceTypesMod, only : numpft
    use FatesAllometryMod,      only : CrownDepth
    use FatesFuelClassesMod,    only : fuel_classes
@@ -295,7 +298,6 @@ contains
                leaf_c             = 0.0_r8
                sapw_c             = 0.0_r8
                struct_c           = 0.0_r8
-               crown_fuel_per_m   = 0.0_r8
                crown_depth        = 0.0_r8
                cbh_co             = 0.0_r8
                SF_val_CWD_frac_adj(ncwd) = 0.0_r8
@@ -662,13 +664,16 @@ contains
       ! Active: ROS_front > R'_initiation and R_active > R'_active. Note: FI > FI_init is equivalent to ROS_front > R'_initiation
       ! 6) Calculate new ROS and FI and update ROS_front and FI
       !
-      use SFParamsMod,    only : SF_val_miner_total, SF_val_part_dens, SF_val_drying_ratio
-      use EDParamsMod,    only : crown_fire_switch
-      use EDTypesMod,     only : CalculateTreeGrassAreaSite
-      use SFEquationsMod, only : OptimumPackingRatio, ReactionIntensity
-      use SFEquationsMod, only : HeatofPreignition, EffectiveHeatingNumber
-      use SFEquationsMod, only : WindFactor, PropagatingFlux
-      use SFEquationsMod, only : HeatSink, ForwardRateOfSpread
+      use SFParamsMod,           only : SF_val_miner_total, SF_val_part_dens
+      use SFParamsMod,           only : SF_val_drying_ratio, SF_val_SAV
+      use EDParamsMod,           only : crown_fire_switch
+      use EDTypesMod,            only : CalculateTreeGrassAreaSite
+      use FatesFuelMod,          only : fuel_type
+      use FatesFuelClassesMod,   only : num_fuel_classes
+      use SFEquationsMod,        only : OptimumPackingRatio, ReactionIntensity
+      use SFEquationsMod,        only : HeatofPreignition, EffectiveHeatingNumber
+      use SFEquationsMod,        only : WindFactor, PropagatingFlux
+      use SFEquationsMod,        only : HeatSink, ForwardRateOfSpread
       use CrownFireEquationsMod, only : CrownFireBehaveFM10
       use CrownFireEquationsMod, only : PassiveCrownFireIntensity, HeatReleasePerArea
       use CrownFireEquationsMod, only : CrowningIndex, CrownFireIntensity
@@ -707,9 +712,9 @@ contains
       real(r8)                        :: CI                ! crowning index: open wind speed to sustain active crown fire [km/hr]
       real(r8)                        :: CI_effective      ! effective wind speed using CI [m/min]
       real(r8)                        :: phi_wind_SA       ! wind factor for calculating ROS_SA [unitless]
-      real(r8)                        :: q_ig[num_fuel_classes] ! heat of pre-ignition of current patch by fuel class [kJ/kg]
-      real(r8)                        :: eps[num_fuel_classes]  ! effective heating number of current patch by fuel class [unitless]
-      real(r8)                        :: heatsink               ! energy required to ignite per unit fuel bed, current patch [kJ m-3]
+      real(r8)                        :: q_ig(num_fuel_classes) ! heat of pre-ignition of current patch by fuel class [kJ/kg]
+      real(r8)                        :: eps(num_fuel_classes)  ! effective heating number of current patch by fuel class [unitless]
+      real(r8)                        :: heat_sink               ! energy required to ignite per unit fuel bed, current patch [kJ m-3]
       type(fuel_type)                 :: fuel_fm10              ! fuel type object using fuel model 10
       real(r8)                        :: heatsink_fm10          ! energy required to ignite per unit volume fuel bed for FM 10[kJ m-3]
       real(r8)                        :: xi_fm10                ! propagation flux ratio for FM10 [unitless]
@@ -773,7 +778,7 @@ contains
                end do
 
                ! total heat required to ignite per unit fuel bed
-               heatsink = HeatSink(q_ig, eps, currentPatch%fuel%weighting_factor, &
+               heat_sink = HeatSink(q_ig, eps, currentPatch%fuel%weighting_factor, &
                   currentPatch%fuel%bulk_density_weighted, currentPatch%fuel%wf_dead, &
                   currentPatch%fuel%wf_live)
 
@@ -792,7 +797,7 @@ contains
                   currentPatch%fuel%SAV_weighted)
                xi = PropagatingFlux(beta, currentPatch%fuel%SAV_weighted)
                ! calculate surface fire spread rate at CI
-               ROS_SA = ForwardRateOfSpread(heatsink, i_r, xi, phi_wind_SA)
+               ROS_SA = ForwardRateOfSpread(heat_sink, i_r, xi, phi_wind_SA)
 
                ! Calculate ROS_init, EQ. 12 in Scott & Reinhardt 2001
                ! first calculate heat release per unit area [kW/m2]
@@ -801,7 +806,7 @@ contains
 
                ! Now check if there is passive or active crown fire and calculate crown fraction burnt (CFB)
                ! XLG: there are alternative ways to calculate CFB, see pg 39-41 in Scott & Reinhardt 2001
-               call CrownFireCFB(ROS_active, ROS_acitive_min, currentPatch%ROS_front, &
+               call CrownFireCFB(ROS_active, ROS_active_min, currentPatch%ROS_front, &
                   ROS_init, ROS_SA, active_crownfire, passive_crownfire, crown_frac_burnt)
 
                currentPatch%active_crown_fire = active_crownfire
@@ -815,10 +820,6 @@ contains
                ! EQ. 22 in Scott & Reinhardt 2001
                FI_final = CrownFireIntensity(HPA, currentPatch%fuel%canopy_fuel_load, &
                   currentPatch%area, crown_frac_burnt, ROS_final)
-
-               if(write_SF == itrue)then
-                  if ( hlm_masterproc == itrue ) write(fates_log(),*) 'FI_final',FI_final
-               endif
 
                write(fates_log(),*) 'passive crown fire is ', currentPatch%passive_crown_fire
                write(fates_log(),*) 'active crown fire is ', currentPatch%active_crown_fire
