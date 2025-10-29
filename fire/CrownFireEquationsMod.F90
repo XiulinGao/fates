@@ -287,9 +287,9 @@ contains
 
       ! update fuel chracteristics
       call fuel_fm10%UpdateLoading(fuel_1h, 0.0_r8, fuel_10h, fuel_100h, 0.0_r8, fuel_live)
-      call fuel_fm10%CalculateWeightingFactor(fuel_sav, SF_val_part_dens)
-      call fuel_fm10%SumLoading(fuel_sav, SF_val_part_dens)
-      call fuel_fm10%CalculateFractionalLoading(fuel_sav, SF_val_part_dens)
+      call fuel_fm10%CalculateWeightingFactor()
+      call fuel_fm10%SumLoading()
+      call fuel_fm10%CalculateFractionalLoading()
       call fuel_fm10%UpdateFuelMoisture(fuel_sav, drying_ratio, fireWeatherClass)
       call fuel_fm10%AverageSAV(fuel_sav)
 
