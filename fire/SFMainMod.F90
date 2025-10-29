@@ -674,7 +674,7 @@ contains
       use SFEquationsMod,        only : HeatofPreignition, EffectiveHeatingNumber
       use SFEquationsMod,        only : WindFactor, PropagatingFlux
       use SFEquationsMod,        only : HeatSink, ForwardRateOfSpread
-      use CrownFireEquationsMod, only : CrownFireBehaveFM10
+      use CrownFireEquationsMod, only : CrownFireBehaveFM10, CrownFireCFB
       use CrownFireEquationsMod, only : PassiveCrownFireIntensity, HeatReleasePerArea
       use CrownFireEquationsMod, only : CrowningIndex, CrownFireIntensity
 
