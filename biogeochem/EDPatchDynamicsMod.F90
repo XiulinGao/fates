@@ -249,8 +249,8 @@ contains
       !currentPatch%delta_BA = 0.0_r8 
       currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
 
-      write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
-      write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
+      !write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
+      !write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
 
 
        currentCohort => currentPatch%shortest
@@ -292,12 +292,12 @@ contains
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
 
-          write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
-          write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
-          write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
-          write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
+          !write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
+          !write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
+          !write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
+          !write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
-          write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
+          !write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
 
 
           currentCohort => currentCohort%taller
