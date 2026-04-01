@@ -8591,7 +8591,7 @@ end subroutine update_history_hifrq
 
        call this%set_history_var(vname='FATES_BTRAN_SZPF', units='1',          &
              long='mean individual level BTRAN by size class x pft',           &
-             use_default='inactive', avgflag='A', vtype=site_size_pft_r8,      &
+             use_default='active', avgflag='A', vtype=site_size_pft_r8,      &
              hlms='CLM:ALM', upfreq=4, ivar=ivar,                              &
              initialize=initialize_variables, index = ih_btran_scpf)
 
