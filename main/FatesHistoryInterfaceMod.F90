@@ -612,6 +612,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_nocomp_pftburnedarea_si_pft
   integer :: ih_seeds_out_gc_si_pft
   integer :: ih_seeds_in_gc_si_pft
+  integer :: ih_btran_si_pft
 
   ! indices to (site x patch-age) variables
   integer :: ih_area_si_age
@@ -2276,6 +2277,7 @@ end subroutine flush_hvars
                hio_npp_si_pft  => this%hvars(ih_npp_si_pft)%r82d, &
                hio_seed_bank_si_pft  => this%hvars(ih_seed_bank_si_pft)%r82d, &
                hio_npp_sec_si_pft      => this%hvars(ih_npp_sec_si_pft)%r82d, &
+               hio_btran_si_pft        => this%hvars(ih_btran_si_pft)%r82d, &
                hio_nesterov_fire_danger_si => this%hvars(ih_nesterov_fire_danger_si)%r81d, &
                hio_rx_burn_window_si => this%hvars(ih_rx_burn_window_si)%r81d, &
                hio_fire_nignitions_si => this%hvars(ih_fire_nignitions_si)%r81d, &
@@ -2803,6 +2805,10 @@ end subroutine flush_hvars
             ! also pft level brtan resolved by patch age
             hio_btran_si_agepft(io_si,iagepft) = hio_btran_si_agepft(io_si,iagepft) + &
                cpatch%btran_ft(i_pft) * cpatch%area
+          
+            ! pft level mean btran 
+            hio_btran_si_pft(io_si,i_pft) = hio_btran_si_pft(io_si,i_pft) + &
+               cpatch%btran_ft(i_pft) * cpatch%area * AREA_INV
 
             ! and also pft-labeled patch areas in the event that we are in nocomp mode
             if ( hlm_use_nocomp .eq. itrue .and. cpatch%nocomp_pft_label .eq. i_pft) then 
@@ -3000,6 +3006,7 @@ end subroutine flush_hvars
                      hio_biomass_sec_si_pft(io_si, ft) = hio_biomass_sec_si_pft(io_si, ft) + &
                         (ccohort%n * AREA_INV) * total_m
                   end if
+
 
                   ! update total biomass per age bin
                   hio_biomass_si_age(io_si,cpatch%age_class) = hio_biomass_si_age(io_si,cpatch%age_class) &
@@ -5581,6 +5588,12 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_pft_r8, hlms='CLM:ALM', &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_biomass_si_pft)
+
+    call this%set_history_var(vname='FATES_BTRAN_PF', units='1',               &
+         long='mean non-hydro version btran by PFT',                           &
+         use_default='inactive', avgflag='A', vtype=site_pft_r8,               &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables,  &
+         index=ih_btran_si_pft)
 
     call this%set_history_var(vname='FATES_VEGC_SE_PF', units='kg m-2',           &
          long='total PFT-level biomass in kg of carbon per land area, secondary patches',         &
