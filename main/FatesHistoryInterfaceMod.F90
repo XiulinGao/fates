@@ -5592,7 +5592,7 @@ end subroutine update_history_hifrq
     call this%set_history_var(vname='FATES_BTRAN_PF', units='1',               &
          long='mean non-hydro version btran by PFT',                           &
          use_default='inactive', avgflag='A', vtype=site_pft_r8,               &
-         hlms='CLM:ALM', upfreq=1, ivar=ivar, initializ=initialize_variables,  &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables,  &
          index=ih_btran_si_pft)
 
     call this%set_history_var(vname='FATES_VEGC_SE_PF', units='kg m-2',           &
@@ -7196,7 +7196,7 @@ end subroutine update_history_hifrq
           long='mean btran per PFT in each patch age bin',                     &
           use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
-          initializ=initialize_variables, index=ih_btran_si_agepft)
+          initialize=initialize_variables, index=ih_btran_si_agepft)
 
 
     ! Carbon Flux (grid dimension x scpf) (THESE ARE DEFAULT INACTIVE!!!
