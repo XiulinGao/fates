@@ -338,7 +338,6 @@ module FatesHistoryInterfaceMod
   integer :: ih_scorch_height_si_agepft
   integer :: ih_canopycrownarea_si_agepft
   integer :: ih_crownarea_si_agepft
-  integer :: ih_btran_si_agepft
 
   ! Indices to (site) variables
   integer :: ih_tveg24_si
@@ -2203,10 +2202,6 @@ end subroutine flush_hvars
 
     real(r8) :: gpp_cached ! variable used to cache gpp value in previous time step; for C13 discrimination
 
-    ! The following are used in calculting non-Hydro PFT level soil btran 
-    real(r8) :: nplant_agepft(nlevage*maxpft) ! Bins to count up stem density used in weighting btran 
-    real(r8) :: nplant_fraction 
-
     ! The following are all carbon states, turnover and net allocation flux variables
     ! the organs of relevance should be self explanatory
     real(r8) :: sapw_m    ! Sapwood mass (elemental, c,n or p) [kg/plant]
@@ -2490,7 +2485,6 @@ end subroutine flush_hvars
                hio_biomass_si_agepft                => this%hvars(ih_biomass_si_agepft)%r82d, &
                hio_canopycrownarea_si_agepft        => this%hvars(ih_canopycrownarea_si_agepft)%r82d, &
                hio_crownarea_si_agepft              => this%hvars(ih_crownarea_si_agepft)%r82d, &
-               hio_btran_si_agepft                  => this%hvars(ih_btran_si_agepft)%r82d, &
                hio_scorch_height_si_agepft          => this%hvars(ih_scorch_height_si_agepft)%r82d, &
                hio_yesterdaycanopylevel_canopy_si_scls     => this%hvars(ih_yesterdaycanopylevel_canopy_si_scls)%r82d, &
                hio_yesterdaycanopylevel_understory_si_scls => this%hvars(ih_yesterdaycanopylevel_understory_si_scls)%r82d, &
@@ -2698,23 +2692,6 @@ end subroutine flush_hvars
          this%hvars(ih_h2oveg_recruit_si)%r81d(io_si)      = sites(s)%si_hydr%h2oveg_recruit
          this%hvars(ih_h2oveg_growturn_err_si)%r81d(io_si) = sites(s)%si_hydr%h2oveg_growturn_err
       end if
-
-      ! count stem fraction for age x PFT class, used in weighting 
-      nplant_agepft(:) = 0._r8
-      cpatch => sites(s)%oldest_patch
-      do while(associated(cpatch))
-          ccohort => cpatch%shortest
-          do while(associated(ccohort))
-               if(.not. ccohort%isnew) then
-                    iagepft = get_agepft_class_index(cpatch%age,ccohort%pft)
-                    nplant_agepft(iagepft) = nplant_agepft(iagepft) + ccohort%n
-               end if
-               ccohort => ccohort%taller
-          end do
-          cpatch => cpatch%younger
-      end do
-
-
       hio_harvest_debt_si(io_si) = sites(s)%resources_management%harvest_debt
       hio_harvest_debt_sec_si(io_si) = sites(s)%resources_management%harvest_debt_sec
 
@@ -3444,10 +3421,6 @@ end subroutine flush_hvars
               
                hio_crownarea_si_agepft(io_si,iagepft) = hio_crownarea_si_agepft(io_si,iagepft) + &
                   ccohort%c_area * AREA_INV
-               
-               nplant_fraction = ccohort%n/nplant_agepft(iagepft)
-               hio_btran_si_agepft(io_si,iagepft) = hio_btran_si_agepft(io_si,iagepft) + &
-                  ccohort%btran * nplant_fraction
                
                if (ccohort%canopy_layer .eq. 1) then
                    hio_canopycrownarea_si_agepft(io_si,iagepft) = hio_canopycrownarea_si_agepft(io_si,iagepft) + &
@@ -7190,12 +7163,6 @@ end subroutine update_history_hifrq
           use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
           initialize=initialize_variables, index = ih_crownarea_si_agepft)
-
-     call this%set_history_var(vname='FATES_BTRAN_APPF',units = '1',           &
-          long='mean BTRAN by patch age x PFT',                                &
-          use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
-          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
-          initialize=initialize_variables, index = ih_btran_si_agepft)
 
     call this%set_history_var(vname='FATES_SCORCH_HEIGHT_APPF',units = 'm',    &
           long='SPITFIRE flame Scorch Height (calculated per PFT in each patch age bin)', &
