@@ -2800,9 +2800,6 @@ end subroutine flush_hvars
             hio_scorch_height_si_agepft(io_si,iagepft) = hio_scorch_height_si_agepft(io_si,iagepft) + &
                cpatch%Scorch_ht(i_pft) * cpatch%area
 
-            ! also pft level brtan resolved by patch age
-            hio_btran_si_agepft(io_si,iagepft) = hio_btran_si_agepft(io_si,iagepft) + &
-               cpatch%btran_ft(i_pft) * cpatch%area
           
             ! pft level mean btran 
             hio_btran_si_pft(io_si,i_pft) = hio_btran_si_pft(io_si,i_pft) + &
@@ -7186,12 +7183,6 @@ end subroutine update_history_hifrq
           use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
           hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
           initialize=initialize_variables, index = ih_scorch_height_si_agepft)
-
-     call this%set_history_var(vname='FATES_BTRAN_APPF', units='1',            &
-          long='mean btran per PFT in each patch age bin',                     &
-          use_default='inactive', avgflag='A', vtype=site_agepft_r8,           &
-          hlms='CLM:ALM', upfreq=1, ivar=ivar,                                 &
-          initialize=initialize_variables, index=ih_btran_si_agepft)
 
 
     ! Carbon Flux (grid dimension x scpf) (THESE ARE DEFAULT INACTIVE!!!
