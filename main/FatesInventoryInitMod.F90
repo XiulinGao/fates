@@ -760,7 +760,7 @@ contains
 
       use FatesSizeAgeTypeIndicesMod, only: get_age_class_index
       use EDtypesMod, only: AREA
-
+      use PRTGenericMod,              only: element_pos, carbon12_element
       ! Arguments
       type(fates_patch_type),intent(inout), target   :: newpatch      ! Patch structure
       integer,intent(in)                          :: pss_file_unit ! Self explanatory
@@ -802,7 +802,7 @@ contains
       if( debug_inv) then
 
          write(*,fmt=hd_fmt) &
-               'time','patch','trk','age','area' &
+               'time','patch','trk','age','area',   &
                'leaf litter','1-hour cwd','10-hour cwd','100-hour cwd',  &
                '1000-hour cwd'
          write(*,fmt=wr_fmt) &
@@ -852,6 +852,7 @@ contains
               init_bg_cwd=0._r8,     &
               init_seed=0._r8,   &
               init_seed_germ=0._r8)
+         end if
 
       end do
 
