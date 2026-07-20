@@ -155,6 +155,8 @@ contains
 
       real(r8),                        allocatable :: inv_lat_list(:)      ! list of lat coords
       real(r8),                        allocatable :: inv_lon_list(:)      ! list of lon coords
+      real(r8),                        allocatable :: delta_lon_list(:)    ! list of delta lon between model grid and inv sites
+      real(r8),                        allocatable :: dist_list(:)         ! list of distance between model and inventory grid
       integer                                      :: invsite              ! index of inventory site
                                                                            ! closest to actual site
       integer                                      :: el                   ! loop counter for number of elements
@@ -229,13 +231,15 @@ contains
       ! For each site, identify the most proximal PSS/CSS couplet, read-in the data
       ! allocate linked lists and assign to memory
       do s = 1, nsites
-         invsite = &
-               minloc( (sites(s)%lat-inv_lat_list(:))**2.0_r8 + &
-               (sites(s)%lon-inv_lon_list(:))**2.0_r8 , dim=1)
+
+         delta_lon_list = abs(modulo((sites(s)%lon - inv_lon_list(:)) + &
+         180.0_r8, 360.0_r8)-180.0_r8)
+         dist_list = (sites(s)%lat - inv_lat_list(:))**2.0_r8 + &
+         delta_lon_list**2.0_r8
+         invsite = minloc(dist_list, dim=1)
 
          ! Do a sanity check on the distance separation between physical site and model site
-         if ( sqrt( (sites(s)%lat-inv_lat_list(invsite))**2.0_r8 + &
-               (sites(s)%lon-inv_lon_list(invsite))**2.0_r8 ) > max_site_adjacency_deg ) then
+         if ( sqrt(invsite) > max_site_adjacency_deg ) then
             write(fates_log(), *) 'Model site at lat:',sites(s)%lat,' lon:',sites(s)%lon
             write(fates_log(), *) 'has no reasonably proximal site in the inventory site list.'
             write(fates_log(), *) 'Closest is at lat:',inv_lat_list(invsite),' lon:',inv_lon_list(invsite)
@@ -772,17 +776,24 @@ contains
       character(len=patchname_strlen)             :: p_name     ! unique string identifier of patch
       real(r8)                                    :: p_age      ! Patch age [years]
       real(r8)                                    :: p_area     ! Patch area [fraction]
+      real(r8)                                    :: p_lit_fine ! fine leaf litter [kgC m-2]
+      real(r8)                                    :: p_lit_1h   ! 1-hour woody debris [kgC m-2]
+      real(r8)                                    :: p_lit_10h  ! 10-hour woody debris [kgC m-2]
+      real(r8)                                    :: p_lit_100h ! 100-hour woody debris [kgC m-2]
+      real(r8)                                    :: p_lit_1000h ! 1000-hour woody debris [kgC m-2]
       integer                                     :: icwd       ! index for counting CWD pools
       integer                                     :: ipft       ! index for counting PFTs
       real(r8)                                    :: pftfrac    ! the inverse of the total number of PFTs
 
-      character(len=30),parameter    :: hd_fmt = &
-            '(A5,2X,A20,2X,A4,2X,A5,2X,A17)'
-      character(len=47),parameter    :: wr_fmt = &
-            '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14)'
+      character(len=100),parameter    :: hd_fmt = &
+            '(A5,2X,A20,2X,A4,2X,A5,2X,A17,2X,A17,2X,A17,2X,A17,2X,A17,2X,A17)'
+      character(len=100),parameter    :: wr_fmt = &
+            '(F5.2,2X,A20,2X,I4,2X,F5.2,2X,F17.14,2X,F17.14,2X,F17.14,2X,F17.14,2X,F17.14,&
+            2X,F17.14)'
 
 
-      read(pss_file_unit,fmt=*,iostat=ios) p_time, p_name, p_trk, p_age, p_area 
+      read(pss_file_unit,fmt=*,iostat=ios) p_time, p_name, p_trk, p_age, p_area, &
+           p_lit_fine, p_lit_1h, p_lit_10h, p_lit_100h, p_lit_1000h
 
       if (ios/=0) return
 
@@ -791,9 +802,12 @@ contains
       if( debug_inv) then
 
          write(*,fmt=hd_fmt) &
-               ' time','               patch',' trk','  age','             area'
+               'time','patch','trk','age','area' &
+               'leaf litter','1-hour cwd','10-hour cwd','100-hour cwd',  &
+               '1000-hour cwd'
          write(*,fmt=wr_fmt) &
-               p_time, p_name, p_trk, p_age, p_area 
+               p_time, p_name, p_trk, p_age, p_area, p_lit_fine, p_lit_1h, p_lit_10h,  &
+               p_lit_100h, p_lit_1000h
       end if
 
       ! Fill in the patch's memory structures
@@ -821,7 +835,18 @@ contains
       do el=1,num_elements
          litt => newpatch%litter(el)
 
-         call litt%InitConditions(init_leaf_fines=0._r8, &
+         if(el == element_pos(carbon12_element))then
+            litt%leaf_fines(:) = p_lit_fine
+            litt%root_fines(:,:) = 0.0_r8
+            litt%ag_cwd(1) = p_lit_1h
+            litt%ag_cwd(2) = p_lit_10h
+            litt%ag_cwd(3) = p_lit_100h
+            litt%ag_cwd(4) = p_lit_1000h
+            litt%bg_cwd(:,:) = 0.0_r8
+            litt%seed(:) = 0.0_r8
+            litt%seed_germ(:) = 0.0_r8
+         else
+            call litt%InitConditions(init_leaf_fines=0._r8, &
               init_root_fines=0._r8, &
               init_ag_cwd=0._r8,     &
               init_bg_cwd=0._r8,     &
