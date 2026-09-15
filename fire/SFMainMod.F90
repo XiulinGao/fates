@@ -356,12 +356,12 @@ contains
                        mean_10day_smp(currentCohort%pft), &
                        min_lfmc, coeff_lfmc, smp_alpha, lai_beta, gamma_int)
             end if
-            write(fates_log(),*) 'current cohort cwc is ', currentCohort%lfmc
+            !write(fates_log(),*) 'current cohort cwc is ', currentCohort%lfmc
 
           end if ! trees only
           currentCohort => currentCohort%shorter;
         end do ! end cohort loop
-        write(fates_log(),*) 'current patch canopy fuel is ', currentPatch%fuel%canopy_fuel_load
+        !write(fates_log(),*) 'current patch canopy fuel is ', currentPatch%fuel%canopy_fuel_load
 
         ! loop across cohorts to calculate patch level canopy water content
         currentCohort => currentPatch%tallest
@@ -378,8 +378,8 @@ contains
         biom_matrix(:) = biom_matrix(:) / currentPatch%area ! kg biomass / m3
         ! update canopy fuel bulk density
         call currentPatch%fuel%CalculateCanopyBulkDensity(biom_matrix, max_height)
-        write(fates_log(),*) 'current patch CBD is ', currentPatch%fuel%canopy_bulk_density
-        write(fates_log(),*) 'current patch canopy base height is ', currentPatch%fuel%canopy_base_height
+       ! write(fates_log(),*) 'current patch CBD is ', currentPatch%fuel%canopy_bulk_density
+       ! write(fates_log(),*) 'current patch canopy base height is ', currentPatch%fuel%canopy_base_height
 
         deallocate(biom_matrix)
 
@@ -749,8 +749,8 @@ contains
         FI_init = PassiveCrownFireIntensity(currentPatch%fuel%canopy_base_height, &
                                             currentPatch%fuel%canopy_water_content)
 
-        write(fates_log(),*) 'FI_init is ', FI_init 
-        write(fates_log(),*) 'FI is ', currentPatch%FI
+       ! write(fates_log(),*) 'FI_init is ', FI_init 
+       ! write(fates_log(),*) 'FI is ', currentPatch%FI
         
         ! check if there is a crown fire 
         if (currentPatch%FI > FI_init ) then
@@ -834,13 +834,13 @@ contains
             if ( hlm_masterproc == itrue ) write(fates_log(),*) 'FI_final',FI_final
          endif
 
-         write(fates_log(),*) 'passive crown fire is ', currentPatch%passive_crown_fire
-         write(fates_log(),*) 'active crown fire is ', currentPatch%active_crown_fire
-         write(fates_log(),*) 'FI final is ', FI_final
-         write(fates_log(),*) 'ROS final is  ', ROS_final 
-         write(fates_log(),*) 'ROS_active is ', ROS_active
-         write(fates_log(),*) 'ROS_active_min is ', ROS_active_min
-         write(fates_log(),*) 'HPA is ', HPA
+       !  write(fates_log(),*) 'passive crown fire is ', currentPatch%passive_crown_fire
+       !  write(fates_log(),*) 'active crown fire is ', currentPatch%active_crown_fire
+       !  write(fates_log(),*) 'FI final is ', FI_final
+       !  write(fates_log(),*) 'ROS final is  ', ROS_final 
+       !  write(fates_log(),*) 'ROS_active is ', ROS_active
+       !  write(fates_log(),*) 'ROS_active_min is ', ROS_active_min
+       !  write(fates_log(),*) 'HPA is ', HPA
 
 
           ! only update FI and ROS_front when CFB > 0
