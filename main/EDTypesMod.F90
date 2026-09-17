@@ -369,10 +369,10 @@ module EDTypesMod
      real(r8) :: rxfmort_crownarea_canopy              ! crownarea of canopy indivs killed due to precribed fire per year [m2/sec]
      real(r8) :: rxfmort_crownarea_ustory              ! crownarea of undertsory indivs killed due to prescribed fire per year [m2/sec]
 
-     real(r8), allocatable :: term_nindivs_canopy(:,:) ! number of canopy individuals that were in cohorts which 
-                                                       ! were terminated this timestep, on size x pft
-     real(r8), allocatable :: term_nindivs_ustory(:,:) ! number of understory individuals that were in cohorts which 
-                                                       ! were terminated this timestep, on size x pft
+     real(r8), allocatable :: term_nindivs_canopy(:,:,:) ! number of canopy individuals that were in cohorts which 
+                                                       ! were terminated this timestep, by ermination type, size x pft
+     real(r8), allocatable :: term_nindivs_ustory(:,:,:) ! number of understory individuals that were in cohorts which 
+                                                       ! were terminated this timestep, by ermination type, size x pft
 
      real(r8), allocatable :: term_carbonflux_canopy(:)  ! carbon flux from live to dead pools associated 
                                                          ! with termination mortality, per canopy level. [kgC/ha/day]

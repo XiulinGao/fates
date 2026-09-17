@@ -2059,6 +2059,8 @@ contains
     integer  :: io_idx_si_pft  ! each site-pft index
     integer  :: io_idx_si_vtmem ! indices for veg-temp memory at site
     integer  :: io_idx_pa_ncl   ! each canopy layer within each patch
+    integer  :: io_idx_si_scpf_term ! loop counter for scls, pft, and termination type
+    integer  :: io_idx_si_pft_term ! loop counter for pft, and termination type
 
     ! Some counters (for checking mostly)
     integer  :: totalcohorts   ! total cohort count on this thread (diagnostic)
@@ -2081,6 +2083,7 @@ contains
     integer  :: i_cdam           ! loop counter for damage
     integer  :: icdi             ! loop counter for damage
     integer  :: icdj             ! loop counter for damage
+    integer  :: i_term_type      ! loop counter for termination type
     
     type(fates_restart_variable_type) :: rvar
     type(fates_patch_type),pointer  :: cpatch
@@ -2253,6 +2256,8 @@ contains
           io_idx_si_cdpf = io_idx_co_1st
           io_idx_si_scpf = io_idx_co_1st
           io_idx_si_pft  = io_idx_co_1st
+          io_idx_si_scpf_term  = io_idx_co_1st
+          io_idx_si_pft_term = io_idx_co_1st
 
           ! recruitment rate
           do i_pft = 1,numpft
@@ -2286,10 +2291,20 @@ contains
                 rio_abg_fmort_flux_siscpf(io_idx_si_scpf) = sites(s)%fmort_abg_flux(i_scls, i_pft)
                 rio_abg_rxfmort_flux_siscpf(io_idx_si_scpf) = sites(s)%rxfmort_abg_flux(i_scls, i_pft)
                 io_idx_si_scpf = io_idx_si_scpf + 1
+                do i_term_type = 1, n_term_mort_types
+                    rio_termnindiv_cano_siscpf(io_idx_si_scpf_term) = sites(s)%term_nindivs_canopy(i_term_type,i_scls,i_pft)
+                    rio_termnindiv_usto_siscpf(io_idx_si_scpf_term) = sites(s)%term_nindivs_ustory(i_term_type,i_scls,i_pft)
+                    io_idx_si_scpf_term = io_idx_si_scpf_term + 1
+                end do
              end do
           end do
 
           do i_pft = 1, numpft
+             do i_term_type = 1, n_term_mort_types
+               rio_termcflux_cano_sipft(io_idx_si_pft_term)  = sites(s)%term_carbonflux_canopy(i_term_type,i_pft)
+               rio_termcflux_usto_sipft(io_idx_si_pft_term)  = sites(s)%term_carbonflux_ustory(i_term_type,i_pft)
+               io_idx_si_pft_term = io_idx_si_pft_term + 1
+             end do
              rio_termcflux_cano_sipft(io_idx_si_pft)  = sites(s)%term_carbonflux_canopy(i_pft)
              rio_termcflux_usto_sipft(io_idx_si_pft)  = sites(s)%term_carbonflux_ustory(i_pft)
              rio_fmortcflux_cano_sipft(io_idx_si_pft) = sites(s)%fmort_carbonflux_canopy(i_pft)

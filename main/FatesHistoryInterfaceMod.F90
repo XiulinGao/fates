@@ -10,6 +10,10 @@ module FatesHistoryInterfaceMod
   use FatesConstantsMod        , only : pi_const
   use FatesConstantsMod        , only : nearzero
   use FatesConstantsMod        , only : t_water_freeze_k_1atm
+  use FatesConstantsMod        , only : n_term_mort_types
+  use FatesConstantsMod        , only : i_term_mort_type_cstarv
+  use FatesConstantsMod        , only : i_term_mort_type_canlev
+  use FatesConstantsMod        , only : i_term_mort_type_numdens
   use FatesGlobals             , only : fates_log
   use FatesGlobals             , only : endrun => fates_endrun
   use EDParamsMod              , only : nclmax, maxpft
@@ -3882,32 +3886,71 @@ end subroutine flush_hvars
 
       ! pass the cohort termination mortality as a flux to the history, and then reset the termination mortality buffer
       ! note there are various ways of reporting the total mortality, so pass to these as well
+
+      do i_pft = 1, numpft
+          hio_cstarvmortality_carbonflux_si_pft(io_si,i_pft) = &
+               hio_cstarvmortality_carbonflux_si_pft(io_si,i_pft) + &
+               (sites(s)%term_carbonflux_ustory(i_term_mort_type_cstarv,i_pft) + &
+               sites(s)%term_carbonflux_canopy(i_term_mort_type_cstarv,i_pft)) * days_per_sec * ha_per_m2
+      end do 
       do i_pft = 1, numpft
          do i_scls = 1,nlevsclass
             i_scpf = (i_pft-1)*nlevsclass + i_scls
             !
             ! termination mortality. sum of canopy and understory indices
-            hio_m6_si_scpf(io_si,i_scpf) = (sites(s)%term_nindivs_canopy(i_scls,i_pft) + &
-               sites(s)%term_nindivs_ustory(i_scls,i_pft)) *              &
+            hio_m6_si_scpf(io_si,i_scpf) = &
+            (sum(sites(s)%term_nindivs_canopy(i_term_mort_type_canlev:n_term_mort_types,i_scls,i_pft)) + &
+               sum(sites(s)%term_nindivs_ustory(i_term_mort_type_canlev:n_term_mort_types,i_scls,i_pft))) *              &
                days_per_year / m2_per_ha
 
             hio_m6_si_scls(io_si,i_scls) = hio_m6_si_scls(io_si,i_scls) +  &
-               (sites(s)%term_nindivs_canopy(i_scls,i_pft) +              &
-               sites(s)%term_nindivs_ustory(i_scls,i_pft)) *              &
+               (sum(sites(s)%term_nindivs_canopy(i_term_mort_type_canlev:n_term_mort_types,i_scls,i_pft)) +              &
+               sum(sites(s)%term_nindivs_ustory(i_term_mort_type_canlev:n_term_mort_types,i_scls,i_pft))) *              &
                days_per_year / m2_per_ha
             !
+            ! add the carbon starvation-related termination mortality to the carbon starvation diagnostics
+            hio_m3_si_scpf(io_si,i_scpf) = hio_m3_si_scpf(io_si,i_scpf) +                               &
+            (sites(s)%term_nindivs_canopy(i_term_mort_type_cstarv,i_scls,ft) +              &
+            sites(s)%term_nindivs_ustory(i_term_mort_type_cstarv,i_scls,ft)) *              &
+            days_per_year / m2_per_ha
+
+            hio_m3_si_scls(io_si,i_scls) = hio_m3_si_scls(io_si,i_scls) +                               &
+            (sites(s)%term_nindivs_canopy(i_term_mort_type_cstarv,i_scls,ft) +              &
+            sites(s)%term_nindivs_ustory(i_term_mort_type_cstarv,i_scls,ft)) *              &
+            days_per_year / m2_per_ha
+            ! add c-starve termination mortality to canopy and understory M3 mortality (N/m^2/yr)
+            hio_m3_mortality_canopy_si_scpf(io_si,i_scpf) = &
+               hio_m3_mortality_canopy_si_scpf(io_si,i_scpf) + &
+               sites(s)%term_nindivs_canopy(i_term_mort_type_cstarv,i_scls,ft) * &
+               days_per_year / m2_per_ha
+
+            hio_m3_mortality_understory_si_scpf(io_si,i_scpf) = &
+               hio_m3_mortality_understory_si_scpf(io_si,i_scpf) + &
+               sites(s)%term_nindivs_ustory(i_term_mort_type_cstarv,i_scls,ft) * &
+               days_per_year / m2_per_ha
+
+            hio_m3_mortality_canopy_si_scls(io_si,i_scls) = &
+               hio_m3_mortality_canopy_si_scls(io_si,i_scls) + &
+               sites(s)%term_nindivs_canopy(i_term_mort_type_cstarv,i_scls,ft) * &
+               days_per_year / m2_per_ha
+
+            hio_m3_mortality_understory_si_scls(io_si,i_scls) = &
+               hio_m3_mortality_understory_si_scls(io_si,i_scls) + &
+               sites(s)%term_nindivs_ustory(i_term_mort_type_cstarv,i_scls,ft) * &
+               days_per_year / m2_per_ha
+
             ! add termination mortality to canopy and understory mortality
             hio_mortality_canopy_si_scls(io_si,i_scls) = hio_mortality_canopy_si_scls(io_si,i_scls) + &
-               sites(s)%term_nindivs_canopy(i_scls,i_pft) * days_per_year / m2_per_ha
+               sites(s)%term_nindivs_canopy(:,i_scls,i_pft) * days_per_year / m2_per_ha
 
             hio_mortality_understory_si_scls(io_si,i_scls) = hio_mortality_understory_si_scls(io_si,i_scls) + &
-               sites(s)%term_nindivs_ustory(i_scls,i_pft) * days_per_year / m2_per_ha
+               sites(s)%term_nindivs_ustory(:,i_scls,i_pft) * days_per_year / m2_per_ha
 
             hio_mortality_canopy_si_scpf(io_si,i_scpf) = hio_mortality_canopy_si_scpf(io_si,i_scpf) + &
-               sites(s)%term_nindivs_canopy(i_scls,i_pft) * days_per_year / m2_per_ha
+               sites(s)%term_nindivs_canopy(:,i_scls,i_pft) * days_per_year / m2_per_ha
 
             hio_mortality_understory_si_scpf(io_si,i_scpf) = hio_mortality_understory_si_scpf(io_si,i_scpf) + &
-               sites(s)%term_nindivs_ustory(i_scls,i_pft) * days_per_year / m2_per_ha
+               sites(s)%term_nindivs_ustory(:,i_scls,i_pft) * days_per_year / m2_per_ha
 
             !
             ! imort on its own
