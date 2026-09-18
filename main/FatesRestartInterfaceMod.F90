@@ -3261,20 +3261,30 @@ contains
                 sites(s)%fmort_rate_cambial(i_scls, i_pft) = rio_fmortrate_cambi_siscpf(io_idx_si_scpf)
                 sites(s)%rxfmort_rate_crown(i_scls, i_pft) = rio_rxfmortrate_crown_siscpf(io_idx_si_scpf)
                 sites(s)%rxfmort_rate_cambial(i_scls, i_pft) = rio_rxfmortrate_cambi_siscpf(io_idx_si_scpf)
-                sites(s)%term_nindivs_canopy(i_scls,i_pft) = rio_termnindiv_cano_siscpf(io_idx_si_scpf)
-                sites(s)%term_nindivs_ustory(i_scls,i_pft) = rio_termnindiv_usto_siscpf(io_idx_si_scpf)
+                !sites(s)%term_nindivs_canopy(i_scls,i_pft) = rio_termnindiv_cano_siscpf(io_idx_si_scpf)
+                !sites(s)%term_nindivs_ustory(i_scls,i_pft) = rio_termnindiv_usto_siscpf(io_idx_si_scpf)
                 sites(s)%growthflux_fusion(i_scls, i_pft)  = rio_growflx_fusion_siscpf(io_idx_si_scpf)
                 sites(s)%term_abg_flux(i_scls,i_pft) = rio_abg_term_flux_siscpf(io_idx_si_scpf)
                 sites(s)%imort_abg_flux(i_scls,i_pft) = rio_abg_imort_flux_siscpf(io_idx_si_scpf)
                 sites(s)%fmort_abg_flux(i_scls,i_pft) = rio_abg_fmort_flux_siscpf(io_idx_si_scpf)
                 sites(s)%rxfmort_abg_flux(i_scls,i_pft) = rio_abg_rxfmort_flux_siscpf(io_idx_si_scpf)
                 io_idx_si_scpf = io_idx_si_scpf + 1
+                do i_term_type = 1, n_term_mort_types
+                    sites(s)%term_nindivs_canopy(i_term_type,i_scls,i_pft) = rio_termnindiv_cano_siscpf(io_idx_si_scpf_term)
+                    sites(s)%term_nindivs_ustory(i_term_type,i_scls,i_pft) = rio_termnindiv_usto_siscpf(io_idx_si_scpf_term)
+                    io_idx_si_scpf_term = io_idx_si_scpf_term + 1
+                end do
              end do
           end do
 
           do i_pft = 1, numpft
-             sites(s)%term_carbonflux_canopy(i_pft)   = rio_termcflux_cano_sipft(io_idx_si_pft)
-             sites(s)%term_carbonflux_ustory(i_pft)   = rio_termcflux_usto_sipft(io_idx_si_pft)
+               do i_term_type = 1, n_term_mort_types
+                    sites(s)%term_carbonflux_canopy(i_term_type,i_pft)   = rio_termcflux_cano_sipft(io_idx_si_pft_term)
+                    sites(s)%term_carbonflux_ustory(i_term_type,i_pft)   = rio_termcflux_usto_sipft(io_idx_si_pft_term)
+                    io_idx_si_pft_term = io_idx_si_pft_term + 1
+               end do
+             !sites(s)%term_carbonflux_canopy(i_pft)   = rio_termcflux_cano_sipft(io_idx_si_pft)
+             !sites(s)%term_carbonflux_ustory(i_pft)   = rio_termcflux_usto_sipft(io_idx_si_pft)
              sites(s)%fmort_carbonflux_canopy(i_pft)  = rio_fmortcflux_cano_sipft(io_idx_si_pft)
              sites(s)%fmort_carbonflux_ustory(i_pft)  = rio_fmortcflux_usto_sipft(io_idx_si_pft)
              sites(s)%rxfmort_carbonflux_canopy(i_pft)  = rio_rxfmortcflux_cano_sipft(io_idx_si_pft)
