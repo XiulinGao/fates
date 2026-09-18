@@ -3051,6 +3051,8 @@ contains
      integer  :: io_idx_si_pft
      integer  :: io_idx_si_cdsc ! each damage x size class within site 
      integer  :: io_idx_si_cdpf ! damage x size x pft within site
+     integer  :: io_idx_si_scpf_term ! loop counter for scls, pft, and termination type
+     integer  :: io_idx_si_pft_term ! loop counter for pft, and termination type
      
      integer  :: io_idx_pa_ncl   ! each canopy layer within each patch
 
@@ -3072,6 +3074,7 @@ contains
      integer  :: i_cdam           ! loop counter for damage class
      integer  :: icdj             ! loop counter for damage class
      integer  :: icdi             ! loop counter for damage class 
+     integer  :: i_term_type      ! loop counter for termination type
 
      associate( rio_npatch_si         => this%rvars(ir_npatch_si)%int1d, &
           rio_cd_status_si            => this%rvars(ir_cd_status_si)%int1d, &
@@ -3229,6 +3232,8 @@ contains
           io_idx_si_cdpf = io_idx_co_1st
           io_idx_si_scpf = io_idx_co_1st
           io_idx_si_pft = io_idx_co_1st
+          io_idx_si_scpf_term = io_idx_co_1st
+          io_idx_si_pft_term = io_idx_co_1st
           
           ! read seed_bank info(site-level, but PFT-resolved)
           do i_pft = 1,numpft
