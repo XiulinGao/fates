@@ -350,6 +350,7 @@ contains
     type(fates_cohort_type), pointer :: copyc
     type(fates_cohort_type), pointer :: nextc  ! The next cohort in line
     integer  :: i_cwd                  ! Index for CWD pool
+    integer  :: termination_type
     real(r8) :: cc_loss                ! cohort crown area loss in demotion (m2)
     real(r8) :: leaf_c             ! leaf carbon [kg]
     real(r8) :: fnrt_c             ! fineroot carbon [kg]
