@@ -11,6 +11,7 @@ module EDCanopyStructureMod
   use FatesConstantsMod     , only : nearzero, area_error_1
   use FatesConstantsMod     , only : rsnbl_math_prec
   use FatesConstantsMod     , only : nocomp_bareground
+  use FatesConstantsMod,      only : i_term_mort_type_canlev
   use FatesGlobals          , only : fates_log
   use EDPftvarcon           , only : EDPftvarcon_inst
   use PRTParametersMod      , only : prt_params
@@ -350,7 +351,6 @@ contains
     type(fates_cohort_type), pointer :: copyc
     type(fates_cohort_type), pointer :: nextc  ! The next cohort in line
     integer  :: i_cwd                  ! Index for CWD pool
-    integer  :: termination_type
     real(r8) :: cc_loss                ! cohort crown area loss in demotion (m2)
     real(r8) :: leaf_c             ! leaf carbon [kg]
     real(r8) :: fnrt_c             ! fineroot carbon [kg]
@@ -737,7 +737,7 @@ contains
              if(currentCohort%canopy_layer>nclmax )then
                 ! put the litter from the terminated cohorts
                 ! straight into the fragmenting pools
-                call terminate_cohort(currentSite,currentPatch,currentCohort,bc_in,termination_type)
+                call terminate_cohort(currentSite,currentPatch,currentCohort,bc_in,i_term_mort_type_canlev)
                 deallocate(currentCohort, stat=istat, errmsg=smsg)
                 if (istat/=0) then
                    write(fates_log(),*) 'dealloc012: fail on deallocate(currentCohort):'//trim(smsg)
