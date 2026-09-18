@@ -47,6 +47,7 @@ module FatesRestartInterfaceMod
   use FatesRunningMeanMod,     only : rmean_type
   use FatesRunningMeanMod,     only : ema_lpa
   use EDParamsMod,             only : regeneration_model
+  use FatesConstantsMod,       only : n_term_mort_types
   
   ! CIME GLOBALS
   use shr_log_mod       , only : errMsg => shr_log_errMsg
@@ -2283,8 +2284,8 @@ contains
                 rio_rxfmortrate_usto_siscpf(io_idx_si_scpf)  = sites(s)%rxfmort_rate_ustory(i_scls, i_pft)
                 rio_rxfmortrate_crown_siscpf(io_idx_si_scpf) = sites(s)%rxfmort_rate_crown(i_scls, i_pft)
                 rio_rxfmortrate_cambi_siscpf(io_idx_si_scpf) = sites(s)%rxfmort_rate_cambial(i_scls, i_pft)
-                rio_termnindiv_cano_siscpf(io_idx_si_scpf) = sites(s)%term_nindivs_canopy(i_scls,i_pft)
-                rio_termnindiv_usto_siscpf(io_idx_si_scpf) = sites(s)%term_nindivs_ustory(i_scls,i_pft)
+              !  rio_termnindiv_cano_siscpf(io_idx_si_scpf) = sites(s)%term_nindivs_canopy(i_scls,i_pft)
+              !  rio_termnindiv_usto_siscpf(io_idx_si_scpf) = sites(s)%term_nindivs_ustory(i_scls,i_pft)
                 rio_growflx_fusion_siscpf(io_idx_si_scpf)  = sites(s)%growthflux_fusion(i_scls, i_pft)
                 rio_abg_term_flux_siscpf(io_idx_si_scpf) = sites(s)%term_abg_flux(i_scls, i_pft)
                 rio_abg_imort_flux_siscpf(io_idx_si_scpf) = sites(s)%imort_abg_flux(i_scls, i_pft)
@@ -2305,8 +2306,8 @@ contains
                rio_termcflux_usto_sipft(io_idx_si_pft_term)  = sites(s)%term_carbonflux_ustory(i_term_type,i_pft)
                io_idx_si_pft_term = io_idx_si_pft_term + 1
              end do
-             rio_termcflux_cano_sipft(io_idx_si_pft)  = sites(s)%term_carbonflux_canopy(i_pft)
-             rio_termcflux_usto_sipft(io_idx_si_pft)  = sites(s)%term_carbonflux_ustory(i_pft)
+            ! rio_termcflux_cano_sipft(io_idx_si_pft)  = sites(s)%term_carbonflux_canopy(i_pft)
+            ! rio_termcflux_usto_sipft(io_idx_si_pft)  = sites(s)%term_carbonflux_ustory(i_pft)
              rio_fmortcflux_cano_sipft(io_idx_si_pft) = sites(s)%fmort_carbonflux_canopy(i_pft)
              rio_fmortcflux_usto_sipft(io_idx_si_pft) = sites(s)%fmort_carbonflux_ustory(i_pft)
              rio_rxfmortcflux_cano_sipft(io_idx_si_pft) = sites(s)%rxfmort_carbonflux_canopy(i_pft)
