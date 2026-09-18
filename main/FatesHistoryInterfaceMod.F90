@@ -3941,16 +3941,16 @@ end subroutine flush_hvars
 
             ! add termination mortality to canopy and understory mortality
             hio_mortality_canopy_si_scls(io_si,i_scls) = hio_mortality_canopy_si_scls(io_si,i_scls) + &
-               sites(s)%term_nindivs_canopy(:,i_scls,i_pft) * days_per_year / m2_per_ha
+               sum(sites(s)%term_nindivs_canopy(:,i_scls,i_pft)) * days_per_year / m2_per_ha
 
             hio_mortality_understory_si_scls(io_si,i_scls) = hio_mortality_understory_si_scls(io_si,i_scls) + &
-               sites(s)%term_nindivs_ustory(:,i_scls,i_pft) * days_per_year / m2_per_ha
+               sum(sites(s)%term_nindivs_ustory(:,i_scls,i_pft)) * days_per_year / m2_per_ha
 
             hio_mortality_canopy_si_scpf(io_si,i_scpf) = hio_mortality_canopy_si_scpf(io_si,i_scpf) + &
-               sites(s)%term_nindivs_canopy(:,i_scls,i_pft) * days_per_year / m2_per_ha
+               sum(sites(s)%term_nindivs_canopy(:,i_scls,i_pft)) * days_per_year / m2_per_ha
 
             hio_mortality_understory_si_scpf(io_si,i_scpf) = hio_mortality_understory_si_scpf(io_si,i_scpf) + &
-               sites(s)%term_nindivs_ustory(:,i_scls,i_pft) * days_per_year / m2_per_ha
+               sum(sites(s)%term_nindivs_ustory(:,i_scls,i_pft)) * days_per_year / m2_per_ha
 
             !
             ! imort on its own
@@ -4044,8 +4044,8 @@ end subroutine flush_hvars
               (sites(s)%fmort_carbonflux_canopy(i_pft) + &
               sites(s)%fmort_carbonflux_ustory(i_pft) ) / g_per_kg + &
               sites(s)%imort_carbonflux(i_pft) + & 
-              sites(s)%term_carbonflux_ustory(i_pft) * days_per_sec * ha_per_m2 + &
-              sites(s)%term_carbonflux_canopy(i_pft) * days_per_sec * ha_per_m2 
+              sites(s)%term_carbonflux_ustory(:,i_pft) * days_per_sec * ha_per_m2 + &
+              sites(s)%term_carbonflux_canopy(:,i_pft) * days_per_sec * ha_per_m2 
    
          hio_firemortality_carbonflux_si_pft(io_si,i_pft) = sites(s)%fmort_carbonflux_canopy(i_pft) / g_per_kg
       end do
@@ -4540,7 +4540,7 @@ end subroutine flush_hvars
          sum(sites(s)%term_carbonflux_canopy(:)) * days_per_sec * ha_per_m2
 
       hio_understory_mortality_carbonflux_si(io_si) = hio_understory_mortality_carbonflux_si(io_si) + &
-         sum(sites(s)%term_carbonflux_ustory(:)) * days_per_sec * ha_per_m2
+         sum(sites(s)%term_carbonflux_ustory(:,:)) * days_per_sec * ha_per_m2
 
       ! add site level mortality counting to crownarea diagnostic
       hio_canopy_mortality_crownarea_si(io_si) = hio_canopy_mortality_crownarea_si(io_si) + &
@@ -4555,8 +4555,8 @@ end subroutine flush_hvars
            sites(s)%imort_crownarea
       
       ! and zero the site-level termination carbon flux variable
-      sites(s)%term_carbonflux_canopy(:) = 0._r8
-      sites(s)%term_carbonflux_ustory(:) = 0._r8
+      sites(s)%term_carbonflux_canopy(:,:) = 0._r8
+      sites(s)%term_carbonflux_ustory(:,:) = 0._r8
       !
 
       ! add the site-level disturbance-associated cwd and litter input fluxes to thir respective flux fields
