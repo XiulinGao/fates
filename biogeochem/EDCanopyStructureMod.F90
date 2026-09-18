@@ -736,7 +736,7 @@ contains
              if(currentCohort%canopy_layer>nclmax )then
                 ! put the litter from the terminated cohorts
                 ! straight into the fragmenting pools
-                call terminate_cohort(currentSite,currentPatch,currentCohort,bc_in)
+                call terminate_cohort(currentSite,currentPatch,currentCohort,bc_in,termination_type)
                 deallocate(currentCohort, stat=istat, errmsg=smsg)
                 if (istat/=0) then
                    write(fates_log(),*) 'dealloc012: fail on deallocate(currentCohort):'//trim(smsg)
