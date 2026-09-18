@@ -4101,8 +4101,8 @@ end subroutine flush_hvars
          end do
       end if
 
-      sites(s)%term_nindivs_canopy(:,:) = 0._r8
-      sites(s)%term_nindivs_ustory(:,:) = 0._r8
+      sites(s)%term_nindivs_canopy(:,:,:) = 0._r8
+      sites(s)%term_nindivs_ustory(:,:,:) = 0._r8
       sites(s)%imort_carbonflux(:) = 0._r8
       sites(s)%imort_rate(:,:) = 0._r8
       sites(s)%fmort_rate_canopy(:,:) = 0._r8
@@ -4537,7 +4537,7 @@ end subroutine flush_hvars
       ! mortality-associated carbon fluxes
 
       hio_canopy_mortality_carbonflux_si(io_si) = hio_canopy_mortality_carbonflux_si(io_si) + &
-         sum(sites(s)%term_carbonflux_canopy(:)) * days_per_sec * ha_per_m2
+         sum(sites(s)%term_carbonflux_canopy(:,:)) * days_per_sec * ha_per_m2
 
       hio_understory_mortality_carbonflux_si(io_si) = hio_understory_mortality_carbonflux_si(io_si) + &
          sum(sites(s)%term_carbonflux_ustory(:,:)) * days_per_sec * ha_per_m2
