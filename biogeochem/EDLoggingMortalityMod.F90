@@ -196,7 +196,8 @@ contains
 
    ! ======================================================================================
 
-   subroutine LoggingMortality_frac( pft_i, dbh, area, n, delta_BA, canopy_layer, lmort_direct, &
+   subroutine LoggingMortality_frac( pft_i, dbh, area, rSDI, n, delta_BA, delta_rSDI, &
+                                     canopy_layer, lmort_direct, &
                                      lmort_collateral,lmort_infra, l_degrad, &
                                      hlm_harvest_rates, hlm_harvest_catnames, &
                                      hlm_harvest_units, &
@@ -208,8 +209,10 @@ contains
       integer,  intent(in)  :: pft_i            ! pft index 
       real(r8), intent(in)  :: dbh              ! diameter at breast height (cm)
       real(r8), intent(in)  :: area             ! current patch area [m2]
+      real(r8), intent(in)  :: rSDI             ! current patch relative SDI [%]
       real(r8), intent(in)  :: n                ! number of plants in current cohort
       real(r8), intent(inout)  :: delta_BA      ! difference between the current and the target basal area [m2/m2]
+      real(r8), intent(inout)  :: delta_rSDI    ! difference between the current and the target relative stem density index(rSDI)[%]
       integer,  intent(in)  :: canopy_layer     ! canopy layer of this cohort
       real(r8), intent(in) :: hlm_harvest_rates(:) ! annual harvest rate per hlm category
       character(len=64), intent(in) :: hlm_harvest_catnames(:) ! names of hlm harvest categories
@@ -245,13 +248,18 @@ contains
 
       !real(r8), parameter :: max_ba_targ = 0.0034_r8 !target site max. basal area below which logging stops (m2/m2)
       real(r8), parameter :: ref_dbh1    = 25.0_r8   !reference DBH size 1 for target logging (cm)
-      real(r8), parameter :: ref_dbh2    = 50.0_r8   !reference DBH size 2
-      real(r8), parameter :: ref_dbh3    = 75.0_r8   !reference DBH size 3
-      real(r8), parameter :: cap_targ1   = 0.75_r8   !max. harvesting fraction for plants < ref_dbh1 
-      real(r8), parameter :: cap_targ2   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
-      real(r8), parameter :: cap_targ3   = 0.20_r8   !max. harvesting fraction for plants > ref_dbh3
-      real(r8), parameter :: targ_ba_precision= 1.0E-5_r8   !error allowed for achieving target basal area 
-      integer , parameter :: target_harvest = 1       !switch for turnning on target harvesting 
+      real(r8), parameter :: ref_dbh2    = 40.0_r8   !reference DBH size 2
+      real(r8), parameter :: ref_dbh3    = 60.0_r8   !reference DBH size 3
+      real(r8), parameter :: cap_targ1   = 0.90_r8   !max. harvesting fraction for log_dbh_min < plants < ref_dbh1 
+      real(r8), parameter :: cap_targ2   = 0.75_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
+      real(r8), parameter :: cap_targ3   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh3
+      real(r8), parameter :: targ_precision = 1.0E-5_r8   !error allowed for achieving logging target 
+      real(r8), parameter :: rsdi_trigger  = 60.0_r8  ! relative stand density index above which logging is triggered
+      real(r8), parameter :: max_SDI = 800.0_r8
+      integer , parameter :: target_harvest = 1       ! switch for turnning on target harvesting 
+      integer, parameter  :: target_option = 2        ! 1: target is based on basal area; 2: target is based on rSDI
+      integer, parameter  :: basal_area_log = 1
+      integer, parameter  :: rSDI_log = 2
 
       ! todo: probably lower the dbhmin default value to 30 cm
       ! todo: change the default logging_event_code to 1 september (-244)
@@ -327,13 +335,28 @@ contains
                cap_frac    = 0.0_r8
             end if
             
-            ! get fraction to be logged and update delta_BA by subtracting basal area from logged trees    
+            ! get fraction to be logged and update delta_BA or delta_rSDI
+            ! given target case by subtracting logged trees    
             ! call get_target_harvest_stem(dbh, n, area, cap_num, delta_BA, final_num)
-            if(delta_BA > targ_ba_precision) then
-               target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
-            else
-               target_num = 0.0_r8
-            end if
+            case_target_logging: select case (int(target_option))
+            case(basal_area_log)
+               if(delta_BA > targ_precision) then
+                  target_num = (delta_BA * area * 4.0_r8) / (pi_const * (dbh / 100.0_r8)**2.0_r8)
+               else
+                  target_num = 0.0_r8
+               end if
+
+            case(rSDI_log)
+               if(rSDI >= rsdi_trigger) then
+                  if(delta_rSDI > targ_precision) then
+                     target_num = ((rSDI - delta_rSDI) * area * 1.0e-4_r8 * max_SDI / 100.0_r8) / (dbh / 25.4_r8)**1.6_r8
+                  else 
+                     target_num = 0.0_r8
+                  end if
+               else
+                  target_num = 0.0_r8
+               end if
+            end select case_target_logging
 
             if(n > 0.0_r8) then
                target_frac = target_num / n
@@ -398,10 +421,17 @@ contains
                lmort_collateral = 0._r8
             endif
 
-            ! update delta_BA
-            delta_BA = delta_BA - (0.25_r8 * pi_const * &
-            ((dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
-            lmort_infra)*n/area)
+            ! update delta_BA or delta_rSDI
+            update_log_target: select case(int(target_option))
+            case (basal_area_log)
+               delta_BA = delta_BA - (0.25_r8 * pi_const * &
+               ((dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
+               lmort_infra)*n/area)
+            case (rSDI_log)
+               delta_rSDI = delta_rSDI - ((dbh / 25.4_r8)**1.6_r8 * (lmort_direct + lmort_collateral + &
+               lmort_infra) * n / (area * 1.0e-4_r8)) / max_SDI * 100.0_r8
+            end select update_log_target
+            
 
          else  ! non-woody plants still killed by infrastructure
             lmort_direct    = 0.0_r8
