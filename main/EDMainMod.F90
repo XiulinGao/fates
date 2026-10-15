@@ -368,6 +368,7 @@ contains
     real(r8) :: delta_height          ! correction for height
     real(r8) :: mean_temp
     real(r8) :: delta_BA              ! difference between current patch basal area and the target basal area
+    real(r8) :: delta_rSDI            ! difference between current relative stand density index (rSDI) and target rSDI
 
     logical  :: newly_recovered       ! If the current loop is dealing with a newly created cohort, which
                                       ! was created because it is a clone of the previous cohort in
@@ -409,6 +410,7 @@ contains
     
     integer,parameter :: leaf_c_id = 1
     real(r8),parameter :: max_ba_targ = 0.004_r8
+    real(r8),parameter :: max_rsdi_targ = 35.0_r8
     
     !-----------------------------------------------------------------------
 
@@ -453,6 +455,7 @@ contains
 
        ! calculate delta_BA before recalculate logging mortality
        delta_BA = currentPatch%total_basal_area - max_ba_targ
+       delta_rSDI = currentPatch%rSDI - max_rsdi_targ
 
 
        ! Within this loop, we may be creating new cohorts, which
@@ -481,7 +484,8 @@ contains
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%anthro_disturbance_label,                          &
                currentPatch%age_since_anthro_disturbance,                      &
-               delta_BA, currentPatch%area, frac_site_primary,                 &
+               currentPatch%rSDI,                                              &
+               delta_BA, delta_rSDI, currentPatch%area, frac_site_primary,     &
                harvestable_forest_c, harvest_tag)
 
              !write(fates_log(),*) 'EDMain lmort_direct is:', currentCohort%lmort_direct
