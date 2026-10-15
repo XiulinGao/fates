@@ -100,7 +100,9 @@ module FatesPatchMod
     real(r8) :: total_canopy_area                           ! area that is covered by vegetation [m2]
     real(r8) :: total_tree_area                             ! area that is covered by woody vegetation [m2]
     real(r8) :: total_basal_area                            ! total tree basal area at each patch [m2/m2]
-    real(r8) :: delta_BA                                    ! difference between current patch basal area and target basal area for targeted logging
+    real(r8) :: rSDI                                        ! patch relative stand density index [%]
+    real(r8) :: delta_BA                                    ! difference between current patch basal area and target basal area 
+    real(r8) :: delta_rSDI                                  ! difference between current patch SDI and target SDI 
     real(r8) :: zstar                                       ! height of smallest canopy tree, only meaningful in "strict PPA" mode [m]
     real(r8) :: elai_profile(nclmax,maxpft,nlevleaf)        ! exposed leaf area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
     real(r8) :: esai_profile(nclmax,maxpft,nlevleaf)        ! exposed stem area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
@@ -322,7 +324,9 @@ module FatesPatchMod
       this%total_canopy_area            = nan
       this%total_tree_area              = nan 
       this%total_basal_area             = nan
+      this%rSDI                         = nan
       this%delta_BA                     = nan
+      this%delta_rSDI                   = nan
       this%zstar                        = nan 
       this%elai_profile(:,:,:)          = nan 
       this%esai_profile(:,:,:)          = nan   
@@ -432,6 +436,7 @@ module FatesPatchMod
       this%canopy_layer_tlai(:)              = 0.0_r8
       this%total_tree_area                   = 0.0_r8  
       this%total_basal_area                  = 0.0_r8
+      this%rSDI                              = 0.0_r8
       this%zstar                             = 0.0_r8
       this%elai_profile(:,:,:)               = 0.0_r8
       this%c_stomata                         = 0.0_r8 
@@ -467,6 +472,7 @@ module FatesPatchMod
       this%disturbance_rates(:)              = 0.0_r8 
       this%fract_ldist_not_harvested         = 0.0_r8
       this%delta_BA                          = 0.0_r8
+      this%delta_rSDI                        = 0.0_r8
 
       ! LITTER AND COARSE WOODY DEBRIS
       this%fragmentation_scaler(:)           = 0.0_r8
@@ -639,20 +645,25 @@ module FatesPatchMod
 
     !===========================================================================
 
-    subroutine UpdateTreeBasalArea(this)
+    subroutine UpdateTreeBasalAreaStandDensity(this)
       !
       ! DESCRIPTION:
       ! calculate patch level tree basal area [m2/m2]
-      !
+      ! and stand density index [trees per hectare]
 
       ! Arguments:
       class(fates_patch_type), intent(inout) :: this  !patch object
 
       ! Locals:
       type(fates_cohort_type), pointer :: currentCohort
+      real(r8)            :: stand_density_index
+      real(r8), parameter :: m2_per_ha = 1.0e-4_r8
+      real(r8), parameter :: max_SDI = 800.0_r8
 
       if(this%nocomp_pft_label .ne. nocomp_bareground) then
         this%total_basal_area = 0.0_r8
+        this%rSDI             = 0.0_r8
+        stand_density_index   = 0.0_r8
 
         currentCohort => this%tallest
         do while(associated(currentCohort))
@@ -660,15 +671,20 @@ module FatesPatchMod
             this%total_basal_area = this%total_basal_area + 0.25_r8 * pi_const * &
             ((currentCohort%dbh / 100.0_r8)**2.0_r8) * currentCohort%n / &
             this%area
+            
+            stand_density_index = stand_density_index + currentCohort%n / (m2_per_ha * &
+            this%area) * (currentCohort%dbh / 25.4_r8)**1.6_r8
           end if
-          currentCohort => currentCohort%shorter 
+          currentCohort => currentCohort%shorter
         end do
+        this%rSDI = stand_density_index / max_SDI * 100.0_r8
       end if
 
-      end subroutine UpdateTreeBasalArea
+      end subroutine UpdateTreeBasalAreaStandDensity
 
 
     !===========================================================================
+    
 
     subroutine FreeMemory(this, regeneration_model, numpft)
       !
@@ -790,7 +806,9 @@ module FatesPatchMod
       write(fates_log(),*) 'pa%total_canopy_area  = ',this%total_canopy_area
       write(fates_log(),*) 'pa%total_tree_area    = ',this%total_tree_area
       write(fates_log(),*) 'pa%total_basal_area   = ',this%total_basal_area
-      write(fates_log(),*) 'pa%delta_BA           = ',this%delta_BA      
+      write(fates_log(),*) 'pa%rSDI               = ',this%rSDI 
+      write(fates_log(),*) 'pa%delta_BA           = ',this%delta_BA   
+      write(fates_log(),*) 'pa%delta_rSDI         = ',this%delta_rSDI   
       write(fates_log(),*) 'pa%zstar              = ',this%zstar
       write(fates_log(),*) 'pa%solar_zenith_flag  = ',this%solar_zenith_flag
       write(fates_log(),*) 'pa%solar_zenith_angle = ',this%solar_zenith_angle
