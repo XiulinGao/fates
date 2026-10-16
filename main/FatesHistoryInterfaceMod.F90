@@ -392,6 +392,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_h2oveg_growturn_err_si
   integer :: ih_h2oveg_hydro_err_si
   integer :: ih_lai_si
+  integer :: ih_sdi_si
  
   integer :: ih_site_cstatus_si
   integer :: ih_gdd_si
@@ -2556,7 +2557,8 @@ end subroutine flush_hvars
                hio_nplant_si_scag                   => this%hvars(ih_nplant_si_scag)%r82d, &
                hio_nplant_canopy_si_scag            => this%hvars(ih_nplant_canopy_si_scag)%r82d, &
                hio_nplant_understory_si_scag        => this%hvars(ih_nplant_understory_si_scag)%r82d, &
-               hio_lai_si                           => this%hvars(ih_lai_si)%r81d )
+               hio_lai_si                           => this%hvars(ih_lai_si)%r81d, &
+               hio_sdi_si                           => this%hvars(ih_sdi_si)%r81d )
 
    ! If we don't have dynamics turned on, we just abort these diagnostics
    if (hlm_use_ed_st3.eq.itrue) return
@@ -2982,7 +2984,6 @@ end subroutine flush_hvars
                   hio_agb_si(io_si) = hio_agb_si(io_si) + n_perm2 *            &
                   ( leaf_m + (sapw_m + struct_m + store_m) * prt_params%allom_agb_frac(ccohort%pft) )
 
-
                   ! Update PFT partitioned biomass components
                   hio_leafbiomass_si_pft(io_si,ft) = hio_leafbiomass_si_pft(io_si,ft) + &
                      (ccohort%n * AREA_INV) * leaf_m
@@ -3227,6 +3228,10 @@ end subroutine flush_hvars
               
                ! Woody State Variables (basal area growth increment)
                if ( prt_params%woody(ft) == itrue) then
+
+                  ! Update stand density index [trees per hectare]
+                  hio_sdi_si(io_si) = hio_sdi_si(io_si) + n_perm2 * 1.0e4_r8 * &
+                  (dbh/25.4_r8)**1.6_r8
 
                   ! basal area  [m2/m2]
                   hio_ba_si_scpf(io_si,scpf) = hio_ba_si_scpf(io_si,scpf) + &
@@ -5625,6 +5630,12 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_lai_si)
+
+    call this%set_history_var(vname='FATES_SDI', units='per hectare',          &
+         long='stand density index in number of trees per hectare land area',  &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_sdi_si)
 
     call this%set_history_var(vname='FATES_VEGC_PF', units='kg m-2',           &
          long='total PFT-level biomass in kg of carbon per land area',         &
