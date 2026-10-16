@@ -243,7 +243,7 @@ module FatesPatchMod
       procedure :: InitRunningMeans
       procedure :: InitLitter
       procedure :: Create
-      procedure :: UpdateTreeBasalArea
+      procedure :: UpdateTreeBasalAreaStandDensity
       procedure :: FreeMemory
       procedure :: Dump
       procedure :: CheckVars
