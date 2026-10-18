@@ -808,7 +808,7 @@ contains
 
          write(*,fmt=hd_fmt) &
             !   'time','patch','trk','age','area'
-               'time','patch','trk','age','area' &
+               'time','patch','trk','age','area', &
                'leaf litter','1-hour cwd','10-hour cwd','100-hour cwd',  &
                '1000-hour cwd'
          write(*,fmt=wr_fmt) &
