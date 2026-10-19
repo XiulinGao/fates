@@ -393,6 +393,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_h2oveg_hydro_err_si
   integer :: ih_lai_si
   integer :: ih_sdi_si
+  integer :: ih_rsdi_si
  
   integer :: ih_site_cstatus_si
   integer :: ih_gdd_si
@@ -2558,7 +2559,8 @@ end subroutine flush_hvars
                hio_nplant_canopy_si_scag            => this%hvars(ih_nplant_canopy_si_scag)%r82d, &
                hio_nplant_understory_si_scag        => this%hvars(ih_nplant_understory_si_scag)%r82d, &
                hio_lai_si                           => this%hvars(ih_lai_si)%r81d, &
-               hio_sdi_si                           => this%hvars(ih_sdi_si)%r81d )
+               hio_sdi_si                           => this%hvars(ih_sdi_si)%r81d, &
+               hio_rsdi_si                          => this%hvars(ih_rsdi_si)%rb1d)
 
    ! If we don't have dynamics turned on, we just abort these diagnostics
    if (hlm_use_ed_st3.eq.itrue) return
@@ -2760,6 +2762,10 @@ end subroutine flush_hvars
          ! long-term running mean veg temperature (tgrowth)
          hio_tgrowth(io_si) = hio_tgrowth(io_si) + &
               (cpatch%tveg_lpa%GetMean()- t_water_freeze_k_1atm)*cpatch%area*AREA_INV
+
+         ! track relative stand density index [%]
+         hio_rsdi_si(io_si) = hio_rsdi_si(io_si) + &
+         cpatch%rSDI * cpatch%area * AREA_INV
 
          ! Increment some patch-age-resolved diagnostics
          hio_lai_si_age(io_si,cpatch%age_class) = hio_lai_si_age(io_si,cpatch%age_class) &
@@ -5630,6 +5636,12 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index=ih_lai_si)
+
+    call this%set_history_var(vname='FATES_RSDI', units='%',                   &
+         long='relative stand density index compared to the max. SDI, in%',    &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index=ih_rsdi_si)
 
     call this%set_history_var(vname='FATES_SDI', units='per hectare',          &
          long='stand density index in number of trees per hectare land area',  &
