@@ -658,7 +658,7 @@ module FatesPatchMod
       type(fates_cohort_type), pointer :: currentCohort
       real(r8)            :: stand_density_index
       real(r8), parameter :: m2_per_ha = 1.0e-4_r8
-      real(r8), parameter :: max_SDI = 800.0_r8
+      real(r8), parameter :: max_SDI = 836.0_r8
 
       if(this%nocomp_pft_label .ne. nocomp_bareground) then
         this%total_basal_area = 0.0_r8

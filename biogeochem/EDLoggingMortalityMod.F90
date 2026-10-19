@@ -255,7 +255,7 @@ contains
       real(r8), parameter :: cap_targ3   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh3
       real(r8), parameter :: targ_precision = 1.0E-5_r8   !error allowed for achieving logging target 
       real(r8), parameter :: rsdi_trigger  = 60.0_r8  ! relative stand density index above which logging is triggered
-      real(r8), parameter :: max_SDI = 800.0_r8
+      real(r8), parameter :: max_SDI = 836.0_r8
       integer , parameter :: target_harvest = 1       ! switch for turnning on target harvesting 
       integer, parameter  :: target_option = 2        ! 1: target is based on basal area; 2: target is based on rSDI
       integer, parameter  :: basal_area_log = 1
