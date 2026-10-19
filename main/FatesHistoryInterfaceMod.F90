@@ -2560,7 +2560,7 @@ end subroutine flush_hvars
                hio_nplant_understory_si_scag        => this%hvars(ih_nplant_understory_si_scag)%r82d, &
                hio_lai_si                           => this%hvars(ih_lai_si)%r81d, &
                hio_sdi_si                           => this%hvars(ih_sdi_si)%r81d, &
-               hio_rsdi_si                          => this%hvars(ih_rsdi_si)%rb1d)
+               hio_rsdi_si                          => this%hvars(ih_rsdi_si)%r81d)
 
    ! If we don't have dynamics turned on, we just abort these diagnostics
    if (hlm_use_ed_st3.eq.itrue) return
