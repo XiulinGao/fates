@@ -197,7 +197,7 @@ contains
    ! ======================================================================================
 
    subroutine LoggingMortality_frac( pft_i, dbh, area, rSDI, n, delta_BA, delta_rSDI, &
-                                     canopy_layer, lmort_direct, &
+                                     logging_pause,canopy_layer, lmort_direct, &
                                      lmort_collateral,lmort_infra, l_degrad, &
                                      hlm_harvest_rates, hlm_harvest_catnames, &
                                      hlm_harvest_units, &
@@ -213,6 +213,7 @@ contains
       real(r8), intent(in)  :: n                ! number of plants in current cohort
       real(r8), intent(inout)  :: delta_BA      ! difference between the current and the target basal area [m2/m2]
       real(r8), intent(inout)  :: delta_rSDI    ! difference between the current and the target relative stem density index(rSDI)[%]
+      logical,  intent(in)     :: logging_pause ! if logging based on rSDI is paused 
       integer,  intent(in)  :: canopy_layer     ! canopy layer of this cohort
       real(r8), intent(in) :: hlm_harvest_rates(:) ! annual harvest rate per hlm category
       character(len=64), intent(in) :: hlm_harvest_catnames(:) ! names of hlm harvest categories
@@ -347,7 +348,7 @@ contains
                end if
 
             case(rSDI_log)
-               if(rSDI >= rsdi_trigger) then
+               if(.not. logging_pause) then
                   if(delta_rSDI > targ_precision) then
                      target_num = ((rSDI - delta_rSDI) * area * 1.0e-4_r8 * max_SDI / 100.0_r8) / (dbh / 25.4_r8)**1.6_r8
                   else 

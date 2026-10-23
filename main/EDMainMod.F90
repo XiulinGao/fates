@@ -485,7 +485,8 @@ contains
                currentPatch%anthro_disturbance_label,                          &
                currentPatch%age_since_anthro_disturbance,                      &
                currentPatch%rSDI,                                              &
-               delta_BA, delta_rSDI, currentPatch%area, frac_site_primary,     &
+               delta_BA, delta_rSDI, currentPatch%logging_pause,               &
+               currentPatch%area, frac_site_primary,                           &
                harvestable_forest_c, harvest_tag)
 
              !write(fates_log(),*) 'EDMain lmort_direct is:', currentCohort%lmort_direct

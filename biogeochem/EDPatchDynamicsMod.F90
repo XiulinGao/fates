@@ -250,6 +250,9 @@ contains
       currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
       ! difference between current patch and target relative SDI
       currentPatch%delta_rSDI = currentPatch%rSDI - max_rsdi_targ
+      ! update logging pause: true if delta_rSDI is less than target precision
+      ! false if rSDI is above trigger 
+      call currentPatch%RefreshLoggingPause()
 
       !write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
       !write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
@@ -278,7 +281,8 @@ contains
 
           call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentPatch%area, &
                 currentPatch%rSDI, currentCohort%n, currentPatch%delta_BA, & 
-                currentPatch%delta_rSDI, currentCohort%canopy_layer, &
+                currentPatch%delta_rSDI, currentPatch%logging_pause, &
+                currentCohort%canopy_layer, &
                 lmort_direct,lmort_collateral,lmort_infra,l_degrad, &
                 bc_in%hlm_harvest_rates, &
                 bc_in%hlm_harvest_catnames, &

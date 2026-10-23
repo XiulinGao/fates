@@ -231,6 +231,10 @@ module FatesPatchMod
     real(r8)              :: burnt_frac_litter(nfsc) ! fraction of each litter pool burned, conditional on it being burned [0-1]
 
     !---------------------------------------------------------------------------
+    ! logging
+    logical               :: logging_pause        ! if logging should be paused given rSDI
+
+    !---------------------------------------------------------------------------
     
     ! PLANT HYDRAULICS (not currently used in hydraulics RGK 03-2018)  
     ! type(ed_patch_hydr_type), pointer :: pa_hydr ! All patch hydraulics data, see FatesHydraulicsMemMod.F90
@@ -244,6 +248,7 @@ module FatesPatchMod
       procedure :: InitLitter
       procedure :: Create
       procedure :: UpdateTreeBasalAreaStandDensity
+      procedure :: RefreshLoggingPause
       procedure :: FreeMemory
       procedure :: Dump
       procedure :: CheckVars
@@ -417,6 +422,9 @@ module FatesPatchMod
       this%rxfire                       = fates_unset_int
       this%rxfire_fi                    = nan
       this%rxfire_frac_burnt            = nan
+
+      ! LOGGING
+      this%logging_pause                = .true.
   
     end subroutine NanValues
 
@@ -684,6 +692,34 @@ module FatesPatchMod
 
 
     !===========================================================================
+
+    subroutine RefreshLoggingPause(this)
+      !
+      ! DESCRIPTION:
+      ! Update patch level flag for whether logging should be
+      ! paused given current patch level rSDI
+      !
+
+      ! Arguments:
+      class(fates_patch_type), intent(inout) :: this  !patch object
+
+      ! Locals:
+      real(r8), parameter    :: rsdi_trigger = 60.0_r8
+      real(r8), parameter    :: targ_precision = 1.0E-5_r8
+
+      if(this%logging_pause) then
+        if(this%rSDI >= rsdi_trigger) then
+          this%logging_pause = .false.
+        end if
+      else 
+        if (this%delta_rSDI <= targ_precision) then
+          this%logging_pause = .true.
+        end if
+      end if
+
+    end subroutine RefreshLoggingPause
+
+    !===========================================================================
     
 
     subroutine FreeMemory(this, regeneration_model, numpft)
@@ -808,7 +844,8 @@ module FatesPatchMod
       write(fates_log(),*) 'pa%total_basal_area   = ',this%total_basal_area
       write(fates_log(),*) 'pa%rSDI               = ',this%rSDI 
       write(fates_log(),*) 'pa%delta_BA           = ',this%delta_BA   
-      write(fates_log(),*) 'pa%delta_rSDI         = ',this%delta_rSDI   
+      write(fates_log(),*) 'pa%delta_rSDI         = ',this%delta_rSDI 
+      write(fates_log(),*) 'pa%logging_pause      = ',this%logging_pause  
       write(fates_log(),*) 'pa%zstar              = ',this%zstar
       write(fates_log(),*) 'pa%solar_zenith_flag  = ',this%solar_zenith_flag
       write(fates_log(),*) 'pa%solar_zenith_angle = ',this%solar_zenith_angle
