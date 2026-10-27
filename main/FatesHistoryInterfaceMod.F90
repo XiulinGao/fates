@@ -641,6 +641,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_fire_intensity_si_age
   integer :: ih_fire_sum_fuel_si_age
   integer :: ih_rxfire_intensity_si_age
+  integer :: ih_rsdi_si_age
 
   integer :: ih_lai_secondary_si
 
@@ -2518,6 +2519,7 @@ end subroutine flush_hvars
                hio_fire_intensity_si_age          => this%hvars(ih_fire_intensity_si_age)%r82d, &
                hio_rxfire_intensity_si_age        => this%hvars(ih_rxfire_intensity_si_age)%r82d, &
                hio_fire_sum_fuel_si_age           => this%hvars(ih_fire_sum_fuel_si_age)%r82d, &
+               hio_rsdi_si_age                    => this%hvars(ih_rsdi_si_age)%r82d, &
                hio_burnt_frac_litter_si_fuel      => this%hvars(ih_burnt_frac_litter_si_fuel)%r82d, &
                hio_fuel_amount_si_fuel            => this%hvars(ih_fuel_amount_si_fuel)%r82d, &
                hio_fuel_amount_age_fuel            => this%hvars(ih_fuel_amount_age_fuel)%r82d, &
@@ -2843,6 +2845,10 @@ end subroutine flush_hvars
 
          hio_rx_area_burnt_si_age(io_si,cpatch%age_class) = hio_rx_area_burnt_si_age(io_si,cpatch%age_class) + &
               cpatch%rxfire_frac_burnt * cpatch%area * AREA_INV / sec_per_day
+
+         ! relative stand density index [%]
+         hio_rsdi_si_age(io_si,cpatch%age_class) = hio_rsdi_si_age(io_si,cpatch%age_class) + &
+         cpatch%rSDI * cpatch%area * AREA_INV 
 
          ! hio_fire_rate_of_spread_front_si_age(io_si, cpatch%age_class) = hio_fire_rate_of_spread_si_age(io_si, cpatch%age_class) + &
          !    cpatch%ros_front * cpatch*frac_burnt * cpatch%area * AREA_INV
@@ -5863,6 +5869,12 @@ end subroutine update_history_hifrq
          use_default='inactive', avgflag='A', vtype=site_age_r8,               &
          hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables, &
          index=ih_ncl_si_age)
+
+    call this%set_history_var(vname='FATES_RSDI_AP', units='',                 &
+         long='relative stand density index by age bin',                       &
+         use_default='inactive', avgflag='A', vtype=site_age_r8,              &
+         hlms='CLM:ALM', upfreq=1, ivar=ivar, initialize=initialize_variables, &
+         index=ih_rsdi_si_age)
 
     call this%set_history_var(vname='FATES_NPATCH_AP', units='',               &
          long='number of patches by age bin', use_default='inactive',          &
