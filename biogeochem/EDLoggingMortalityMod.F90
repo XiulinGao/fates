@@ -249,11 +249,13 @@ contains
 
       !real(r8), parameter :: max_ba_targ = 0.0034_r8 !target site max. basal area below which logging stops (m2/m2)
       real(r8), parameter :: ref_dbh1    = 25.0_r8   !reference DBH size 1 for target logging (cm)
-      real(r8), parameter :: ref_dbh2    = 40.0_r8   !reference DBH size 2
-      real(r8), parameter :: ref_dbh3    = 60.0_r8   !reference DBH size 3
+      real(r8), parameter :: ref_dbh2    = 50.0_r8   !reference DBH size 2
+      real(r8), parameter :: ref_dbh3    = 75.0_r8   !reference DBH size 3
+      real(r8), parameter :: ref_dbh4    = 100.0_r8
       real(r8), parameter :: cap_targ1   = 0.90_r8   !max. harvesting fraction for log_dbh_min < plants < ref_dbh1 
-      real(r8), parameter :: cap_targ2   = 0.75_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
-      real(r8), parameter :: cap_targ3   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh3
+      real(r8), parameter :: cap_targ2   = 0.80_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
+      real(r8), parameter :: cap_targ3   = 0.60_r8   !max. harvesting fraction for plants > ref_dbh3
+      real(r8), parameter :: cap_targ4   = 0.15_r8
       real(r8), parameter :: targ_precision = 1.0_r8   !error allowed for achieving logging target 
       real(r8), parameter :: rsdi_trigger  = 60.0_r8  ! relative stand density index above which logging is triggered
       real(r8), parameter :: max_SDI = 836.0_r8
@@ -332,6 +334,8 @@ contains
                cap_frac    = cap_targ2 
             else if(dbh > ref_dbh2 .and. dbh <= ref_dbh3) then
                cap_frac    = cap_targ3
+            else if(dbh > ref_dbh3 .and. dbh <= ref_dbh4) then
+               cap_frac    = cap_targ4
             else 
                cap_frac    = 0.0_r8
             end if
