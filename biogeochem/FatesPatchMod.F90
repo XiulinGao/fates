@@ -680,8 +680,10 @@ module FatesPatchMod
             ((currentCohort%dbh / 100.0_r8)**2.0_r8) * currentCohort%n / &
             this%area
             
-            stand_density_index = stand_density_index + currentCohort%n / (m2_per_ha * &
-            this%area) * (currentCohort%dbh / 25.4_r8)**1.6_r8
+            if(currentCohort%dbh > 5.0_r8) then
+              stand_density_index = stand_density_index + currentCohort%n / (m2_per_ha * &
+              this%area) * (currentCohort%dbh / 25.4_r8)**1.6_r8
+            end if
           end if
           currentCohort => currentCohort%shorter
         end do
