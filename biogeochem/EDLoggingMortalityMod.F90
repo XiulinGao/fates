@@ -254,7 +254,7 @@ contains
       real(r8), parameter :: cap_targ1   = 0.90_r8   !max. harvesting fraction for log_dbh_min < plants < ref_dbh1 
       real(r8), parameter :: cap_targ2   = 0.75_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
       real(r8), parameter :: cap_targ3   = 0.50_r8   !max. harvesting fraction for plants > ref_dbh3
-      real(r8), parameter :: targ_precision = 1.0E-5_r8   !error allowed for achieving logging target 
+      real(r8), parameter :: targ_precision = 1.0_r8   !error allowed for achieving logging target 
       real(r8), parameter :: rsdi_trigger  = 60.0_r8  ! relative stand density index above which logging is triggered
       real(r8), parameter :: max_SDI = 836.0_r8
       integer , parameter :: target_harvest = 1       ! switch for turnning on target harvesting 
@@ -350,7 +350,7 @@ contains
             case(rSDI_log)
                if(.not. logging_pause) then
                   if(delta_rSDI > targ_precision) then
-                     target_num = ((rSDI - delta_rSDI) * area * 1.0e-4_r8 * max_SDI / 100.0_r8) / (dbh / 25.4_r8)**1.6_r8
+                     target_num = (delta_rSDI * area * 1.0e-4_r8 * max_SDI / 100.0_r8) / ((dbh / 25.4_r8)**1.6_r8)
                   else 
                      target_num = 0.0_r8
                   end if
