@@ -489,7 +489,7 @@ contains
                currentPatch%area, frac_site_primary,                           &
                harvestable_forest_c, harvest_tag)
 
-             !write(fates_log(),*) 'EDMain lmort_direct is:', currentCohort%lmort_direct
+             write(fates_log(),*) 'EDMain lmort_direct is:', currentCohort%lmort_direct
              !write(fates_log(),*) 'EDMain l_degrad is:', currentCohort%l_degrad
 
              ! -----------------------------------------------------------------------------

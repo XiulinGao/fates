@@ -352,7 +352,7 @@ contains
                end if
 
             case(rSDI_log)
-               if(.not. logging_pause) then
+               if(.not.logging_pause) then
                   if(delta_rSDI > targ_precision) then
                      target_num = (delta_rSDI * area * 1.0e-4_r8 * max_SDI / 100.0_r8) / ((dbh / 25.4_r8)**1.6_r8)
                   else 

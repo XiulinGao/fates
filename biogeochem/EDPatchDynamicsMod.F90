@@ -309,8 +309,8 @@ contains
           end if
 
           write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
-          !write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
-          !write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
+          write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
+          write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
           write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
           !write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
