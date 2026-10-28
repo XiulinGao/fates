@@ -228,6 +228,7 @@ contains
     real(r8), parameter :: max_ba_targ = 0.004_r8   ! max. target basal area after logging
     real(r8), parameter :: max_rsdi_targ = 35.0_r8  ! max. relative stand density index after logging
     integer , parameter :: target_harvest = 1  
+    integer, parameter  :: target_option = 2
 
     !----------------------------------------------------------------------------------------------
     ! Calculate Mortality Rates (these were previously calculated during growth derivatives)
@@ -250,12 +251,12 @@ contains
       currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
       ! difference between current patch and target relative SDI
       currentPatch%delta_rSDI = currentPatch%rSDI - max_rsdi_targ
-      ! update logging pause: true if delta_rSDI is less than target precision
-      ! false if rSDI is above trigger 
-      call currentPatch%RefreshLoggingPause()
 
       !write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
       !write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
+      write(fates_log(),*) 'current patch RSDI', currentPatch%rSDI
+       write(fates_log(),*) 'current patch delta RSDI before call log', currentPatch%delta_rSDI
+      write(fates_log(),*) 'current patch logging pause before call log', currentPatch%logging_pause
 
 
        currentCohort => currentPatch%shortest
@@ -298,12 +299,20 @@ contains
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
 
+          ! update logging pause: true if delta_rSDI is less than target precision
+          ! false if rSDI is above trigger 
+          if (target_harvest==1 .and. target_option==2) then
+            call currentPatch%RefreshLoggingPause()
+          end if
+
           !write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
           !write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
           !write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
           !write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
           !write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
+          write(fates_log(),*) 'current delta RSDI after update:', currentPatch%delta_rSDI
+          write(fates_log(),*) 'current rSDI logging pause after update:', currentPatch%logging_pause
 
 
           currentCohort => currentCohort%taller
