@@ -707,7 +707,7 @@ module FatesPatchMod
 
       ! Locals:
       real(r8), parameter    :: rsdi_trigger = 60.0_r8
-      real(r8), parameter    :: targ_precision = 1.0E-5_r8
+      real(r8), parameter    :: targ_precision = 1.0_r8
 
       if(this%logging_pause) then
         if(this%rSDI >= rsdi_trigger) then
