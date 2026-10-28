@@ -428,13 +428,13 @@ contains
 
             ! update delta_BA or delta_rSDI
             update_log_target: select case(int(target_option))
-            case (basal_area_log)
+            case(basal_area_log)
                delta_BA = delta_BA - (0.25_r8 * pi_const * &
                ((dbh / 100.0_r8)**2.0_r8) * (lmort_direct + lmort_collateral + &
                lmort_infra)*n/area)
-            case (rSDI_log)
+            case(rSDI_log)
                delta_rSDI = delta_rSDI - ((dbh / 25.4_r8)**1.6_r8 * (lmort_direct + lmort_collateral + &
-               lmort_infra) * n / (area * 1.0e-4_r8)) / max_SDI * 100.0_r8
+               lmort_infra)*n/(area * 1.0e-4_r8)) / max_SDI * 100.0_r8
             end select update_log_target
             
 
