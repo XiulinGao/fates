@@ -712,13 +712,19 @@ module FatesPatchMod
       if(this%logging_pause) then
         if(this%rSDI >= rsdi_trigger) then
           this%logging_pause = .false.
-        end if
-      else 
-        if (this%delta_rSDI <= targ_precision) then
+        else
           this%logging_pause = .true.
         end if
-      end if
+      endif
 
+      if(.not.this%logging_pause) then
+        if(this%delta_rSDI <= targ_precision) then
+          this%logging_pause = .true.
+        else
+          this%logging_pause = .false.
+        endif
+      endif
+      
     end subroutine RefreshLoggingPause
 
     !===========================================================================
