@@ -569,6 +569,7 @@ contains
     currentSite%disturbance_rates_primary_to_primary(1:N_DIST_TYPES) = 0._r8
     currentSite%disturbance_rates_primary_to_secondary(1:N_DIST_TYPES) = 0._r8
     currentSite%disturbance_rates_secondary_to_secondary(1:N_DIST_TYPES) = 0._r8
+    currentSite%actual_harvest_disturbance_rate = 0._r8
 
     ! in the nocomp cases, since every patch has a PFT identity, it can only receive patch area from patches
     ! that have the same identity. In order to allow this, we have this very high level loop over nocomp PFTs
@@ -615,6 +616,13 @@ contains
 
                    else
                       site_areadis_secondary = site_areadis_secondary + currentPatch%area * disturbance_rate
+                      
+                      ! accumulate disturbance rate that is due to harvest, excluding degradation 
+                      if(i_disturbance_type == dtype_ilog) then
+                        currentSite%actual_harvest_disturbance_rate = currentSite%actual_harvest_disturbance_rate + &
+                        currentPatch%area * (1.0_r8 - currentPatch%fract_ldist_not_harvested) * disturbance_rate * &
+                        AREA_INV
+                      endif
 
                       ! track disturbance rates to output to history
                       if (currentPatch%anthro_disturbance_label .eq. secondaryforest) then

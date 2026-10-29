@@ -2730,10 +2730,7 @@ end subroutine flush_hvars
          days_per_year
 
      ! logging disturbance rate that is due to actual harvest 
-      hio_logging_dis_harvest_rate_si(io_si) = (sites(s)%disturbance_rates_primary_to_primary(dtype_ilog) + &
-         sites(s)%disturbance_rates_primary_to_secondary(dtype_ilog) +         &
-         sites(s)%disturbance_rates_secondary_to_secondary(dtype_ilog)) *      &
-          (1.0_r8 - sites(s)%fract_ldist_not_harvested) * days_per_year
+      hio_logging_dis_harvest_rate_si(io_si) = sites(s)%actual_harvest_disturbance_rate * days_per_year
 
       hio_fall_disturbance_rate_si(io_si) = (sites(s)%disturbance_rates_primary_to_primary(dtype_ifall) + &
          sites(s)%disturbance_rates_primary_to_secondary(dtype_ifall) +     &
