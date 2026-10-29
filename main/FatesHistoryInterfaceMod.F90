@@ -318,6 +318,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_disturbance_rate_s2s_si
   integer :: ih_fire_disturbance_rate_si
   integer :: ih_logging_disturbance_rate_si
+  integer :: ih_logging_dis_harvest_rate_si
   integer :: ih_fall_disturbance_rate_si
   integer :: ih_potential_disturbance_rate_si
   integer :: ih_harvest_carbonflux_si
@@ -2335,6 +2336,7 @@ end subroutine flush_hvars
                hio_disturbance_rate_s2s_si       => this%hvars(ih_disturbance_rate_s2s_si)%r81d, &
                hio_fire_disturbance_rate_si      => this%hvars(ih_fire_disturbance_rate_si)%r81d, &
                hio_logging_disturbance_rate_si   => this%hvars(ih_logging_disturbance_rate_si)%r81d, &
+               hio_logging_dis_harvest_rate_si   => this%hvars(ih_logging_dis_harvest_rate_si)%r81d, &
                hio_fall_disturbance_rate_si      => this%hvars(ih_fall_disturbance_rate_si)%r81d, &
                hio_potential_disturbance_rate_si => this%hvars(ih_potential_disturbance_rate_si)%r81d, &
                hio_harvest_carbonflux_si => this%hvars(ih_harvest_carbonflux_si)%r81d, &
@@ -2726,6 +2728,12 @@ end subroutine flush_hvars
          sites(s)%disturbance_rates_primary_to_secondary(dtype_ilog) +         &
          sites(s)%disturbance_rates_secondary_to_secondary(dtype_ilog)) *      &
          days_per_year
+
+     ! logging disturbance rate that is due to actual harvest 
+      hio_logging_dis_harvest_rate_si(io_si) = (sites(s)%disturbance_rates_primary_to_primary(dtype_ilog) + &
+         sites(s)%disturbance_rates_primary_to_secondary(dtype_ilog) +         &
+         sites(s)%disturbance_rates_secondary_to_secondary(dtype_ilog)) *      &
+          (1.0_r8 - sites(s)%fract_ldist_not_harvested) * days_per_year
 
       hio_fall_disturbance_rate_si(io_si) = (sites(s)%disturbance_rates_primary_to_primary(dtype_ifall) + &
          sites(s)%disturbance_rates_primary_to_secondary(dtype_ifall) +     &
@@ -6696,6 +6704,12 @@ end subroutine update_history_hifrq
          use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
          upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
          index = ih_logging_disturbance_rate_si)
+
+    call this%set_history_var(vname='FATES_HARVEST_DIS_RATE_LOGGING',          &
+         units='m2 m-2 yr-1', long='disturbance rate from logging that is due to actual harvest', &
+         use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
+         upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
+         index = ih_logging_dis_harvest_rate_si)
 
     call this%set_history_var(vname='FATES_DISTURBANCE_RATE_TREEFALL',         &
          units='m2 m-2 yr-1', long='disturbance rate from treefall',           &

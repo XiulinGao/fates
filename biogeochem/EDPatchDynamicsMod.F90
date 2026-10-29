@@ -251,6 +251,7 @@ contains
       currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
       ! difference between current patch and target relative SDI
       currentPatch%delta_rSDI = currentPatch%rSDI - max_rsdi_targ
+      ! refresh logging pause tag before proceed to logging
       if (target_harvest==1 .and. target_option==2) then
             call currentPatch%RefreshLoggingPause()
       end if
@@ -309,8 +310,8 @@ contains
           end if
 
           write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
-          write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
-          write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
+          !write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
+          !write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
           write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
           !write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
@@ -404,13 +405,21 @@ contains
              call get_harvest_rate_area (currentPatch%anthro_disturbance_label, bc_in%hlm_harvest_catnames, &
                   bc_in%hlm_harvest_rates, frac_site_primary, currentPatch%age_since_anthro_disturbance, harvest_rate)
           end if
+         ! for target harvest, avoid adding this logging disturbance rate
+         ! when logging is paused (log disturbance rate should be zero) to let 
+         ! stand recover to threshold rSDI even input harvest rate is non-zero and logging time is true
+         !if (target_harvest == 1 .and. target_option == 2 .and. &
+         !currentPatch%disturbance_rates(dtype_ilog) <= nearzero) then
+         !   currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + 0.0_r8
 
-         
+         !   dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + 0.0_r8
+         !else
          currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
-            (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
-            ! Non-harvested part of the logging disturbance rate
+          (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
+         ! Non-harvested part of the logging disturbance rate
          dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + &
-            (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
+         (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
+         !end if
 
 
        endif
