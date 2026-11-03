@@ -3247,8 +3247,10 @@ end subroutine flush_hvars
                if ( prt_params%woody(ft) == itrue) then
 
                   ! Update stand density index [trees per hectare]
-                  hio_sdi_si(io_si) = hio_sdi_si(io_si) + n_perm2 * 1.0e4_r8 * &
-                  (dbh/25.4_r8)**1.6_r8
+                  if(dbh >= 10.0_r8) then
+                    hio_sdi_si(io_si) = hio_sdi_si(io_si) + n_perm2 * 1.0e4_r8 * &
+                    (dbh/25.4_r8)**1.6_r8
+                  end if
 
                   ! basal area  [m2/m2]
                   hio_ba_si_scpf(io_si,scpf) = hio_ba_si_scpf(io_si,scpf) + &
