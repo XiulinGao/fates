@@ -2724,7 +2724,7 @@ contains
             hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%fuel%canopy_fuel_load * AREA_INV * mass_2_carbon
             hio_canopy_fuel_sapling_si(io_si)  = hio_canopy_fuel_sapling_si(io_si) + cpatch%fuel%canopy_fuel_load_sapling * AREA_INV * mass_2_carbon
             hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%fuel%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
-            hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%fuel%canopy_base_height * cpatch%area *
+            hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%fuel%canopy_base_height * cpatch%area * &
             AREA_INV
             hio_act_crown_fire_freq_si(io_si)  = hio_act_crown_fire_freq_si(io_si) + cpatch%active_crown_fire * cpatch%area * AREA_INV
             hio_pass_crown_fire_freq_si(io_si) = hio_pass_crown_fire_freq_si(io_si) + cpatch%passive_crown_fire * cpatch%area * AREA_INV
