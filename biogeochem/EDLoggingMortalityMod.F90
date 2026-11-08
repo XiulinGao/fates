@@ -250,13 +250,13 @@ contains
       real(r8) :: final_frac_logged   ! final fraction of plants that need to be logged 
 
       !real(r8), parameter :: max_ba_targ = 0.0034_r8 !target site max. basal area below which logging stops (m2/m2)
-      real(r8), parameter :: ref_dbh1    = 25.0_r8   !reference DBH size 1 for target logging (cm)
-      real(r8), parameter :: ref_dbh2    = 50.0_r8   !reference DBH size 2
-      real(r8), parameter :: ref_dbh3    = 75.0_r8   !reference DBH size 3
+      real(r8), parameter :: ref_dbh1    = 30.0_r8   !reference DBH size 1 for target logging (cm)
+      real(r8), parameter :: ref_dbh2    = 60.0_r8   !reference DBH size 2
+      real(r8), parameter :: ref_dbh3    = 80.0_r8   !reference DBH size 3
       real(r8), parameter :: ref_dbh4    = 100.0_r8
       real(r8), parameter :: cap_targ1   = 0.90_r8   !max. harvesting fraction for log_dbh_min < plants < ref_dbh1 
       real(r8), parameter :: cap_targ2   = 0.80_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
-      real(r8), parameter :: cap_targ3   = 0.60_r8   !max. harvesting fraction for plants > ref_dbh3
+      real(r8), parameter :: cap_targ3   = 0.70_r8   !max. harvesting fraction for plants > ref_dbh3
       real(r8), parameter :: cap_targ4   = 0.15_r8
       real(r8), parameter :: targ_precision = 1.0_r8  !error allowed for achieving logging target 
       integer , parameter :: target_harvest = 1       ! switch for turnning on target harvesting 
