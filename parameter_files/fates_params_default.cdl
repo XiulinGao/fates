@@ -386,21 +386,21 @@ variables:
 	double fates_leafn_vert_scaler_coeff1(fates_pft) ;
                 fates_leafn_vert_scaler_coeff1:units = "unitless" ;
                 fates_leafn_vert_scaler_coeff1:long_name = "Coefficient one for decrease in leaf nitrogen through the canopy, from Lloyd et al. 2010." ;
-        double fates_leafn_vert_scaler_coeff2(fates_pft) ;
-                fates_leafn_vert_scaler_coeff2:units = "unitless" ;
-                fates_leafn_vert_scaler_coeff2:long_name = "Coefficient two for decrease in leaf nitrogen through the canopy, from Lloyd et al. 2010." ;
+    double fates_leafn_vert_scaler_coeff2(fates_pft) ;
+        fates_leafn_vert_scaler_coeff2:units = "unitless" ;
+        fates_leafn_vert_scaler_coeff2:long_name = "Coefficient two for decrease in leaf nitrogen through the canopy, from Lloyd et al. 2010." ;
 	double fates_maintresp_leaf_atkin2017_baserate(fates_pft) ;
 		fates_maintresp_leaf_atkin2017_baserate:units = "umol CO2/m^2/s" ;
 		fates_maintresp_leaf_atkin2017_baserate:long_name = "Leaf maintenance respiration base rate parameter (r0) per Atkin et al 2017" ;
 	double fates_maintresp_leaf_ryan1991_baserate(fates_pft) ;
 		fates_maintresp_leaf_ryan1991_baserate:units = "gC/gN/s" ;
 		fates_maintresp_leaf_ryan1991_baserate:long_name = "Leaf maintenance respiration base rate per Ryan et al 1991" ;
-        double fates_maintresp_leaf_vert_scaler_coeff1(fates_pft) ;
-                fates_maintresp_leaf_vert_scaler_coeff1:units = "unitless" ;
-                fates_maintresp_leaf_vert_scaler_coeff1:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and respiration through the canopy, match with fates_leafn_vert_scaler_coeff1." ;
-        double fates_maintresp_leaf_vert_scaler_coeff2(fates_pft) ;
-                fates_maintresp_leaf_vert_scaler_coeff2:units = "unitless" ;
-                fates_maintresp_leaf_vert_scaler_coeff2:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and respiration through the canopy, match with fates_leafn_vert_scaler_coeff2." ;
+    double fates_maintresp_leaf_vert_scaler_coeff1(fates_pft) ;
+        fates_maintresp_leaf_vert_scaler_coeff1:units = "unitless" ;
+        fates_maintresp_leaf_vert_scaler_coeff1:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and respiration through the canopy, match with fates_leafn_vert_scaler_coeff1." ;
+    double fates_maintresp_leaf_vert_scaler_coeff2(fates_pft) ;
+        fates_maintresp_leaf_vert_scaler_coeff2:units = "unitless" ;
+        fates_maintresp_leaf_vert_scaler_coeff2:long_name = "Leaf maintenance respiration decrease through the canopy. Only applies to Atkin et al. 2017. For proportionality between photosynthesis and respiration through the canopy, match with fates_leafn_vert_scaler_coeff2." ;
 	double fates_maintresp_reduction_curvature(fates_pft) ;
 		fates_maintresp_reduction_curvature:units = "unitless (0-1)" ;
 		fates_maintresp_reduction_curvature:long_name = "curvature of MR reduction as f(carbon storage), 1=linear, 0=very curved" ;
@@ -812,6 +812,15 @@ variables:
 	double fates_landuse_pprodharv10_forest_mean ;
 		fates_landuse_pprodharv10_forest_mean:units = "fraction" ;
 		fates_landuse_pprodharv10_forest_mean:long_name = "mean harvest mortality proportion of deadstem to 10-yr product (pprodharv10) of all woody PFT types" ;
+	double fates_landuse_max_SDI ;
+	    fates_landuse_max_SDI:units = "numer of plants per hectare" ;
+		fates_landuse_max_SDI:long_name = "maximum stand density index" ;
+	double fates_landuse_rsdi_trigger ;
+	    fates_landuse_rsdi_trigger:units = "%" ;
+		fates_landuse_rsdi_trigger:long_name = "relative rSDI above which logging is triggered" ;
+	double fates_landuse_max_rsdi_targ ;
+	    fates_landuse_max_rsdi_targ:units = "%" ;
+		fates_landuse_max_rsdi_targ:long_name = "relative rSDI at which logging is paused, allowing certain precision" ;
 	double fates_leaf_photo_temp_acclim_thome_time ;
 		fates_leaf_photo_temp_acclim_thome_time:units = "years" ;
 		fates_leaf_photo_temp_acclim_thome_time:long_name = "Length of the window for the long-term (i.e. T_home in Kumarathunge et al 2019) exponential moving average (ema) of vegetation temperature used in photosynthesis temperature acclimation (used if fates_leaf_photo_tempsens_model = 2)" ;
@@ -1761,6 +1770,12 @@ data:
  fates_landuse_logging_mechanical_frac = 0.05 ;
 
  fates_landuse_pprodharv10_forest_mean = 0.8125 ;
+
+ fates_landuse_max_SDI = 836 ;
+
+ fates_landuse_rsdi_trigger = 60 ;
+
+ fates_landuse_max_rsdi_targ = 35 ;
 
  fates_leaf_photo_temp_acclim_thome_time = 30 ;
 

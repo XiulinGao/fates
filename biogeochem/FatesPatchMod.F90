@@ -659,14 +659,15 @@ module FatesPatchMod
       ! calculate patch level tree basal area [m2/m2]
       ! and stand density index [trees per hectare]
 
+      use EDParamsMod      ,  only: max_SDI
+      use FatesConstantsMod,  only: m2_per_ha
+
       ! Arguments:
       class(fates_patch_type), intent(inout) :: this  !patch object
 
       ! Locals:
       type(fates_cohort_type), pointer :: currentCohort
       real(r8)            :: stand_density_index
-      real(r8), parameter :: m2_per_ha = 1.0e-4_r8
-      real(r8), parameter :: max_SDI = 836.0_r8
 
       if(this%nocomp_pft_label .ne. nocomp_bareground) then
         this%total_basal_area = 0.0_r8
@@ -680,10 +681,10 @@ module FatesPatchMod
             ((currentCohort%dbh / 100.0_r8)**2.0_r8) * currentCohort%n / &
             this%area
             
-            if(currentCohort%dbh >= 10.0_r8) then
-              stand_density_index = stand_density_index + currentCohort%n / (m2_per_ha * &
-              this%area) * (currentCohort%dbh / 25.4_r8)**1.6_r8
-            end if
+          !  if(currentCohort%dbh >= 10.0_r8) then
+             stand_density_index = stand_density_index + currentCohort%n / &
+             (this%area / m2_per_ha) * (currentCohort%dbh / 25.4_r8)**1.6_r8
+          !  end if
           end if
           currentCohort => currentCohort%shorter
         end do
@@ -701,12 +702,11 @@ module FatesPatchMod
       ! Update patch level flag for whether logging should be
       ! paused given current patch level rSDI
       !
-
+      use EDParamsMod        , only: rsdi_trigger
       ! Arguments:
       class(fates_patch_type), intent(inout) :: this  !patch object
 
       ! Locals:
-      real(r8), parameter    :: rsdi_trigger = 60.0_r8
       real(r8), parameter    :: targ_precision = 1.0_r8
 
       if(this%logging_pause) then

@@ -43,6 +43,8 @@ module EDLoggingMortalityMod
    use EDParamsMod       , only : logging_mechanical_frac 
    use EDParamsMod       , only : logging_coll_under_frac 
    use EDParamsMod       , only : logging_dbhmax_infra
+   use EDParamsMod       , only : max_SDI
+   use EDParamsMod       , only : rsdi_trigger
    use FatesInterfaceTypesMod , only : bc_in_type
    use FatesInterfaceTypesMod , only : hlm_current_year
    use FatesInterfaceTypesMod , only : hlm_current_month
@@ -256,9 +258,7 @@ contains
       real(r8), parameter :: cap_targ2   = 0.80_r8   !max. harvesting fraction for plants > ref_dbh1 and < ref_dbh2
       real(r8), parameter :: cap_targ3   = 0.60_r8   !max. harvesting fraction for plants > ref_dbh3
       real(r8), parameter :: cap_targ4   = 0.15_r8
-      real(r8), parameter :: targ_precision = 1.0_r8   !error allowed for achieving logging target 
-      real(r8), parameter :: rsdi_trigger  = 60.0_r8  ! relative stand density index above which logging is triggered
-      real(r8), parameter :: max_SDI = 836.0_r8
+      real(r8), parameter :: targ_precision = 1.0_r8  !error allowed for achieving logging target 
       integer , parameter :: target_harvest = 1       ! switch for turnning on target harvesting 
       integer, parameter  :: target_option = 2        ! 1: target is based on basal area; 2: target is based on rSDI
       integer, parameter  :: basal_area_log = 1

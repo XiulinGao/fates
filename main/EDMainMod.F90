@@ -336,6 +336,7 @@ contains
     use FatesConstantsMod, only : itrue
     use FatesConstantsMod     , only : nearzero
     use EDCanopyStructureMod  , only : canopy_structure
+    use EDParamsMod           , only : max_rsdi_targ
     
     ! !ARGUMENTS:
 
@@ -410,7 +411,7 @@ contains
     
     integer,parameter :: leaf_c_id = 1
     real(r8),parameter :: max_ba_targ = 0.004_r8
-    real(r8),parameter :: max_rsdi_targ = 35.0_r8
+
     
     !-----------------------------------------------------------------------
 

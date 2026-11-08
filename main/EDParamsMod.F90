@@ -317,12 +317,17 @@ integer, parameter, public :: maxpft = 16      ! maximum number of PFTs allowed
                                                         ! product pool (pprodharv10) of all woody PFT types
    character(len=param_string_length),parameter,public :: logging_name_pprodharv10="fates_landuse_pprodharv10_forest_mean"
 
+   real(r8),protected,public :: max_SDI                  ! maximum stand density index 
+   character(len=param_string_length),parameter,public :: logging_name_max_SDI="fates_landuse_max_SDI"
+
+   real(r8),protected,public :: rsdi_trigger       ! relative SDI above which logging is triggered
+   character(len=param_string_length),parameter,public :: logging_name_rsdi_trigger="fates_landuse_rsdi_trigger"
+
+   real(r8),protected,public :: max_rsdi_targ      ! maximum rSDI that logging aim for 
+   character(len=param_string_length),parameter,public :: logging_name_max_rsdi_targ="fates_landuse_max_rsdi_targ"
+
    real(r8),protected,public :: eca_plant_escalar  ! scaling factor for plant fine root biomass to 
                                                ! calculate nutrient carrier enzyme abundance (ECA)
-
-   
-
-   
    character(len=param_string_length),parameter,public :: eca_name_plant_escalar = "fates_cnp_eca_plant_escalar"
 
    public :: FatesParamsInit
@@ -396,6 +401,9 @@ contains
     logging_dbhmax_infra                  = nan
     logging_export_frac                   = nan
     pprodharv10_forest_mean               = nan
+    max_SDI                               = nan
+    rsdi_trigger                          = nan
+    max_rsdi_targ                         = nan
     eca_plant_escalar                     = nan
     q10_mr                                = nan
     q10_froz                              = nan
@@ -596,6 +604,15 @@ contains
          dimension_names=dim_names_scalar)
 
     call fates_params%RegisterParameter(name=logging_name_pprodharv10, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=logging_name_max_SDI, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=logging_name_rsdi_trigger, dimension_shape=dimension_shape_scalar, &
+         dimension_names=dim_names_scalar)
+
+    call fates_params%RegisterParameter(name=logging_name_max_rsdi_targ, dimension_shape=dimension_shape_scalar, &
          dimension_names=dim_names_scalar)
 
     call fates_params%RegisterParameter(name=eca_name_plant_escalar, dimension_shape=dimension_shape_scalar, & 
@@ -836,6 +853,15 @@ contains
 
     call fates_params%RetrieveParameter(name=logging_name_pprodharv10, &
          data=pprodharv10_forest_mean)
+
+    call fates_params%RetrieveParameter(name=logging_name_max_SDI, &
+         data=max_SDI)
+
+    call fates_params%RetrieveParameter(name=logging_name_rsdi_trigger, &
+         data=rsdi_trigger)
+
+    call fates_params%RetrieveParameter(name=logging_name_max_rsdi_targ, &
+         data=max_rsdi_targ)
     
     call fates_params%RetrieveParameter(name=eca_name_plant_escalar, &
           data=eca_plant_escalar)
@@ -959,6 +985,9 @@ contains
         write(fates_log(),fmt0) 'logging_mechanical_frac = ',logging_mechanical_frac
         write(fates_log(),fmt0) 'logging_event_code = ',logging_event_code
         write(fates_log(),fmt0) 'logging_dbhmax_infra = ',logging_dbhmax_infra
+        write(fates_log(),fmt0) 'max_SDI = ',max_SDI
+        write(fates_log(),fmt0) 'rsdi_trigger = ',rsdi_trigger
+        write(fates_log(),fmt0) 'max_rsdi_targ = ',max_rsdi_targ
         write(fates_log(),fmt0) 'eca_plant_escalar = ',eca_plant_escalar
         write(fates_log(),fmt0) 'q10_mr = ',q10_mr
         write(fates_log(),fmt0) 'q10_froz = ',q10_froz

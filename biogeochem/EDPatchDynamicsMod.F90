@@ -189,6 +189,7 @@ contains
     use EDMortalityFunctionsMod , only : ExemptTreefallDist
     ! loging flux
     use EDLoggingMortalityMod , only : LoggingMortality_frac
+    use EDParamsMod           , only : max_rsdi_targ
 
   
     ! !ARGUMENTS:
@@ -226,7 +227,6 @@ contains
 
     !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
     real(r8), parameter :: max_ba_targ = 0.004_r8   ! max. target basal area after logging
-    real(r8), parameter :: max_rsdi_targ = 35.0_r8  ! max. relative stand density index after logging
     integer , parameter :: target_harvest = 1  
     integer, parameter  :: target_option = 2
 
