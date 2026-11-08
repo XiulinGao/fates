@@ -466,6 +466,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_sum_canopy_fuel_si
   integer :: ih_canopy_fuel_sapling_si
   integer :: ih_canopy_fuel_bulkd_si
+  integer :: ih_canopy_base_height_si
   integer :: ih_act_crown_fire_freq_si
   integer :: ih_pass_crown_fire_freq_si
   integer :: ih_canopy_water_content_si
@@ -2438,6 +2439,7 @@ contains
          hio_sum_canopy_fuel_si  => this%hvars(ih_sum_canopy_fuel_si)%r81d, &
          hio_canopy_fuel_sapling_si   => this%hvars(ih_canopy_fuel_sapling_si)%r81d, &
          hio_canopy_fuel_bulkd_si     => this%hvars(ih_canopy_fuel_bulkd_si)%r81d, &
+         hio_canopy_base_height_si    => this%hvars(ih_canopy_base_height_si)%r81d, &
          hio_act_crown_fire_freq_si   => this%hvars(ih_act_crown_fire_freq_si)%r81d, &
          hio_pass_crown_fire_freq_si   => this%hvars(ih_pass_crown_fire_freq_si)%r81d, &
          hio_canopy_water_content_si   => this%hvars(ih_canopy_water_content_si)%r81d, &
@@ -2722,6 +2724,8 @@ contains
             hio_sum_canopy_fuel_si(io_si)      = hio_sum_canopy_fuel_si(io_si) + cpatch%fuel%canopy_fuel_load * AREA_INV * mass_2_carbon
             hio_canopy_fuel_sapling_si(io_si)  = hio_canopy_fuel_sapling_si(io_si) + cpatch%fuel%canopy_fuel_load_sapling * AREA_INV * mass_2_carbon
             hio_canopy_fuel_bulkd_si(io_si)    = hio_canopy_fuel_bulkd_si(io_si) + cpatch%fuel%canopy_bulk_density * cpatch%area * AREA_INV * mass_2_carbon
+            hio_canopy_base_height_si(io_si)   = hio_canopy_base_height_si(io_si) + cpatch%fuel%canopy_base_height * cpatch%area *
+            AREA_INV
             hio_act_crown_fire_freq_si(io_si)  = hio_act_crown_fire_freq_si(io_si) + cpatch%active_crown_fire * cpatch%area * AREA_INV
             hio_pass_crown_fire_freq_si(io_si) = hio_pass_crown_fire_freq_si(io_si) + cpatch%passive_crown_fire * cpatch%area * AREA_INV
             hio_canopy_water_content_si(io_si) = hio_canopy_water_content_si(io_si) + cpatch%fuel%canopy_water_content * cpatch%area * AREA_INV
@@ -6431,6 +6435,12 @@ contains
             use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',     &
             upfreq=1, ivar=ivar, initialize=initialize_variables,                 &
             index = ih_canopy_fuel_bulkd_si)
+
+       call this%set_history_var(vname='FATES_CANOPY_BASE_HEIGHT', units='m',    &
+            long='canopy base height in meter, influencing crown fire prob.',    &
+            use_default='active', avgflag='A', vtype=site_r8, hlms='CLM:ALM',    &
+            upfreq=1, ivar=ivar, initialize=initialize_variables,                &
+            index = ih_canopy_base_height_si)
 
        call this%set_history_var(vname='FATES_CANOPY_WATER_CONTENT', units='%',  &
             long='Non-hydro live canopy water content in %',                     &
