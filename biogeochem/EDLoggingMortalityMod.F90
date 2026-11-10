@@ -451,14 +451,14 @@ contains
 
          ! the area occupied by all plants in the canopy that aren't killed is still disturbed at the harvest rate
          if (canopy_layer .eq. 1 ) then
-
+            
             l_degrad = harvest_rate - (lmort_direct + lmort_infra + lmort_collateral) ! fraction passed to 'degraded' forest.
             ! for target logging based on rSDI, if current logging is paused, set l_degrad to zero
-            !if (target_harvest == 1 .and. target_option == rSDI_log .and. &
-            ! logging_pause) then
+            if (target_harvest == 1 .and. target_option == rSDI_log .and. &
+             logging_pause) then
                
-            !   l_degrad = 0._r8
-            !end if       
+               l_degrad = 0._r8
+            end if       
 
          else
             l_degrad = 0._r8

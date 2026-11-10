@@ -405,15 +405,17 @@ contains
              call get_harvest_rate_area (currentPatch%anthro_disturbance_label, bc_in%hlm_harvest_catnames, &
                   bc_in%hlm_harvest_rates, frac_site_primary, currentPatch%age_since_anthro_disturbance, harvest_rate)
           end if
-         ! for target harvest, avoid adding this logging disturbance rate
+
+         ! for target harvest, reset harvest rate to zero 
          ! when logging is paused (log disturbance rate should be zero) to let 
          ! stand recover to threshold rSDI even input harvest rate is non-zero and logging time is true
-         !if (target_harvest == 1 .and. target_option == 2 .and. &
-         !currentPatch%disturbance_rates(dtype_ilog) <= nearzero) then
-         !   currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + 0.0_r8
 
-         !   dist_rate_ldist_notharvested = dist_rate_ldist_notharvested + 0.0_r8
-         !else
+         if (target_harvest == 1 .and. target_option == 2 .and. &
+         currentPatch%disturbance_rates(dtype_ilog) <= nearzero) then
+            harvest_rate = 0.0_r8
+         end if
+            
+     
          currentPatch%disturbance_rates(dtype_ilog) = currentPatch%disturbance_rates(dtype_ilog) + &
           (currentPatch%area - currentPatch%total_canopy_area) * harvest_rate / currentPatch%area
          ! Non-harvested part of the logging disturbance rate
