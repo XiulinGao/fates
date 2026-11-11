@@ -138,6 +138,7 @@ module EDPatchDynamicsMod
   public :: set_patchno
   private:: fuse_2_patches
   public :: get_frac_site_primary
+  public :: get_site_rsdi
 
   character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -3292,6 +3293,35 @@ contains
    end do
 
  end subroutine get_frac_site_primary
+
+ ! =====================================================================================
+ subroutine get_site_rsdi(site_in, site_rsdi)
+   !! DESCRIPTION:
+   ! Calculate site level relative stand density
+   !
+   ! USES:
+   use EDTypesMod,  only: ed_site_type
+   !
+   ! ARGUMENTS:
+   type(ed_site_type) , intent(in), target :: site_in
+   real(r8)           , intent(out)        :: site_rsdi
+   !
+   ! LOCALS:
+   type (fates_patch_type), pointer  :: currentPatch
+
+   site_rsdi = 0.0_r8
+   currentPatch => site_in%oldest_patch
+   do while (associated(currentPatch))
+      if(currentPatch%nocomp_pft_label /= nocomp_bareground) then
+         site_rsdi = site_rsdi + currentPatch%rSDI * currentPatch%area * &
+         AREA_INV
+      end if
+      currentPatch => currentPatch%younger
+   end do
+
+ end subroutine get_site_rsdi
+
+
 
 
  end module EDPatchDynamicsMod
