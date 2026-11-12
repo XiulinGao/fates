@@ -1328,7 +1328,7 @@ contains
    real(r8) :: total_burnable_frac    ! total fractional land area that can apply prescribed fire after condition checks at site level
 
    !integer,  parameter :: rx_freq = 1 ! Rx fire return interval 
-   real(r8), parameter :: min_frac_site = 0.0_r8  ! min. burnable fraction for Rx fire to happen
+   real(r8), parameter :: min_frac_site = 0.005_r8  ! min. burnable fraction for Rx fire to happen
 
    ! zero current site total burnable area and fraction before loop through patches
    currentSite%rxfire_area_final = 0._r8
