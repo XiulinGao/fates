@@ -263,7 +263,7 @@ contains
       ! difference between current patch and target basal area
       currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
       ! difference between current patch and target relative SDI
-      delta_rSDI = max(0, (currentPatch%rSDI - max_rsdi_targ))
+      delta_rSDI = max(0._r8, (currentPatch%rSDI - max_rsdi_targ))
       ! allocate target rSDI reduction to current patch given the patch delta in proportion
       ! to the summed, area-weighted delta 
       delta_rSDI = (site_rsdi - max_rsdi_targ) * delta_rSDI / stand_rsdi_excess
