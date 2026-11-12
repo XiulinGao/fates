@@ -139,6 +139,8 @@ module EDPatchDynamicsMod
   private:: fuse_2_patches
   public :: get_frac_site_primary
   public :: get_site_rsdi
+  public :: RefreshLoggingPause
+  public :: CalculateWeightedLoggingTarget
 
   character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -220,6 +222,9 @@ contains
     integer  :: i_dist
     integer  :: h_index
     real(r8) :: frac_site_primary
+    real(r8) :: site_rsdi
+    real(r8) :: delta_rSDI
+    real(r8) :: stand_rsdi_excess
     real(r8) :: harvest_rate 
     real(r8) :: tempsum
     real(r8) :: mean_temp
@@ -228,6 +233,7 @@ contains
 
     !real(r8), parameter :: min_ba_targ = 0.0028_r8   ! min. target basal area in m2/m2 after logging 
     real(r8), parameter :: max_ba_targ = 0.004_r8   ! max. target basal area after logging
+    real(r8), parameter :: targ_precision = 1.0_r8
     integer , parameter :: target_harvest = 1  
     integer, parameter  :: target_option = 2
 
@@ -242,6 +248,12 @@ contains
     ! get available biomass for harvest for all patches
     call get_harvestable_carbon(site_in, bc_in%site_area, bc_in%hlm_harvest_catnames, harvestable_forest_c)
 
+    ! get site level rSDI and patch-area weighted excess rSDI in reference to target rSDI that 
+    call get_site_rsdi(site_in, site_rsdi)
+    call CalculateWeightedLoggingTarget(site_in, stand_rsdi_excess)
+   ! refresh logging pause tag before proceed to logging
+    call RefreshLoggingPause(site_in, site_rsdi)
+
     currentPatch => site_in%oldest_patch
     do while (associated(currentPatch)) 
       ! first update patch basal area and relative stand density index 
@@ -251,17 +263,17 @@ contains
       ! difference between current patch and target basal area
       currentPatch%delta_BA = currentPatch%total_basal_area - max_ba_targ
       ! difference between current patch and target relative SDI
-      currentPatch%delta_rSDI = currentPatch%rSDI - max_rsdi_targ
-      ! refresh logging pause tag before proceed to logging
-      if (target_harvest==1 .and. target_option==2) then
-            call currentPatch%RefreshLoggingPause()
-      end if
+      delta_rSDI = max(0, (currentPatch%rSDI - max_rsdi_targ))
+      ! allocate target rSDI reduction to current patch given the patch delta in proportion
+      ! to the summed, area-weighted delta 
+      delta_rSDI = (site_rsdi - max_rsdi_targ) * delta_rSDI / stand_rsdi_excess
+
 
       !write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
       !write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
       write(fates_log(),*) 'current patch RSDI', currentPatch%rSDI
-      write(fates_log(),*) 'current patch delta RSDI before call log', currentPatch%delta_rSDI
-      write(fates_log(),*) 'current patch logging pause before call log', currentPatch%logging_pause
+      write(fates_log(),*) 'current patch delta RSDI before call log', delta_rSDI
+      write(fates_log(),*) 'current site logging pause before call log', site_in%logging_pause
 
 
       currentCohort => currentPatch%shortest
@@ -286,8 +298,8 @@ contains
           currentCohort%dgmort = dgmort
 
           call LoggingMortality_frac(currentCohort%pft, currentCohort%dbh, currentPatch%area, &
-                currentPatch%rSDI, currentCohort%n, currentPatch%delta_BA, & 
-                currentPatch%delta_rSDI, currentPatch%logging_pause, &
+                currentCohort%n, currentPatch%delta_BA, & 
+                currentPatch%delta_rSDI, site_in%logging_pause, &
                 currentCohort%canopy_layer, &
                 lmort_direct,lmort_collateral,lmort_infra,l_degrad, &
                 bc_in%hlm_harvest_rates, &
@@ -304,20 +316,13 @@ contains
           currentCohort%lmort_infra      = lmort_infra
           currentCohort%l_degrad         = l_degrad
 
-          ! update logging pause: true if delta_rSDI is less than target precision
-          ! false if rSDI is above trigger 
-          if (target_harvest==1 .and. target_option==2) then
-            call currentPatch%RefreshLoggingPause()
-          end if
-
           write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
           !write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
           !write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
           write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
           !write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
-          write(fates_log(),*) 'current delta RSDI after update:', currentPatch%delta_rSDI
-          write(fates_log(),*) 'current rSDI logging pause after update:', currentPatch%logging_pause
+          write(fates_log(),*) 'current patch delta RSDI after update:', delta_rSDI
 
 
           currentCohort => currentCohort%taller
@@ -3320,6 +3325,70 @@ contains
    end do
 
  end subroutine get_site_rsdi
+
+ !===========================================================================
+
+ subroutine RefreshLoggingPause(site_in, site_rsdi)
+   !
+   ! DESCRIPTION:
+   ! Update site level flag for whether logging should be
+   ! paused given current site rSDI
+   !
+   use EDTypesMod         , only: ed_site_type
+   use EDParamsMod        , only: rsdi_trigger
+   use EDParamsMod        , only: max_rsdi_targ
+   ! Arguments:
+   type(ed_site_type)  , intent(inout), target :: site_in  
+   real(r8)            , intent(in) :: site_rsdi !site level rsdi
+
+   ! Locals:
+   real(r8)               :: delta_stand_rsdi
+   real(r8), parameter    :: targ_precision = 1.0_r8
+
+   delta_stand_rsdi = site_rsdi - max_rsdi_targ
+
+   if(site_in%logging_pause) then
+      if(site_rsdi >= rsdi_trigger) then
+         site_in%logging_pause = .false.
+      endif
+   else
+      if(delta_stand_rsdi <= targ_precision) then
+         site_in%logging_pause = .true.
+      end if
+   end if
+
+ end subroutine RefreshLoggingPause
+
+ !===========================================================================
+ subroutine CalculateWeightedLoggingTarget(site_in, stand_rsdi_excess)
+   !
+   ! DESCRIPTION
+   ! calculate logging target and proportionally allocate
+   ! across patches by allocating more to denser patches 
+   !
+   ! USES:
+   use EDTypesMod,  only: ed_site_type
+   use EDParamsMod, only: max_rsdi_targ
+   ! ARGUMENTS:
+   type(ed_site_type)          , target      , intent(in)  :: site_in
+   real(r8)                                  , intent(out) :: stand_rsdi_excess
+   ! LOCALS:
+   type (fates_patch_type), pointer  :: currentPatch
+   real(r8)                          :: delta_patch_rsdi
+
+   stand_rsdi_excess = 0.0_r8
+
+   currentPatch => site_in%oldest_patch
+   do while (associated(currentPatch))
+      if(currentPatch%nocomp_pft_label /= nocomp_bareground) then
+         delta_patch_rsdi = max(0.0_r8, currentPatch%rSDI - max_rsdi_targ)
+         stand_rsdi_excess = stand_rsdi_excess + delta_patch_rsdi * &
+         currentPatch%area * AREA_INV
+      end if
+      currentPatch => currentPatch%younger
+   end do
+
+ end subroutine CalculateWeightedLoggingTarget
 
 
 

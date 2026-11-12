@@ -102,7 +102,6 @@ module FatesPatchMod
     real(r8) :: total_basal_area                            ! total tree basal area at each patch [m2/m2]
     real(r8) :: rSDI                                        ! patch relative stand density index [%]
     real(r8) :: delta_BA                                    ! difference between current patch basal area and target basal area 
-    real(r8) :: delta_rSDI                                  ! difference between current patch SDI and target SDI 
     real(r8) :: zstar                                       ! height of smallest canopy tree, only meaningful in "strict PPA" mode [m]
     real(r8) :: elai_profile(nclmax,maxpft,nlevleaf)        ! exposed leaf area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
     real(r8) :: esai_profile(nclmax,maxpft,nlevleaf)        ! exposed stem area in each canopy layer, pft, and leaf layer [m2 leaf/m2 contributing crown area]
@@ -231,8 +230,6 @@ module FatesPatchMod
     real(r8)              :: burnt_frac_litter(nfsc) ! fraction of each litter pool burned, conditional on it being burned [0-1]
 
     !---------------------------------------------------------------------------
-    ! logging
-    logical               :: logging_pause        ! if logging should be paused given rSDI
 
     !---------------------------------------------------------------------------
     
@@ -331,7 +328,6 @@ module FatesPatchMod
       this%total_basal_area             = nan
       this%rSDI                         = nan
       this%delta_BA                     = nan
-      this%delta_rSDI                   = nan
       this%zstar                        = nan 
       this%elai_profile(:,:,:)          = nan 
       this%esai_profile(:,:,:)          = nan   
@@ -422,9 +418,6 @@ module FatesPatchMod
       this%rxfire                       = fates_unset_int
       this%rxfire_fi                    = nan
       this%rxfire_frac_burnt            = nan
-
-      ! LOGGING
-      this%logging_pause                = .true.
   
     end subroutine NanValues
 
@@ -480,7 +473,6 @@ module FatesPatchMod
       this%disturbance_rates(:)              = 0.0_r8 
       this%fract_ldist_not_harvested         = 0.0_r8
       this%delta_BA                          = 0.0_r8
-      this%delta_rSDI                        = 0.0_r8
 
       ! LITTER AND COARSE WOODY DEBRIS
       this%fragmentation_scaler(:)           = 0.0_r8
@@ -693,32 +685,6 @@ module FatesPatchMod
 
       end subroutine UpdateTreeBasalAreaStandDensity
 
-
-    !===========================================================================
-
-    subroutine RefreshLoggingPause(this)
-      !
-      ! DESCRIPTION:
-      ! Update patch level flag for whether logging should be
-      ! paused given current patch level rSDI
-      !
-      use EDParamsMod        , only: rsdi_trigger
-      ! Arguments:
-      class(fates_patch_type), intent(inout) :: this  !patch object
-
-      ! Locals:
-      real(r8), parameter    :: targ_precision = 1.0_r8
-
-      if(this%logging_pause) then
-       this%logging_pause = (this%rSDI < rsdi_trigger)
-      endif
-
-      if(.not.this%logging_pause) then
-       this%logging_pause = (this%delta_rSDI <= targ_precision)
-      endif
-      
-    end subroutine RefreshLoggingPause
-
     !===========================================================================
     
 
@@ -843,9 +809,7 @@ module FatesPatchMod
       write(fates_log(),*) 'pa%total_tree_area    = ',this%total_tree_area
       write(fates_log(),*) 'pa%total_basal_area   = ',this%total_basal_area
       write(fates_log(),*) 'pa%rSDI               = ',this%rSDI 
-      write(fates_log(),*) 'pa%delta_BA           = ',this%delta_BA   
-      write(fates_log(),*) 'pa%delta_rSDI         = ',this%delta_rSDI 
-      write(fates_log(),*) 'pa%logging_pause      = ',this%logging_pause  
+      write(fates_log(),*) 'pa%delta_BA           = ',this%delta_BA     
       write(fates_log(),*) 'pa%zstar              = ',this%zstar
       write(fates_log(),*) 'pa%solar_zenith_flag  = ',this%solar_zenith_flag
       write(fates_log(),*) 'pa%solar_zenith_angle = ',this%solar_zenith_angle

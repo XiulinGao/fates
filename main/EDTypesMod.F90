@@ -326,6 +326,9 @@ module EDTypesMod
      real(r8) ::  rxfire_area_final                            ! daily total burnable area when all conditions met [m2]           
      real(r8) ::  rx_burn_accum                                ! cumulative burnt fraction by Rx fire at site
      integer  ::  next_rx_year                                 ! year of next Rx fire
+
+     ! LOGGING
+     logical  :: logging_pause = .true.        ! if logging should be paused given current site rSDI, default to true at start 
   
      ! PLANT HYDRAULICS
      type(ed_site_hydr_type), pointer :: si_hydr

@@ -277,7 +277,7 @@ contains
     integer,          intent(in)               :: anthro_disturbance_label
     real(r8),         intent(in)               :: age_since_anthro_disturbance
     real(r8),         intent(in)               :: frac_site_primary 
-    real(r8),         intent(in)               :: rSDI
+   ! real(r8),         intent(in)               :: rSDI
     real(r8),         intent(inout)            :: delta_BA
     real(r8),         intent(inout)            :: delta_rSDI
     logical,          intent(in)               :: logging_pause
@@ -316,9 +316,9 @@ contains
     !write(fates_log(),*) 'EDMort delta_BA before is:', delta_BA
    
     call LoggingMortality_frac(ipft, currentCohort%dbh, area, &
-                               rSDI, currentCohort%n, &
+                               currentCohort%n, &
                                delta_BA, delta_rSDI, &
-                               logging_pause, &
+                               currentSite%logging_pause, &
                                currentCohort%canopy_layer, &
                                currentCohort%lmort_direct,                       &
                                currentCohort%lmort_collateral,                    &

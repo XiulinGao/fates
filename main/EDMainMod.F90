@@ -377,6 +377,8 @@ contains
                                       ! because it inherited them (such as daily carbon balance)
     real(r8) :: target_leaf_c
     real(r8) :: frac_site_primary
+    real(r8) :: site_rsdi
+    real(r8) :: stand_rsdi_excess
 
 
     real(r8) :: harvestable_forest_c(hlm_num_lu_harvest_cats)
@@ -424,6 +426,11 @@ contains
     ! Patch level biomass are required for C-based harvest
     call get_harvestable_carbon(currentSite, bc_in%site_area, bc_in%hlm_harvest_catnames, harvestable_forest_c)
 
+    ! update delta_rSDI
+    call get_site_rsdi(currentSite, site_rsdi)
+    call CalculateWeightedLoggingTarget(currentSite, stand_rsdi_excess)
+
+
     ! Set a pointer to this sites carbon12 mass balance
     site_cmass => currentSite%mass_balance(element_pos(carbon12_element))
 
@@ -456,7 +463,9 @@ contains
 
        ! calculate delta_BA before recalculate logging mortality
        delta_BA = currentPatch%total_basal_area - max_ba_targ
-       delta_rSDI = currentPatch%rSDI - max_rsdi_targ
+
+       delta_rSDI = max(0._r8, (currentPatch%rSDI - max_rsdi_targ))
+       delta_rSDI = (site_rsdi - max_rsdi_targ) * delta_rSDI / stand_rsdi_excess
 
 
        ! Within this loop, we may be creating new cohorts, which
@@ -485,8 +494,7 @@ contains
                currentPatch%btran_ft, mean_temp,                               &
                currentPatch%anthro_disturbance_label,                          &
                currentPatch%age_since_anthro_disturbance,                      &
-               currentPatch%rSDI,                                              &
-               delta_BA, delta_rSDI, currentPatch%logging_pause,               &
+               delta_BA, delta_rSDI, currentSite%logging_pause,                &
                currentPatch%area, frac_site_primary,                           &
                harvestable_forest_c, harvest_tag)
 

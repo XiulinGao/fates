@@ -44,6 +44,7 @@ module EDLoggingMortalityMod
    use EDParamsMod       , only : logging_coll_under_frac 
    use EDParamsMod       , only : logging_dbhmax_infra
    use EDParamsMod       , only : max_SDI
+   use EDParamsMod       , only : max_rsdi_targ
    use EDParamsMod       , only : rsdi_trigger
    use FatesInterfaceTypesMod , only : bc_in_type
    use FatesInterfaceTypesMod , only : hlm_current_year
@@ -198,8 +199,8 @@ contains
 
    ! ======================================================================================
 
-   subroutine LoggingMortality_frac( pft_i, dbh, area, rSDI, n, delta_BA, delta_rSDI, &
-                                     logging_pause,canopy_layer, lmort_direct, &
+   subroutine LoggingMortality_frac( pft_i, dbh, area, n, delta_BA, delta_rSDI, &
+                                     logging_pause, canopy_layer, lmort_direct, &
                                      lmort_collateral,lmort_infra, l_degrad, &
                                      hlm_harvest_rates, hlm_harvest_catnames, &
                                      hlm_harvest_units, &
@@ -208,13 +209,13 @@ contains
                                      harvest_tag)
 
       ! Arguments
-      integer,  intent(in)  :: pft_i            ! pft index 
-      real(r8), intent(in)  :: dbh              ! diameter at breast height (cm)
-      real(r8), intent(in)  :: area             ! current patch area [m2]
-      real(r8), intent(in)  :: rSDI             ! current patch relative SDI [%]
+      integer,  intent(in)  :: pft_i             ! pft index 
+      real(r8), intent(in)  :: dbh               ! diameter at breast height (cm)
+      real(r8), intent(in)  :: area              ! current patch area [m2]
+     ! real(r8), intent(in)  :: rSDI              ! current patch relative SDI [%]
       real(r8), intent(in)  :: n                ! number of plants in current cohort
       real(r8), intent(inout)  :: delta_BA      ! difference between the current and the target basal area [m2/m2]
-      real(r8), intent(inout)  :: delta_rSDI    ! difference between the current and the target relative stem density index(rSDI)[%]
+      real(r8), intent(inout)  :: delta_rSDI        ! target rSDI reduction for current patch [%]
       logical,  intent(in)     :: logging_pause ! if logging based on rSDI is paused 
       integer,  intent(in)  :: canopy_layer     ! canopy layer of this cohort
       real(r8), intent(in) :: hlm_harvest_rates(:) ! annual harvest rate per hlm category
