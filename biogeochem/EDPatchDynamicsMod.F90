@@ -259,9 +259,9 @@ contains
 
       !write(fates_log(),*) 'current patch basal area:', currentPatch%total_basal_area
       !write(fates_log(),*) 'current delta basal area:', currentPatch%delta_BA
-      write(fates_log(),*) 'current patch RSDI', currentPatch%rSDI
-      write(fates_log(),*) 'current patch delta RSDI before call log', currentPatch%delta_rSDI
-      write(fates_log(),*) 'current patch logging pause before call log', currentPatch%logging_pause
+      !write(fates_log(),*) 'current patch RSDI', currentPatch%rSDI
+      !write(fates_log(),*) 'current patch delta RSDI before call log', currentPatch%delta_rSDI
+      !write(fates_log(),*) 'current patch logging pause before call log', currentPatch%logging_pause
 
 
       currentCohort => currentPatch%shortest
@@ -310,14 +310,14 @@ contains
             call currentPatch%RefreshLoggingPause()
           end if
 
-          write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
+          !write(fates_log(),*) 'lmort_direct is:', currentCohort%lmort_direct
           !write(fates_log(),*) 'lmort_collateral is:', currentCohort%lmort_collateral
           !write(fates_log(),*) 'lmort_infra is:', currentCohort%lmort_infra
-          write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
+          !write(fates_log(),*) 'l_degrad is:', currentCohort%l_degrad
 
           !write(fates_log(),*) 'current delta basal area after update:', currentPatch%delta_BA
-          write(fates_log(),*) 'current delta RSDI after update:', currentPatch%delta_rSDI
-          write(fates_log(),*) 'current rSDI logging pause after update:', currentPatch%logging_pause
+          !write(fates_log(),*) 'current delta RSDI after update:', currentPatch%delta_rSDI
+          !write(fates_log(),*) 'current rSDI logging pause after update:', currentPatch%logging_pause
 
 
           currentCohort => currentCohort%taller
